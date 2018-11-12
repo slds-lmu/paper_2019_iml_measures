@@ -9,8 +9,8 @@ library(mlrMBO)
 library(dplyr)
 
 load("~/repos/interpretable-ml-book/data/bike.RData")
-source("autoiml/iml-measures.R")
-source("autoiml/xgboost.R")
+source("R/iml-measures.R")
+source("R/xgboost.R")
 
 bike.task = makeRegrTask(data = bike, target = "cnt")
 
@@ -48,7 +48,7 @@ fn = function(x){
   mod = train(lrn, bike.task)
   pred = Predictor$new(mod, bike.x)
   #sob = interaction.strength(pred)
-  c(perf, n.features(pred), round(score_linearity_lm(pred), 2), max(0, round(interaction.strength(pred), 1)))
+  c(perf, n.features(pred), round(lin_or_bin_tree(pred), 2), max(0, round(interaction.strength(pred), 1)))
 }
 obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = par.set, n.objectives = 4, has.simple.signature = FALSE)
 
@@ -69,10 +69,17 @@ best.models = cbind(round(mbo.iml$pareto.front, 2), pareto.set)
 best.models %>%
   arrange(y_1)
 
+mae_0 = measureMAE(truth = bike$cnt, response = mean(bike$cnt))
 
-
-ggplot(best.models, aes(y = 1 - (y_1 - min(y_1))/(max(y_1) - min(y_1)),
+ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
   x = (ncol(bike.x) - y_2) * (1 - y_3) * (1 - y_4))) + geom_point() +
+  geom_label(aes(label = y_2, fill = booster)) +
+  scale_x_continuous("Interpretability") +
+  scale_y_continuous("Accuracy")
+
+
+ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
+  x = 1 - y_3)) + geom_point() +
   geom_label(aes(label = y_2, fill = booster)) +
   scale_x_continuous("Interpretability") +
   scale_y_continuous("Accuracy")

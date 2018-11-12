@@ -13,6 +13,108 @@ n.features = function(pred){
 
 
 # =============================================================================
+# alpha-controlled degrees of freedom
+# =============================================================================
+
+# take minimal degrees of freedom from tree and spline
+
+
+# for tree splits
+df_tree_feature = function(preditor, feature_name){
+  require("rpart")
+  # Fit ALE plot
+  ale = FeatureEffect$new(predictor, feature_name)
+  feature_values = predictor$data$X[,feature_name,with=FALSE][[1]]
+  feature_type = predictor$data$feature.types[feature_name]
+  if(feature_type == "categorical") {
+    w = table(feature_values)[ale$results[, feature_name]]
+  } else {
+    # Weight by density
+    dens = density(feature_values)
+    dens_fun = approxfun(dens$x, dens$y)
+    w = dens_fun(ale$results[, feature_name])
+  }
+
+  # fully grow tree
+  # TODO
+  # extract SSE for varying ct and also return n.nodes
+
+
+  ctrl = rpart.control(maxdepth = 100, minsplit = 1, minbucket = 1)
+  ale.tree = rpart(ale$results$.ale ~ ale$results[, feature_name], w=w, control = ctrl)
+  ale.lm.pred = predict(ale.tree)
+
+  SST = weighted.var(ale$results$.ale, w = w)
+  if(SST == 0){
+    warning(paste('No variance for feature %s', feature_name))
+    return(0)
+  }
+  SSE = weighted.var(ale$results$.ale - predict(ale.tree), w = w)
+  SSE/SST
+}
+
+
+
+# for splines
+
+
+# =============================================================================
+# Best of single split tree and lm for feature effect
+# =============================================================================
+
+lin_or_bin_tree = function(predictor) {
+  scores = lapply(predictor$data$feature.names, function(feature_name) {
+    lin_or_bin_tree_feature(predictor, feature_name)
+  })
+  # NAs are from categorical features
+  sum(unlist(scores), na.rm = TRUE) / ncol(predictor$data$get.x())
+}
+
+lin_or_bin_tree_feature = function(predictor, feature_name){
+  min(score_linearity_feature_lm(predictor, feature_name), score_split_feature(predictor, feature_name), na.rm = TRUE)
+}
+
+
+# =============================================================================
+# Feature score based on R.squared of single split tree
+# =============================================================================
+score_split = function(predictor) {
+  scores = lapply(predictor$data$feature.names, function(feature_name) {
+    score_split_feature(predictor, feature_name)
+  })
+  # NAs are from categorical features
+  mean(unlist(scores), na.rm = TRUE)
+}
+
+
+score_split_feature = function(predictor, feature_name){
+  require("rpart")
+  # Fit ALE plot
+  ale = FeatureEffect$new(predictor, feature_name)
+  feature_values = predictor$data$X[,feature_name,with=FALSE][[1]]
+  feature_type = predictor$data$feature.types[feature_name]
+  if(feature_type == "categorical") {
+    w = table(feature_values)[ale$results[, feature_name]]
+  } else {
+    # Weight by density
+    dens = density(feature_values)
+    dens_fun = approxfun(dens$x, dens$y)
+    w = dens_fun(ale$results[, feature_name])
+  }
+  ctrl = rpart.control(maxdepth = 1, minsplit = 1, minbucket = 1)
+  ale.tree = rpart(ale$results$.ale ~ ale$results[, feature_name], w=w, control = ctrl)
+  ale.lm.pred = predict(ale.tree)
+
+  SST = weighted.var(ale$results$.ale, w = w)
+  if(SST == 0){
+    warning(paste('No variance for feature %s', feature_name))
+    return(0)
+    }
+  SSE = weighted.var(ale$results$.ale - predict(ale.tree), w = w)
+  SSE/SST
+}
+
+# =============================================================================
 # Feature linearity score based on 2nd-order derivatives of ALE
 # =============================================================================
 

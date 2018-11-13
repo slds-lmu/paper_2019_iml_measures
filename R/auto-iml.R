@@ -48,11 +48,11 @@ fn = function(x){
   mod = train(lrn, bike.task)
   pred = Predictor$new(mod, bike.x)
   #sob = interaction.strength(pred)
-  c(perf, n.features(pred), round(lin_or_bin_tree(pred), 2), max(0, round(interaction.strength(pred), 1)))
+  c(perf, round(sum_df(pred), 2), max(0, round(interaction.strength(pred), 1)))
 }
-obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = par.set, n.objectives = 4, has.simple.signature = FALSE)
+obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = par.set, n.objectives = 3, has.simple.signature = FALSE)
 
-ctrl = makeMBOControl(n.objectives = 4L)
+ctrl = makeMBOControl(n.objectives = 3L)
 ctrl = setMBOControlInfill(ctrl, crit = crit.cb)
 ctrl = setMBOControlMultiObj(ctrl, method = "parego")
 
@@ -79,7 +79,7 @@ ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
 
 
 ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
-  x = 1 - y_3)) + geom_point() +
+  x = (max(y_2) - y_2) * (1 - y_3))) + geom_point() +
   geom_label(aes(label = y_2, fill = booster)) +
   scale_x_continuous("Interpretability") +
   scale_y_continuous("Accuracy")

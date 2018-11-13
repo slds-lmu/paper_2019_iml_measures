@@ -16,14 +16,29 @@ n.features = function(pred){
 # alpha-controlled degrees of freedom
 # =============================================================================
 
-# take minimal degrees of freedom from tree and spline
+sum_df = function(predictor) {
+  scores = lapply(predictor$data$feature.names, function(feature_name) {
+    df_feature(predictor, feature_name)
+  })
+  # NAs are from categorical features
+  sum(unlist(scores), na.rm = TRUE)
+}
 
+
+# take minimal degrees of freedom from tree and spline
+df_feature = function(predictor, feature_name, eps = 0.05, max_cp  = 10){
+  min(df_tree_feature(predictor, feature_name, max_cp = max_cp, eps = eps),
+    df_spline_feature(predictor, feature_name = feature_name, eps = eps),
+    na.rm = TRUE)
+}
 
 # for tree splits
-df_tree_feature = function(preditor, feature_name){
+df_tree_feature = function(predictor, feature_name, max_cp = 10, eps = 0.01){
   require("rpart")
   # Fit ALE plot
   ale = FeatureEffect$new(predictor, feature_name)
+  #print(plot(ale))
+  if(length(unique(ale$results$.ale)) == 1) return(0)
   feature_values = predictor$data$X[,feature_name,with=FALSE][[1]]
   feature_type = predictor$data$feature.types[feature_name]
   if(feature_type == "categorical") {
@@ -36,27 +51,80 @@ df_tree_feature = function(preditor, feature_name){
   }
 
   # fully grow tree
-  # TODO
-  # extract SSE for varying ct and also return n.nodes
-
-
-  ctrl = rpart.control(maxdepth = 100, minsplit = 1, minbucket = 1)
+  ctrl = rpart.control(maxdepth = 30, minsplit = 1, minbucket = 1, cp = 0)
   ale.tree = rpart(ale$results$.ale ~ ale$results[, feature_name], w=w, control = ctrl)
-  ale.lm.pred = predict(ale.tree)
+  ale.tree.pred = predict(ale.tree)
 
-  SST = weighted.var(ale$results$.ale, w = w)
-  if(SST == 0){
-    warning(paste('No variance for feature %s', feature_name))
-    return(0)
+
+  calculate_R_squared = function(ale, tree, w){
+    SST = weighted.var(ale$results$.ale, w = w)
+    if(SST == 0){
+      warning(paste('No variance for feature %s', feature_name))
+      return(0)
+    }
+    SSE = weighted.var(ale$results$.ale - predict(tree), w = w)
+    1 - SSE/SST
   }
-  SSE = weighted.var(ale$results$.ale - predict(ale.tree), w = w)
-  SSE/SST
+
+  found_smallest_tree = FALSE
+  cp = max_cp
+  while(!found_smallest_tree){
+    tree_new = prune.rpart(ale.tree, cp = cp)
+    R_squared = calculate_R_squared(ale, tree_new, w)
+    #print(sprintf("cp is %.5f, R_squared is %.3f", cp, R_squared))
+    if(R_squared > (1 - eps)) found_smallest_tree = TRUE
+    if(cp < 0.00000001) break()
+    cp = 0.95 * cp
+  }
+  n_nodes = sum(tree_new$frame$var == "<leaf>")
+  n_nodes
 }
 
 
 
 # for splines
+df_spline_feature = function(predictor, feature_name,  eps = 0.05){
+  feature_type = predictor$data$feature.types[feature_name]
+  if(feature_type == "categorical") {
+    NA
+  } else {
+    # Fit ALE plot
+    ale = FeatureEffect$new(predictor, feature_name)
+    #print(plot(ale))
+    if(length(unique(ale$results$.ale)) == 1) return(0)
+    # Weight by density
+    dens = density(predictor$data$X[,feature_name,with=FALSE][[1]])
+    dens_fun = approxfun(dens$x, dens$y)
+    w = dens_fun(ale$results[, feature_name])
 
+    calculate_R_squared = function(ale, w, pred.mod){
+      SST = weighted.var(ale$results$.ale, w = w)
+      if(SST == 0){stop("No variance")}
+      SSE = weighted.var(ale$results$.ale - pred.mod, w = w)
+      1 - SSE/SST
+    }
+
+    # first try linear model
+    ale.lm = lm(ale$results$.ale ~ ale$results[, feature_name], w=w)
+    r_squared = calculate_R_squared(ale, w, predict(ale.lm))
+    if(r_squared > (1-eps)) return(1)
+
+    found_best_spline = FALSE
+    spar = 1
+    while(!found_best_spline){
+      ale.inter = smooth.spline(ale$results[, feature_name], ale$results$.ale,
+        w = dens_fun(ale$results[, feature_name]), spar = spar)
+      R_squared = calculate_R_squared(ale,w, predict(ale.inter)$y)
+      #print(sprintf("spar is %.5f, R_squared is %.3f", spar, R_squared))
+      if(R_squared > (1 - eps)) found_best_spline = TRUE
+      if(spar < 0.00000001) break()
+      spar = 0.99 * spar
+    }
+
+    # measure spline complexity
+    ale.inter$df
+  }
+}
 
 # =============================================================================
 # Best of single split tree and lm for feature effect

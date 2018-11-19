@@ -17,9 +17,12 @@ n.features = function(pred){
 # =============================================================================
 
 sum_df = function(predictor) {
-  scores = lapply(predictor$data$feature.names, function(feature_name) {
-    df_feature(predictor, feature_name)
-  })
+  scores = c()
+
+  for (feature_name in predictor$data$feature.names) {
+    scores = c(scores, feature_name = df_feature(predictor, feature_name))
+  }
+
   # NAs are from categorical features
   sum(unlist(scores), na.rm = TRUE)
 }
@@ -36,9 +39,8 @@ df_feature = function(predictor, feature_name, eps = 0.05, max_cp  = 10){
 df_tree_feature = function(predictor, feature_name, max_cp = 10, eps = 0.01){
   require("rpart")
   # Fit ALE plot
-  ale = FeatureEffect$new(predictor, feature_name)
-  #print(plot(ale))
-  if(length(unique(ale$results$.ale)) == 1) return(0)
+  ale = FeatureEffect$new(predictor, feature_name, method = "pdp")
+  if(length(unique(ale$results$.y.hat)) == 1) return(0)
   feature_values = predictor$data$X[,feature_name,with=FALSE][[1]]
   feature_type = predictor$data$feature.types[feature_name]
   if(feature_type == "categorical") {
@@ -52,17 +54,17 @@ df_tree_feature = function(predictor, feature_name, max_cp = 10, eps = 0.01){
 
   # fully grow tree
   ctrl = rpart.control(maxdepth = 30, minsplit = 1, minbucket = 1, cp = 0)
-  ale.tree = rpart(ale$results$.ale ~ ale$results[, feature_name], w=w, control = ctrl)
+  ale.tree = rpart(ale$results$.y.hat ~ ale$results[, feature_name], w=w, control = ctrl)
   ale.tree.pred = predict(ale.tree)
 
 
   calculate_R_squared = function(ale, tree, w){
-    SST = weighted.var(ale$results$.ale, w = w)
+    SST = weighted.var(ale$results$.y.hat, w = w)
     if(SST == 0){
       warning(paste('No variance for feature %s', feature_name))
       return(0)
     }
-    SSE = weighted.var(ale$results$.ale - predict(tree), w = w)
+    SSE = weighted.var(ale$results$.y.hat - predict(tree), w = w)
     1 - SSE/SST
   }
 
@@ -71,7 +73,6 @@ df_tree_feature = function(predictor, feature_name, max_cp = 10, eps = 0.01){
   while(!found_smallest_tree){
     tree_new = prune.rpart(ale.tree, cp = cp)
     R_squared = calculate_R_squared(ale, tree_new, w)
-    #print(sprintf("cp is %.5f, R_squared is %.3f", cp, R_squared))
     if(R_squared > (1 - eps)) found_smallest_tree = TRUE
     if(cp < 0.00000001) break()
     cp = 0.95 * cp
@@ -89,33 +90,31 @@ df_spline_feature = function(predictor, feature_name,  eps = 0.05){
     NA
   } else {
     # Fit ALE plot
-    ale = FeatureEffect$new(predictor, feature_name)
-    #print(plot(ale))
-    if(length(unique(ale$results$.ale)) == 1) return(0)
+    ale = FeatureEffect$new(predictor, feature_name, method = "pdp")
+    if(length(unique(ale$results$.y.hat)) == 1) return(0)
     # Weight by density
     dens = density(predictor$data$X[,feature_name,with=FALSE][[1]])
     dens_fun = approxfun(dens$x, dens$y)
     w = dens_fun(ale$results[, feature_name])
 
     calculate_R_squared = function(ale, w, pred.mod){
-      SST = weighted.var(ale$results$.ale, w = w)
+      SST = weighted.var(ale$results$.y.hat, w = w)
       if(SST == 0){stop("No variance")}
-      SSE = weighted.var(ale$results$.ale - pred.mod, w = w)
+      SSE = weighted.var(ale$results$.y.hat - pred.mod, w = w)
       1 - SSE/SST
     }
 
     # first try linear model
-    ale.lm = lm(ale$results$.ale ~ ale$results[, feature_name], w=w)
+    ale.lm = lm(ale$results$.y.hat ~ ale$results[, feature_name], w=w)
     r_squared = calculate_R_squared(ale, w, predict(ale.lm))
     if(r_squared > (1-eps)) return(1)
 
     found_best_spline = FALSE
     spar = 1
     while(!found_best_spline){
-      ale.inter = smooth.spline(ale$results[, feature_name], ale$results$.ale,
+      ale.inter = smooth.spline(ale$results[, feature_name], ale$results$.y.hat,
         w = dens_fun(ale$results[, feature_name]), spar = spar)
       R_squared = calculate_R_squared(ale,w, predict(ale.inter)$y)
-      #print(sprintf("spar is %.5f, R_squared is %.3f", spar, R_squared))
       if(R_squared > (1 - eps)) found_best_spline = TRUE
       if(spar < 0.00000001) break()
       spar = 0.99 * spar
@@ -170,15 +169,15 @@ score_split_feature = function(predictor, feature_name){
     w = dens_fun(ale$results[, feature_name])
   }
   ctrl = rpart.control(maxdepth = 1, minsplit = 1, minbucket = 1)
-  ale.tree = rpart(ale$results$.ale ~ ale$results[, feature_name], w=w, control = ctrl)
+  ale.tree = rpart(ale$results$.y.hat ~ ale$results[, feature_name], w=w, control = ctrl)
   ale.lm.pred = predict(ale.tree)
 
-  SST = weighted.var(ale$results$.ale, w = w)
+  SST = weighted.var(ale$results$.y.hat, w = w)
   if(SST == 0){
     warning(paste('No variance for feature %s', feature_name))
     return(0)
-    }
-  SSE = weighted.var(ale$results$.ale - predict(ale.tree), w = w)
+  }
+  SSE = weighted.var(ale$results$.y.hat - predict(ale.tree), w = w)
   SSE/SST
 }
 
@@ -290,63 +289,41 @@ surrogate_sim = function(pred, type = 'tree') {
 # =============================================================================
 
 
-interaction.strength = function(pred, sample.size = 50000){
-  1 - sum(unlist(sobol(pred, n = sample.size)))
+interaction.strength = function(pred, sample.size = 1000){
+  1 - sobol2(pred, n = sample.size)
 }
 
-
-sobol = function(pred, n) {
-  feature.names = pred$data$feature.names
-  dat.intervened = intervene.sobol(generate.sobol, X = data.frame(pred$data$get.x()), n = n)
-  res = aggregate.sobol.first(dat.intervened, pred$predict(dat.intervened)[[1]], n = n)
-  res
-}
-
-
-
-
-generate.sobol = function(n, background){
-  background[sample(1:nrow(background), size = n, replace = TRUE), ]
-}
-
-intervene.sobol = function(generate.fun, X, n){
+sobol2 = function(pred, n){
+  X = data.frame(pred$data$get.x())
+  generate.fun = function(n, background){
+    background[sample(1:nrow(background), size = n, replace = TRUE), ]
+  }
   require(dplyr)
   X1 = generate.fun(n, X)
   X2 = generate.fun(n, X)
 
   n.features = ncol(X)
-  feature.names = colnames(X)
-
-  # The intervention
-  Ab = lapply(1:n.features, function(feature.index){
-    A = X1
-    A[,feature.index] = X2[feature.index]
-    A
-  }) %>% data.table::rbindlist()
-  rbind(X1, X2, Ab)
+  sobolz = c()
+  for (feature.index in 1:n.features){
+    sobolz = c(sobolz, sobol_feature(pred, X1, X2, feature.index))
+  }
+  sum(sobolz)
 }
 
+sobol_feature = function(pred, X1, X2, feature.index){
+  n  = nrow(X1)
+  X12 = X1
+  X12[,feature.index] = X2[feature.index]
 
-aggregate.sobol.first = function(X, y.hat, n, w=NULL,...){
-  y.hat.A = y.hat[1:n]
-  y.hat.B = y.hat[(n+1):(2*n)]
-  Ab.index = (2*n + 1):nrow(X)
+  y.hat.A = pred$predict(X1)[[1]]
+  y.hat.B = pred$predict(X2)[[1]]
+  y.hat.AB= pred$predict(X12)[[1]]
   var.y = var(y.hat.A)
-  lapply(1:ncol(X), function(i){
-    y.hat.Ab.by.feature = matrix(y.hat[Ab.index], nrow = n)
-    S_i = (1/n) * sum(y.hat.B * (y.hat.Ab.by.feature[,i] - y.hat.A))
-    S_i/ var.y
-  })
-}
-
-aggregate.sobol.total = function(X, y.hat, n, w=NULL,...){
-  y.hat.A = y.hat[1:n]
-  y.hat.B = y.hat[(n+1):(2*n)]
-  Ab.index = (2*n + 1):nrow(X)
-  var.y = var(y.hat.A)
-  lapply(1:ncol(X), function(i){
-    y.hat.Ab.by.feature = matrix(y.hat[Ab.index], nrow = n)
-    S_i = (1/(2*n)) * sum((y.hat.Ab.by.feature[,i] - y.hat.A)^2)
-    S_i / var.y
-  })
+  S_i = (1/n) * sum(y.hat.B * (y.hat.AB - y.hat.A))
+  res = S_i/ var.y
+  if(is.nan(res)){
+    warning('got NaN, returning sobol of 0')
+    return(0)
+  }
+  res
 }

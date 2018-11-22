@@ -289,41 +289,20 @@ surrogate_sim = function(pred, type = 'tree') {
 # =============================================================================
 
 
-interaction.strength = function(pred, sample.size = 1000){
+
+
+interaction.strength = function(pred, sample.size = 3000){
   1 - sobol2(pred, n = sample.size)
 }
 
 sobol2 = function(pred, n){
-  X = data.frame(pred$data$get.x())
-  generate.fun = function(n, background){
-    background[sample(1:nrow(background), size = n, replace = TRUE), ]
+  pred.fun = function(X){
+    pred$predict(newdata = pred$data$get.x())[[1]]
   }
-  require(dplyr)
-  X1 = generate.fun(n, X)
-  X2 = generate.fun(n, X)
 
-  n.features = ncol(X)
-  sobolz = c()
-  for (feature.index in 1:n.features){
-    sobolz = c(sobolz, sobol_feature(pred, X1, X2, feature.index))
-  }
-  sum(sobolz)
+  x = sensitivity::sobolmara(pred.fun,
+    X1 = task.dat[sample(pred$data$n.rows, n, replace = TRUE),])
+  sum(x$S)
 }
 
-sobol_feature = function(pred, X1, X2, feature.index){
-  n  = nrow(X1)
-  X12 = X1
-  X12[,feature.index] = X2[feature.index]
 
-  y.hat.A = pred$predict(X1)[[1]]
-  y.hat.B = pred$predict(X2)[[1]]
-  y.hat.AB= pred$predict(X12)[[1]]
-  var.y = var(y.hat.A)
-  S_i = (1/n) * sum(y.hat.B * (y.hat.AB - y.hat.A))
-  res = S_i/ var.y
-  if(is.nan(res)){
-    warning('got NaN, returning sobol of 0')
-    return(0)
-  }
-  res
-}

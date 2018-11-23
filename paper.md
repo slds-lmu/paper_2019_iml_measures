@@ -49,8 +49,8 @@ Discuss:
 - Number of features
 - Average/median number of features needed to explain individual predictions to user-defined degree of certainty. Or with Shapley value: Order shapley value by absolute value. Cumsum of abs.value divided by total value > 0.95. how many features needed? -> lm would have very bad number here, trees probably really good.
 -How strongly are features (that are used in the model) correlated / associated .
-- Alternative variance: Difference between product-of-distributions and feature distribution
-
+- Alternative variance: Difference between product of pdps and comp
+- Use fanova decomposition. For first-order, it should be simple to construct it. Make sure to weight data points when marginalizing, based on density. Use grid for function. For each feature: get fine grid, get $\hat{f}$ for grid based on PDP estimate. make function by interpolation. make sure to weight by probability. not sure fit that will work. maybe do it the Hooker-Generalized fanova way. Built grid over all features.
 
 # The Optimization problem and MBO
 Mathematically writing down objectives

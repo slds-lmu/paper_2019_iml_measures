@@ -20,6 +20,8 @@
 - How to get interaction measure more stable?
 - Optimize over all learners? Or per learner and combine pareto sets in the end?
 - How do you (in code) correctly do  hyperparameter tuning across different learners and parameters?
+- First a paper with only the measures? Or already with multicrit optimization?
+
 
 # Novelty
 - Suggesting (novel) interpretability measures and testing them

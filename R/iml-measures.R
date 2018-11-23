@@ -1,4 +1,81 @@
 # =============================================================================
+# ALE fanova
+# =============================================================================
+
+ale_fanova  = function(pred){
+
+  if(pred$task == "classification" & is.null(pred$class)) {
+    stop("Please set class in Predictor")
+  }
+
+  #print(pred$model$learner.model)
+  feature.names = pred$data$feature.names
+  dat = data.frame(pred$data$get.x())
+  # for all features:
+  funs = lapply(feature.names, function(fname) {
+    func = get_ale_function(pred, fname)
+    func(dat[,fname])
+  })
+  funs = data.frame(funs)
+
+  predictions = pred$predict(dat)[[1]]
+  mean_prediction = mean(predictions)
+  ale_predictions = mean_prediction + rowSums(funs)
+
+  SST = var(predictions)
+  if(SST == 0) {
+    return(1)
+  }
+  SSE = var(ale_predictions - predictions)
+  SSE/SST
+}
+
+get_ale_function = function(pred, feature.name) {
+  ale = FeatureEffect$new(pred, feature = feature.name, method = "ale", grid.size = 50)
+  #if(feature.name == "sons_occupation") browser()
+  #print(plot(ale))
+  if(ale$feature.type == "numerical"){
+    approxfun(x = ale$results[,feature.name], y = ale$results$.ale)
+  } else {
+    function(x){
+      #print(feature.name)
+      df = data.frame(as.character(x), stringsAsFactors = FALSE)
+      colnames(df) = feature.name
+      results = ale$results
+      # print(results)
+      # print(table(x))
+      results[,feature.name] = as.character(results[,feature.name])
+      dplyr::left_join(df, results, sort = FALSE, by = feature.name, all.x=TRUE)$.ale
+    }
+  }
+}
+
+
+# =============================================================================
+# How similar go GAM
+# =============================================================================
+gam_alike = function(pred){
+  X = pred$data$get.xy()
+  X$.prediction = pred$predict(X)
+  tsk = makeRegrTask(data = X, target = ".prediction")
+  lrn = makeLearner("regr.gamboost")
+
+  ps = makeParamSet(makeIntegerParam("mstop", lower = 1, upper = 4000))
+  ctrl = makeTuneControlGrid()
+  rdesc = makeResampleDesc("CV", iters = 3L)
+  res = tuneParams(lrn, task = tsk, resampling = rdesc,
+    par.set = ps, control = ctrl)
+  lrn = setHyperPars(lrn, par.vals = res$x)
+
+  mod = train(lrn, tsk)
+  SST = var(X$.prediction)
+  gam.pred = getPredictionResponse(predict(mod, newdata =X))
+  SSE = var(gam.pred - X$.prediction)
+  1 - SSE / SST
+}
+
+
+# =============================================================================
 # Number of features
 # =============================================================================
 
@@ -297,7 +374,7 @@ interaction.strength = function(pred, sample.size = 3000){
 
 sobol2 = function(pred, n){
   pred.fun = function(X){
-    pred$predict(newdata = pred$data$get.x())[[1]]
+    pred$predict(newdata = X)[[1]]
   }
 
   x = sensitivity::sobolmara(pred.fun,

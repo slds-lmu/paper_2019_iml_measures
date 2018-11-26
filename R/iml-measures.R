@@ -2,7 +2,7 @@
 # ALE fanova
 # =============================================================================
 
-ale_fanova  = function(pred){
+ale_fanova  = function(pred, grid.size  = 50){
 
   if(pred$task == "classification" & is.null(pred$class)) {
     stop("Please set class in Predictor")
@@ -13,7 +13,7 @@ ale_fanova  = function(pred){
   dat = data.frame(pred$data$get.x())
   # for all features:
   funs = lapply(feature.names, function(fname) {
-    func = get_ale_function(pred, fname)
+    func = get_ale_function(pred, fname, grid.size = grid.size)
     func(dat[,fname])
   })
   funs = data.frame(funs)
@@ -30,8 +30,8 @@ ale_fanova  = function(pred){
   SSE/SST
 }
 
-get_ale_function = function(pred, feature.name) {
-  ale = FeatureEffect$new(pred, feature = feature.name, method = "ale", grid.size = 50)
+get_ale_function = function(pred, feature.name, grid.size) {
+  ale = FeatureEffect$new(pred, feature = feature.name, method = "ale", grid.size = grid.size)
   #if(feature.name == "sons_occupation") browser()
   #print(plot(ale))
   if(ale$feature.type == "numerical"){

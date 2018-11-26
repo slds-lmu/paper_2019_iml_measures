@@ -1,3 +1,22 @@
+# Abstract
+
+<!-- Background -->
+Machine learning needs interpretability. 
+Interpretability is not well defined.
+Often interpretabilty very model-specific, like number of features in a linear model or the depth of a decision tree.
+Another problem: Machine learning methods are optimized by optimizing predictive performance, interpretability by constraining the types of models  explored (e.g. only linear models) instead of optimizing for performance and interpretability simultaneously.
+
+<!-- Methods -->
+We motivate two model-agnostic interpretability measures by the decomposition of the prediction function.
+They allow to compare interpretability across models and to some degree across datasets.
+Also we review other approaches.
+We apply the measures in a multi-crit optimization machine learing approach, which yields a set of models with different accuracy / interpretability trade-offs.
+
+
+<!-- Results -->
+We demonstrate the possiblity with different dataset to optimize for interpretability and accuracy simultaneously. 
+We show examples with different datasets.
+We show the first systematic data-driven creation of the accuracy vs. interpretability figure.
 
 
 # Introduction
@@ -5,24 +24,43 @@ Motivation: User should decide on interpretability  / accuracy tradeoff
 Novelty: New model-agnostic measures for interpretability. End-to-end, multicrit optimization for accuracy and interpretability (interpretability not measured with intermediary number from model.)
 
 # Review
+
 Multicrit often looks at complexity: Examples
 But nowhere are explicit, model-agnostic interpretability measures used
 
 
 # Prerequisites
-little bit about multicrit
 
+- ALE plots
+- Multicrit, Pareto Front
 
 # Interpretability measures
-Discuss pros and cons, show examples. 
-Motivation: PDP interpretability
 
 
-## Sobol interaction strength
-Definition
-2d Heatmap examples. Interaction of zero. High interaction.
-Example motivated by ICE curves.
-Discussion: Instable, Needs uncorrelated features.
+Motivation: 
+- ALE and functional decomposition of \hat{f}(x)
+- Definition via existing model-agnostic criteria (e.g. ALE)
+- Sources of lack of interpretability: many features, complex relationship with prediction and interactions -> interpretability measure should capture those
+- why all with ALE? -> Works also with correlated inputs
+- Why not functional Anova a la hooker? computationally ineffective and his decomposition properties not needed. Also good software with ALE.
+
+$$\hat{f}(x) = f_1(x) + f_2(x_2) + \ldots + f_p(x_p) + f_{12} ...$$
+
+Examples on which measures are demonstrated:
+- XOR problem with perfect predictor
+- Simulated dataset
+  - 3 features, 2 numerical (one linear, one more complex), 1 cateogrical
+  - one version with and one without interactions
+  - categorical features with more 5 or so levels, only 3 df needed
+
+## First order ALE decomposition and SSE
+
+Use fanova decomposition, but with ALE.
+
+Discussion
+- When true marginal function is step function, then it adds to the SSE unecessarily
+- Unclear how many intervals
+- Weighted by data sensity (can be unintuitive when looking at plot) or all plot point same weight (probably very wrong). Solution: Make clear in ALE plot where most data is with rug or alpha.
 
 ## Degrees of freedom univariate
 
@@ -37,9 +75,11 @@ Version for tree split approx
 
 0 if not used, 1 if linear or binary split, ...
 
-Discuss: Implicit comparison between features: reducing a feature from 3 to 2 df is same as removing a linear feature. 
-Discuss: When ALE is used, correlation of features is ok.
-Discuss: 
+Discussion 
+- Implicit comparison between features: reducing a feature from 3 to 2 df is same as removing a linear feature. 
+- can be adjusted to needs. like maybe only interested in log(df) per feature?
+- When ALE is used, correlation of features is ok.
+- 
 
 
 ## Others
@@ -50,7 +90,8 @@ Discuss:
 - Average/median number of features needed to explain individual predictions to user-defined degree of certainty. Or with Shapley value: Order shapley value by absolute value. Cumsum of abs.value divided by total value > 0.95. how many features needed? -> lm would have very bad number here, trees probably really good.
 -How strongly are features (that are used in the model) correlated / associated .
 - Alternative variance: Difference between product of pdps and comp
-- Use fanova decomposition. For first-order, it should be simple to construct it. Make sure to weight data points when marginalizing, based on density. Use grid for function. For each feature: get fine grid, get $\hat{f}$ for grid based on PDP estimate. make function by interpolation. make sure to weight by probability. not sure fit that will work. maybe do it the Hooker-Generalized fanova way. Built grid over all features.
+
+- Sobol interaction strength. Based on first-order indices
 
 # The Optimization problem and MBO
 Mathematically writing down objectives
@@ -76,6 +117,17 @@ Show Pareto Front for some datasets.
 
 Aggregated results per learner (maybe do mbo per learner) and recreate accuracy / interpretability figures
 
+
+## Benchmarking methods that claim to be interpretable
+
+Linear model, LASSO, rpart, SLIM, SBRL, ...
+
+Use a handful of datasets.
+How to tune the models? Maybe different setups: With defaults, only tuned for performance, tuned for performance and interpretability (and report pareto sets for all methods).
+Compare in table:
+  rows: dataset x tuning method
+  columns: methods
+  cells: [performance, interaction.strength, degrees of freedom]
 
 
 # Formatting

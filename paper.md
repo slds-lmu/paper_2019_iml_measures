@@ -27,7 +27,7 @@ Novelty: New model-agnostic measures for interpretability. End-to-end, multicrit
 
 Multicrit often looks at complexity: Examples
 But nowhere are explicit, model-agnostic interpretability measures used
-
+BIC is a tradeoff measure between accuracy and interpretability
 
 # Prerequisites
 

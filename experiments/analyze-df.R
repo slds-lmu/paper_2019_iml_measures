@@ -4,13 +4,17 @@
 devtools::load_all()
 
 library(mlbench)
+library(randomForest)
 
 n = 100
 dat = data.frame(mlbench::mlbench.friedman1(n))
 
+dat$x.1 = cut(dat$x.1, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
+dat$x.2 = cut(dat$x.2, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
 
-library(randomForest)
 rf = randomForest(y ~ ., data = dat, ntree = 10000)
+
+rf = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
 
 pred = Predictor$new(rf, dat)
 
@@ -59,16 +63,9 @@ ale_length(pred, "x.9", grid.size = 50)
 ale_length(pred, "x.10", grid.size = 50)
 
 
-n_segs(pred, "x.1")
-n_segs(pred, "x.2")
-n_segs(pred, "x.3")
-n_segs(pred, "x.4")
-n_segs(pred, "x.5")
-n_segs(pred, "x.6")
-n_segs(pred, "x.7")
-n_segs(pred, "x.8")
-n_segs(pred, "x.9")
-n_segs(pred, "x.10")
+
+n_segs(pred)
+n_segs_feature(pred, "x.2", cat.mode = TRUE, plot = FALSE)
 
 
 

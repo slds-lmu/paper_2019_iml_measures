@@ -17,7 +17,7 @@ tasks = tasks[tasks$number.of.instances < 5000, ]
 tasks = tasks[tasks$number.of.instances > 400, ]
 tasks = tasks[!is.na(tasks$task.id), ]
 tasks = tasks[tasks$number.of.classes  == 2, ]
-i = 20
+i = 26
 
 task = getOMLTask(task.id = tasks$task.id[i])
 task = convertOMLTaskToMlr(task)
@@ -100,13 +100,12 @@ fn = function(x){
   # removes unused params
   x = x[!is.na(x)]
   lrn = setHyperPars(lrn, par.vals = x)
-  print(lrn$name)
   perf = resample(learner = lrn, show.info = FALSE,
     task = task$mlr.task , resampling = rin ,
     measures = list(loss))$aggr
   mod = train(lrn, task$mlr.task)
   pred = Predictor$new(mod, task.dat, y = task$mlr.task$task.desc$tar, class = 1)
-  c(1 - perf, round(sum_df(pred), 2), max(0, ale_fanova(pred)))
+  c(1 - perf, round(n_segs(pred), 2), max(0, ale_fanova(pred)))
 }
 
 obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = ps, n.objectives = 3, has.simple.signature = FALSE)

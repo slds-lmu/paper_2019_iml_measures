@@ -2,37 +2,74 @@
 # =============================================================================
 # Number of linear segments in segmented linear regression
 # =============================================================================
-# Problems: the mechanism in segmented for finding split points is very instable
-# for lmtree the problem is that the number of trees cannot be specified directly
-n_segs = function(pred, feature.name, grid.size = 50) {
-  ale.fun = get_ale_function(pred, feature.name, grid.size)
+
+n_segs = function(pred, ...){
+  feature_names = pred$data$feature.names
+  n_seg_values = sapply(feature_names, function(fname){
+    min(n_segs_feature(pred, feature.name = fname, ...),
+      n_segs_feature(pred, feature.name = fname, cat.mode = TRUE))
+  })
+  sum(n_seg_values)
+}
+
+n_segs_feature = function(pred, feature.name, grid.size = 50, alpha = 0.05, plot = FALSE, cat.mode = FALSE) {
+  ale.fun = get_ale_function(pred, feature.name, grid.size = grid.size)
   feature = pred$data$get.x()[[feature.name]]
   ale.values = ale.fun(feature)
 
-  mod = lm(ale.values ~ feature)
+  # flat function
+  if(n_distinct(ale.values) == 1) return(0)
 
-  #   require("segmented")
-  # TODO: check if linear model is good enough
-  # TODO: For loop
-  # n_breaks = 3
-  # init_break_points = quantile(feature,
-  #   probs = seq(from = 0, to = 1, length.out = 2 + n_breaks)[2:(n_breaks + 1)])
-  # init_break_points = seq(from = min(feature), to = max(feature),
-  #   length.out = 2 + n_breaks)[2:(n_breaks + 1)]
-  # seg  = segmented(mod, psi = NA, control = seg.control(K = n_breaks, toll = 1))
-  # seg.predictions = predict(seg)
-
-  # try party
-  ptree = partykit::lmtree(ale.values ~ feature | feature,  alpha = 0.05, minsize = 2)
-  seg.predictions = predict(ptree, newdata = data.frame(feature))
-  tree.size = ptree$`1`
-  SST = var(ale.values)
-  if(SST == 0) {
-    return(1)
+  pred_tree = function(mod) {
+    if(inherits(mod, "lmtree")) {
+      predict(mod, newdata = mod$data)
+    } else {
+      predict(mod)
+    }
   }
-  SSE = var(seg.predictions - ale.values)
-  print(SSE/SST)
-  partykit::width(ptree)
+
+  check_r = function(mod){
+    seg.predictions = pred_tree(mod)
+    SST = var(ale.values)
+    if(SST == 0) { return(FALSE)}
+    SSE = var(seg.predictions - ale.values)
+    (SSE/SST) < alpha
+  }
+  if(is.numeric(feature) & !cat.mode) {
+    mod = lm(ale.values ~ feature)
+    # linear model case
+    if(check_r(mod)) return(1)
+    # fully grown tree
+    mod = partykit::lmtree(ale.values ~ feature | feature,  alpha = 0.5, minsize = 2)
+  } else {
+    mod = partykit::ctree(ale.values ~ feature,  control = ctree_control(alpha = 0.5, minbucket = 1))
+  }
+  while(check_r(mod)) {
+    n_df = width(mod)
+    mod_best = mod
+    mod = prune_tree_1n(mod)
+  }
+  if(plot) {
+    tree_df = data.frame(x = feature, y = pred_tree(mod_best), node = predict(mod, type = "node"))
+    p = FeatureEffect$new(pred, feature.name, grid.size = grid.size, method = "ale")$plot()
+    if(is.numeric(feature)) {
+      p  = p + geom_line(aes(x = x, y = y, group = node), color = "red", data = tree_df)
+    } else {
+      tree_df = unique(tree_df)
+      p = p + geom_point(aes(x = x, y = y), color = "red", data = tree_df)
+    }
+    print(p)
+  }
+  if(is.numeric(feature) & !cat.mode) {
+    # first segment costs 1 degrees of freedom, every following costs 2
+    # because lm would also be 1 df. for each additional segment, we need to know starting point and
+    # the slope, which makes two degrees of freedom
+    n_df = 2 * n_df - 1
+  } else {
+    # first category can be seen as reference category
+    n_df = n_df - 1
+  }
+  n_df
 }
 
 # =============================================================================
@@ -113,7 +150,6 @@ ale_fanova  = function(pred, grid.size  = 50){
 
 get_ale_function = function(pred, feature.name, grid.size) {
   ale = FeatureEffect$new(pred, feature = feature.name, method = "ale", grid.size = grid.size)
-  print(plot(ale))
   if(ale$feature.type == "numerical"){
     approxfun(x = ale$results[,feature.name], y = ale$results$.ale)
   } else {

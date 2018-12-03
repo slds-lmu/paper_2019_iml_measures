@@ -1,24 +1,3 @@
-# Abstract
-
-<!-- Background -->
-Machine learning needs interpretability. 
-Interpretability is not well defined.
-Often interpretabilty very model-specific, like number of features in a linear model or the depth of a decision tree.
-Another problem: Machine learning methods are optimized by optimizing predictive performance, interpretability by constraining the types of models  explored (e.g. only linear models) instead of optimizing for performance and interpretability simultaneously.
-
-<!-- Methods -->
-We motivate two model-agnostic interpretability measures by the decomposition of the prediction function.
-They allow to compare interpretability across models and to some degree across datasets.
-Also we review other approaches.
-We apply the measures in a multi-crit optimization machine learing approach, which yields a set of models with different accuracy / interpretability trade-offs.
-
-
-<!-- Results -->
-We demonstrate the possiblity with different dataset to optimize for interpretability and accuracy simultaneously. 
-We show examples with different datasets.
-We show the first systematic data-driven creation of the accuracy vs. interpretability figure.
-
-
 # Introduction
 Motivation: User should decide on interpretability  / accuracy tradeoff
 Novelty: New model-agnostic measures for interpretability. End-to-end, multicrit optimization for accuracy and interpretability (interpretability not measured with intermediary number from model.)
@@ -33,6 +12,24 @@ BIC is a tradeoff measure between accuracy and interpretability
 
 - ALE plots
 - Multicrit, Pareto Front
+
+# Motivation
+
+## Limitations of interpretable models
+Short chapter. Limits to certain model class. sub-optimal performance.
+
+## Limitations of post-hoc methods
+
+**Effect of high number of features**
+Example with few and many features and showing Shapley explanations and many partial dependence plots.
+
+**Effect of interactions**
+Show ICE / PDP example.
+Show problem with local and global linear surrogate models.
+
+**Effect of complex non-linear feature effects**
+Show crazy pdp.
+Show problems with LIME.
 
 # Interpretability measures
 

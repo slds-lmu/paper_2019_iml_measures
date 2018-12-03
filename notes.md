@@ -1,3 +1,18 @@
+# Meeting Giuseppe
+- Summarize goal of paper
+- Short paper outline
+- Present interaction measure
+- Present degrees of freedom / segment measure
+- Questions:
+  - How to combine both measures into one
+  - JMLR?
+  - mean(\hat{y} + ale1(x) + ale2(x) + ...) ok?
+  - How should the costs be for feature/segment/constant piece?
+  - How to handle the fact that complexity of df can become infinitely big?
+  - How to choose n.intervals of ALE?
+
+
+
 # Thoughts:
 
 - Create the interpretability vs accuracy figure
@@ -15,7 +30,6 @@
 # Questions
 
 - What does generateDesign could only produce 138 points instead of 1000?
-- Is there a better way for conditional subsetting of Params?
 - How to combine interpretability measure into one measure?
 - How to get interaction measure more stable?
 - Optimize over all learners? Or per learner and combine pareto sets in the end?

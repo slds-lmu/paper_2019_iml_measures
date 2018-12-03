@@ -13,7 +13,8 @@ Depends: OpenML,
          mlrMBO,
          data.table,
          dplyr,
-         ggplot2
+         ggplot2,
+         partykit
 Imports: checkmate,
          mlrMBO,
          rpart

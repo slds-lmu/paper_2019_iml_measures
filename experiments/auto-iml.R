@@ -4,7 +4,7 @@ set.seed(42)
 
 
 
-TASK_TYPE = "classif"
+TASK_TYPE = "regr"
 
 tasks = listOMLTasks()
 tasks = tasks[grepl("Supervised Classification", tasks$task.type), ]
@@ -21,28 +21,37 @@ i = 26
 
 task = getOMLTask(task.id = tasks$task.id[i])
 task = convertOMLTaskToMlr(task)
-task.dat = getTaskData(task$mlr.task)
+task = task$mlr.task
+task.dat = getTaskData(task)
 summary(task.dat)
 print(dim(task.dat))
 
-# lrn = makeLearner("regr.gamboost", mstop = 171)
-lrn = makeLearner("classif.rpart", maxdepth = 7, predict.type = 'prob')
-lrn = makeLearner("classif.logreg", predict.type = 'prob')
-lrn = makeLearner("classif.lda", predict.type = 'prob')
 
-lrn = makeLearner("classif.naiveBayes", predict.type = 'prob')
+n = 100
+dat = data.frame(mlbench::mlbench.friedman1(n))
 
-# lrn = makeLearner("regr.lm")
-# lrn = makeLearner("regr.ranger")
-# lrn = makeLearner("regr.ksvm")
-
-trained = train(lrn, task$mlr.task)
+dat$x.1 = cut(dat$x.1, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
+dat$x.2 = cut(dat$x.2, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
+task = makeRegrTask(data = dat, target = "y")
+task.dat = dat
 #
+# # lrn = makeLearner("regr.gamboost", mstop = 171)
+# lrn = makeLearner("classif.rpart", maxdepth = 7, predict.type = 'prob')
+# lrn = makeLearner("classif.logreg", predict.type = 'prob')
+# lrn = makeLearner("classif.lda", predict.type = 'prob')
 #
-pred = Predictor$new(trained, data = task.dat, y = task$mlr.task$task.desc$target, class = 1)
+# lrn = makeLearner("classif.naiveBayes", predict.type = 'prob')
+#
+# # lrn = makeLearner("regr.lm")
+# # lrn = makeLearner("regr.ranger")
+# # lrn = makeLearner("regr.ksvm")
+#
 # #
-ale_fanova(pred)
-sum_df(pred)
+# #
+# pred = Predictor$new(trained, data = task.dat, y = task$task.desc$target, class = 1)
+# # #
+# ale_fanova(pred)
+# sum_df(pred)
 
 
 
@@ -82,7 +91,7 @@ ps.classif = makeModelMultiplexerParamSet(lrn.classif,
   makeNumericParam("laplace", lower = 0, upper = 1)
 )
 
-rin = makeResampleInstance(cv2 , task$mlr.task)
+rin = makeResampleInstance(cv2 , task)
 
 if(TASK_TYPE == "classif") {
   lrn = lrn.classif
@@ -101,10 +110,10 @@ fn = function(x){
   x = x[!is.na(x)]
   lrn = setHyperPars(lrn, par.vals = x)
   perf = resample(learner = lrn, show.info = FALSE,
-    task = task$mlr.task , resampling = rin ,
+    task = task , resampling = rin ,
     measures = list(loss))$aggr
-  mod = train(lrn, task$mlr.task)
-  pred = Predictor$new(mod, task.dat, y = task$mlr.task$task.desc$tar, class = 1)
+  mod = train(lrn, task)
+  pred = Predictor$new(mod, task.dat, y = task$task.desc$target)
   c(1 - perf, round(n_segs(pred), 2), max(0, ale_fanova(pred)))
 }
 
@@ -131,7 +140,7 @@ best.models %>%
 best.models %>%
   arrange(y_2)
 
-y = task.dat[task$mlr.task$task.desc$target][[1]]
+y = task.dat[task$task.desc$target][[1]]
 #mae_0 = measureMAE(truth = y, response = mean(y))
 mae_0 = 0.5
 ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),

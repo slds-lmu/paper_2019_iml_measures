@@ -2,6 +2,7 @@
 # Analyze the degrees of freedom measure
 # ----------------------------------------------------------------------------
 devtools::load_all()
+set.seed(42)
 
 library(mlbench)
 library(randomForest)
@@ -28,16 +29,17 @@ n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
 # Example with tree ALE
 lrn = makeLearner("regr.rpart")
 mod = train(lrn, tsk)
+mod$learner.model
 pred = Predictor$new(mod, dat)
 n_segs(pred)
-n_segs_feature(pred, "x.1", cat.mode = FALSE, plot = TRUE, epsilon = 0.05)
+n_segs_feature(pred, "x.1", cat.mode = FALSE, plot = TRUE, epsilon = 0.001)
 n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
 
 # TODO: Check for errors in nodeprune
-n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.1, cat.mode = TRUE)
+n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
 
 n_segs_feature(pred, "x.2",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
-n_segs_feature(pred, "x.2",  plot = TRUE, epsilon = 0.1, cat.mode = TRUE)
+n_segs_feature(pred, "x.2",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
 
 n_segs_feature(pred, "x.3",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
 n_segs_feature(pred, "x.3",  plot = TRUE, epsilon = 0.1, cat.mode = TRUE)
@@ -59,10 +61,6 @@ n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
 n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
 n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.1, cat.mode = FALSE)
 n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.001, cat.mode = FALSE, max_df = 20)
-
-
-
-# TODO
 
 # ----------------------------------------------------------------------------
 # Effect of weighting vs. no weighting

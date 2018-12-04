@@ -21,7 +21,6 @@ n_segs = function(pred, ...){
 n_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, plot = FALSE, cat.mode = FALSE, max_df = 10) {
   # The base cost of using a feature, regardless of complexity
   cost_of_feature = 0
-
   ale.fun = get_ale_function(pred, feature.name, grid.size = grid.size)
   feature = pred$data$get.x()[[feature.name]]
   ale.values = ale.fun(feature)
@@ -35,7 +34,7 @@ n_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, pl
     # linear model case
     if(check_r(mod_best, ale.values, epsilon)) {
       if(plot) {
-        plot_segments(mod_best, pred, feature.name, prediction = predict(mod_best))
+        plot_segments(mod_best, pred, feature.name, prediction = predict(mod_best), grid.size = grid.size)
       }
       return(1)
     }
@@ -53,7 +52,7 @@ n_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, pl
     print(sprintf("couldnt find better than alpha model. width is %.2f. SSE percentage is %.3f",
       width(mod), get_r(mod, ale.values)))
     if(plot) {
-      plot_segments(mod, pred, feature.name, prediction = predict(mod))
+      plot_segments(mod, pred, feature.name, prediction = predict(mod), grid.size = grid.size)
     }
     return(max_df)
   }
@@ -63,7 +62,7 @@ n_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, pl
     mod = prune_tree_1n(mod)
   }
   if(plot) {
-    plot_segments(mod_best, pred, feature.name, prediction = pred_tree(mod_best))
+    plot_segments(mod_best, pred, feature.name, prediction = pred_tree(mod_best), grid.size = grid.size)
   }
   n_df = width(mod_best)
 
@@ -102,8 +101,9 @@ check_r = function(mod, ale.values, epsilon){
 }
 
 
-plot_segments = function(mod, pred, feature.name, prediction) {
-  ale = FeatureEffect$new(pred, feature.name, grid.size = 30, method = "ale")
+plot_segments = function(mod, pred, feature.name, prediction, grid.size) {
+  ale = FeatureEffect$new(pred, feature.name, grid.size = grid.size, method = "ale")
+
   feature.name = ale$feature.name
   feature = pred$data$get.x()[[feature.name]]
   dat = data.frame(x = feature, y = prediction)

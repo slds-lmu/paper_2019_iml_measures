@@ -2,6 +2,7 @@
 # Analyze the degrees of freedom measure
 # ----------------------------------------------------------------------------
 devtools::load_all()
+set.seed(42)
 
 library(mlbench)
 library(randomForest)
@@ -11,6 +12,7 @@ library(partykit)
 n = 500
 dat = data.frame(mlbench::mlbench.friedman1(n))
 dat$x.1 = cut(dat$x.1, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
+dat$x.2 = cut(dat$x.2, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
 
 
 tsk = makeRegrTask(data = dat, target = "y")
@@ -20,21 +22,100 @@ lrn = makeLearner("regr.lm")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 
+round(ale_fanova(pred), 3)
+
+
 # Example with tree ALE
 lrn = makeLearner("regr.rpart")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 
-# Example with SVM ALE
-lrn = makeLearner("regr.svm")
+round(ale_fanova(pred), 3)
+
+
+# Example with ranger ALE
+lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 
 
+round(ale_fanova(pred), 3)
 
 # ----------------------------------------------------------------------------
 # Increasing interactions with increasing tree depth
 # ----------------------------------------------------------------------------
+
+for(mdepth in 1:5) {
+  # Example with tree ALE
+  lrn = makeLearner("regr.rpart", maxdepth = mdepth)
+  mod = train(lrn, tsk)
+  pred = Predictor$new(mod, dat)
+
+  print(sprintf("Depth of tree %i, interaction strength: %.2f", mdepth, round(ale_fanova(pred), 3)))
+}
+
+
+
+# ----------------------------------------------------------------------------
+# Building prediction function with ALE plots
+# ----------------------------------------------------------------------------
+
+# simulate 2d or 3d features set and a prediction function
+n = 100
+dat = expand.grid(x1 = seq(from = -2, to = 2, length.out = n),
+  x2 = seq(from = -2, to = 2, length.out = n))
+
+f_hat = function(newdata){
+  sin(newdata$x1) + newdata$x1 * newdata$x2 + newdata$x2^2
+}
+
+dat$y = f_hat(dat)
+p_predictor = ggplot(dat, aes(x = x1, y = x2, fill = y, z = y)) +
+  geom_tile() + geom_contour() +
+  scale_fill_continuous(guide = "none") +
+  ggtitle("Prediction function (100% variance to be explained)")
+
+# plot ale for each component
+
+pred = Predictor$new(predict.fun = f_hat, data = dat)
+
+ale1 = FeatureEffect$new(predictor = pred, feature = "x1")
+ale_f1 = get_ale_function(pred, "x1", 30)
+
+ale2 = FeatureEffect$new(predictor = pred, feature = "x2")
+ale_f2 = get_ale_function(pred, "x2", 30)
+
+
+predict_ale = function(newdata) {
+  mean(dat2$y) + ale_f1(newdata$x1) + ale_f2(newdata$x2)
+}
+
+dat3 = dat2
+dat3$y_ale = predict_ale(dat2)
+p_predictor_ale = ggplot(dat3, aes(x = x1, y = x2, fill = y_ale, z = y_ale)) +
+  geom_tile() + geom_contour() +
+  scale_fill_continuous(guide = "none") +
+  ggtitle(sprintf("Prediction function first order ALE. Explains %.2f %s variance.", 100 * ale_fanova(pred), "%"))
+
+
+
+
+
+
+p_predictor_diff = ggplot(dat3, aes(x = x1, y = x2, fill = y_ale - y)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "yellow", mid = "white", high = "red", guide = "none") +
+  ggtitle(sprintf("Interactions. Explains %.2f %s variance.", 100 - 100 * ale_fanova(pred), "%"))
+
+
+p_predictor
+xx2 = gridExtra::grid.arrange(plot(ale1), plot(ale2), nrow = 1)
+
+xx1 = gridExtra::grid.arrange(p_predictor, p_predictor_ale, p_predictor_diff, nrow = 1)
+
+gridExtra::grid.arrange(xx1, xx2)
+
+
 
 
 

@@ -11,6 +11,9 @@
   - How to handle the fact that complexity of df can become infinitely big?
   - How to choose n.intervals of ALE?
 
+# Problems
+- For tree based methods and other models with step curves, the ale fanova decomp never goes to perfectly zero, because it interpolates a little bit between the steps.
+
 
 
 # Thoughts:

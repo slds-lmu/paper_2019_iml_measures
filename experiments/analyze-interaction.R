@@ -22,7 +22,7 @@ lrn = makeLearner("regr.lm")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 
-round(ale_fanova(pred), 3)
+round(ale_fanova(pred), 5)
 
 
 # Example with tree ALE
@@ -53,6 +53,8 @@ for(mdepth in 1:5) {
 
   print(sprintf("Depth of tree %i, interaction strength: %.2f", mdepth, round(ale_fanova(pred), 3)))
 }
+
+# Interesting example: Tree with depth 2 has two different features, but still no interaction since level 2 splits are both the same
 
 
 
@@ -87,11 +89,11 @@ ale_f2 = get_ale_function(pred, "x2", 30)
 
 
 predict_ale = function(newdata) {
-  mean(dat2$y) + ale_f1(newdata$x1) + ale_f2(newdata$x2)
+  mean(newdata$y) + ale_f1(newdata$x1) + ale_f2(newdata$x2)
 }
 
-dat3 = dat2
-dat3$y_ale = predict_ale(dat2)
+dat3 = dat
+dat3$y_ale = predict_ale(dat)
 p_predictor_ale = ggplot(dat3, aes(x = x1, y = x2, fill = y_ale, z = y_ale)) +
   geom_tile() + geom_contour() +
   scale_fill_continuous(guide = "none") +

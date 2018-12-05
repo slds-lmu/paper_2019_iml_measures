@@ -1,5 +1,5 @@
 devtools::load_all()
-n = 30
+n = 5000
 dat = mlbench::mlbench.xor(n, d=2)
 dat  = data.frame(dat$x, y =  dat$classes)
 colnames(dat) = c("feature_1", "feature_2", "y")
@@ -10,7 +10,7 @@ pred.fun = function(newdata) {
 }
 
 
-gr = 25
+gr = 50
 pred = iml::Predictor$new(predict.fun = pred.fun, data = dat)
 FeatureEffect$new(pred, "feature_1", grid.size = gr)$plot()
 FeatureEffect$new(pred, "feature_2", grid.size = gr)$plot()

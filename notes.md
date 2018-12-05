@@ -1,15 +1,10 @@
-# Meeting Giuseppe
-- Summarize goal of paper
-- Short paper outline
-- Present interaction measure
-- Present degrees of freedom / segment measure
-- Questions:
-  - How to combine both measures into one
-  - JMLR?
-  - mean(\hat{y} + ale1(x) + ale2(x) + ...) ok?
-  - How should the costs be for feature/segment/constant piece?
-  - How to handle the fact that complexity of df can become infinitely big?
-  - How to choose n.intervals of ALE?
+
+
+- minimum complexity: 1
+- maximum: number of data points??
+- AIC / BIC criterium TODO check
+- TODO: Checkout how in boosting the degrees of freedom are computed
+
 
 # Problems
 - For tree based methods and other models with step curves, the ale fanova decomp never goes to perfectly zero, because it interpolates a little bit between the steps.
@@ -21,6 +16,8 @@
 - Create the interpretability vs accuracy figure
 - Title: Optimizing for interpretability and predictive performance
 - publish in JMLR
+- DO an analysis whether ale plots grid.size changes results of tuning
+- Do analysis how tuning parameters map to interpretability
 
 # Table, Figures, Experiments for Paper
 - Simulate 3 different uni-dimensional example without interaction for showcasing the degrees-of-freedom measure. x: feature, y: prediction/ale, geom:line, 

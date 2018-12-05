@@ -39,6 +39,8 @@ n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
 n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
 
 n_segs_feature(pred, "x.2",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
+
+# TODO: Check for errors in nodeprune
 n_segs_feature(pred, "x.2",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
 
 n_segs_feature(pred, "x.3",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
@@ -51,6 +53,8 @@ pred = Predictor$new(mod, dat)
 n_segs(pred)
 n_segs_feature(pred, "x.1", cat.mode = FALSE, plot = TRUE, epsilon = 0.05)
 n_segs_feature(pred, "x.2", cat.mode = FALSE, plot = TRUE, epsilon = 0.05)
+n_segs_feature(pred, "x.2", cat.mode = TRUE, plot = TRUE, epsilon = 0.05)
+
 n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
 n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
 

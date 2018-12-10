@@ -18,6 +18,11 @@
 - publish in JMLR
 - DO an analysis whether ale plots grid.size changes results of tuning
 - Do analysis how tuning parameters map to interpretability
+- Maybe separate n.features and n.segs in measure chapter and combine the in a third explanation.
+- Add table for how post-hoc methods scale with number of features. rows: methods, cols: scalings, like O() of comp, size of output scaling with p, fidelity.
+  - methods: featureimp, pdp, ale, lime, shapley, shap, 2way interaction, ice
+- Show negative correlation between LIME R squared and both of the interpretability measures.
+- Show 
 
 # Table, Figures, Experiments for Paper
 - Simulate 3 different uni-dimensional example without interaction for showcasing the degrees-of-freedom measure. x: feature, y: prediction/ale, geom:line, 

@@ -13,58 +13,48 @@ n_segs = function(pred, ...){
   sum(n_seg_values)
 }
 
-# TODO: Enforce max.df
-# TODO: Don't use all data for approx, but use grid plus weights by density
-#       For this, checkout the other measures that I tried out
-# TODO: increase party.alpha first, and if epsilon already ok, start pruning
-# TODO: Check for errors in nodeprune
-n_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, plot = FALSE, cat.mode = FALSE, max_df = 10) {
-  # The base cost of using a feature, regardless of complexity
-  cost_of_feature = 0
-  ale.fun = get_ale_function(pred, feature.name, grid.size = grid.size)
+plot_segs_feature =function(pred, feature.name, grid.size = 50, epsilon = 0.05, plot = FALSE, cat.mode = FALSE, max_df = 10) {
+  mod = fit_segs_feature(pred, feature.name, grid.size, epsilon, cat.mode)
+  df = segs_complexity(pred, mod, feature.name, cat.mode, max_df)
+  plot_segments(mod, pred, feature.name, pred_seg(mod), grid.size, df = df, epsilon = epsilon)
+}
+
+plot_segments = function(mod, pred, feature.name, prediction, grid.size, df, epsilon) {
+  ale = FeatureEffect$new(pred, feature.name, grid.size = grid.size, method = "ale")
+
+  feature.name = ale$feature.name
   feature = pred$data$get.x()[[feature.name]]
-  ale.values = ale.fun(feature)
-
-  # flat function
-  if(n_distinct(ale.values) == 1) return(0)
-
-
-  if(is.numeric(feature)) {
-    mod_best = lm(ale.values ~ feature)
-    # linear model case
-    if(check_r(mod_best, ale.values, epsilon)) {
-      if(plot) {
-        plot_segments(mod_best, pred, feature.name, prediction = predict(mod_best), grid.size = grid.size)
-      }
-      return(1)
-    }
-  }
-
-  if(is.numeric(feature) & !cat.mode) {
-    # fully grown tree
-    mod = partykit::lmtree(ale.values ~ feature | feature,  alpha = 0.5, minsize = 2)
+  dat = data.frame(x = feature, y = prediction)
+  if(inherits(mod, "party")) {
+    dat$node = factor(pred_seg(mod, type = "node"))
   } else {
-    mod = partykit::ctree(ale.values ~ feature,  control = ctree_control(alpha = 0.5, minbucket = 1))
+    dat$node = 1
   }
 
-  # Maximal depth tree couldn't find good enough approx
-  if(!check_r(mod, ale.values, epsilon)) {
-    print(sprintf("couldnt find better than alpha model. width is %.2f. SSE percentage is %.3f",
-      width(mod), get_r(mod, ale.values)))
-    if(plot) {
-      plot_segments(mod, pred, feature.name, prediction = predict(mod), grid.size = grid.size)
-    }
-    return(max_df)
+  p = ale$plot()
+  if(is.numeric(feature)) {
+    p  = p + geom_line(aes(x = x, y = y, group = node), color = "red", data = dat, lty = 2)
+  } else {
+    dat = unique(dat)
+    p = p + geom_point(aes(x = x, y = y, color = node), data = dat)
   }
+  ale.fun = get_ale_function(pred, feature.name, grid.size = grid.size)
+  ale.values = ale.fun(feature)
+  r_squared = 1 - get_r(mod, ale.values = ale.values)
+  p + ggtitle(sprintf("DF: %i, eps: %.4f, Rsquared: %.4f", df, epsilon, r_squared))
+}
 
-  while(check_r(mod, ale.values, epsilon)) {
-    mod_best = mod
-    mod = prune_tree_1n(mod)
+
+segs_complexity = function(pred, mod, feature.name, cat.mode, max_df){
+  # compute complexity of approximiation
+  feature = pred$data$get.x()[[feature.name]]
+  cost_of_feature = 0
+
+  if(inherits(mod, "party")) {
+    n_df = width(mod)
+  } else {
+    n_df = length(coef(mod)) - 1
   }
-  if(plot) {
-    plot_segments(mod_best, pred, feature.name, prediction = pred_tree(mod_best), grid.size = grid.size)
-  }
-  n_df = width(mod_best)
 
   if(is.numeric(feature) & !cat.mode) {
     # first segment costs 1 degrees of freedom, every following costs 2
@@ -79,8 +69,82 @@ n_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, pl
   n_df = min(n_df, max_df)
   n_df + cost_of_feature
 }
+# returns best fitting model
+n_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, plot = FALSE, cat.mode = FALSE, max_df = 10) {
+  mod = fit_segs_feature(pred, feature.name, grid.size, epsilon, cat.mode)
+  segs_complexity(pred = pred, mod = mod, feature.name = feature.name,
+    cat.mode = cat.mode, max_df = max_df)
+}
 
-pred_tree = function(mod, ...) {
+
+
+
+# TODO: Enforce max.df
+# TODO: Don't use all data for approx, but use grid plus weights by density
+#       For this, checkout the other measures that I tried out
+# TODO: increase party.alpha first, and if epsilon already ok, start pruning
+# TODO: Check for errors in nodeprune
+# return best fitting model
+fit_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, cat.mode = FALSE) {
+  ale.fun = get_ale_function(pred, feature.name, grid.size = grid.size)
+  feature = pred$data$get.x()[[feature.name]]
+  ale.values = ale.fun(feature)
+
+  # flat function
+  if(n_distinct(ale.values) == 1) return(lm(ale.values ~ 1))
+
+  if(is.numeric(feature)) {
+    mod_best = lm(ale.values ~ feature)
+    # linear model case
+    if(check_r(mod_best, ale.values, epsilon)) {
+      return(mod_best)
+    }
+  }
+
+  if(is.numeric(feature) & !cat.mode) {
+    # fully grown tree
+    mod = partykit::lmtree(ale.values ~ feature | feature,  alpha = 0.5, minsize = 2)
+    #mod = partykit::mob(ale.values ~ feature | feature,  fit = mob_fit, control = mob_control(alpha = 0.1, minsize = 3))
+  } else {
+    mod = partykit::ctree(ale.values ~ feature,  control = ctree_control(alpha = 0.5, minbucket = 1))
+  }
+
+  # Maximal depth tree couldn't find good enough approx
+  if(!check_r(mod, ale.values, epsilon)) {
+    warning("couldnt find better than alpha model. width is %.2f. SSE percentage is %.3f",
+      width(mod), get_r(mod, ale.values))
+    return(mod)
+  }
+
+  while(check_r(mod, ale.values, epsilon)) {
+    mod_best = mod
+    mod = prune_tree_1n(mod)
+  }
+  mod_best
+}
+
+# Specialized mob fit function that fits both a constant model and a linear model
+# And then returns the better one
+# How to compare? Maybe use an epsilon value
+mob_fit = function(y, x = NULL, start = NULL, weights = NULL, offset = NULL) {
+
+  alpha = 0.05
+  ## TODO: Checkout lmfit partykit:::lmfit
+  # Fit constant model
+  mod_constant = lm(y ~ 1, weights = weights, offset = offset)
+  # Fit linear model
+  mod_linear = lm(y ~ 0 + x,  weights = weights, offset = offset)
+
+  if (anova(mod_linear)['x', 'Pr(>F)'] < alpha) {
+    mod_linear
+  } else {
+    print("this time constant")
+    mod_constant
+  }
+}
+
+
+pred_seg = function(mod, ...) {
   if(inherits(mod, "lmtree")) {
     predict(mod, newdata = mod$data, ...)
   } else {
@@ -89,7 +153,7 @@ pred_tree = function(mod, ...) {
 }
 
 get_r = function(mod, ale.values) {
-  seg.predictions = pred_tree(mod)
+  seg.predictions = pred_seg(mod)
   SST = var(ale.values)
   if(SST == 0) { return(FALSE)}
   SSE = var(seg.predictions - ale.values)
@@ -100,28 +164,6 @@ check_r = function(mod, ale.values, epsilon){
   get_r(mod, ale.values) < epsilon
 }
 
-
-plot_segments = function(mod, pred, feature.name, prediction, grid.size) {
-  ale = FeatureEffect$new(pred, feature.name, grid.size = grid.size, method = "ale")
-
-  feature.name = ale$feature.name
-  feature = pred$data$get.x()[[feature.name]]
-  dat = data.frame(x = feature, y = prediction)
-  if(inherits(mod, "party")) {
-    dat$node = factor(pred_tree(mod, type = "node"))
-  } else {
-    dat$node = 1
-  }
-
-  p = ale$plot()
-  if(is.numeric(feature)) {
-    p  = p + geom_line(aes(x = x, y = y, group = node), color = "red", data = dat, lty = 2)
-  } else {
-    dat = unique(dat)
-    p = p + geom_point(aes(x = x, y = y, color = node), data = dat)
-  }
-  print(p)
-}
 
 
 # =============================================================================
@@ -481,7 +523,10 @@ score_linearity = function(predictor) {
 # =============================================================================
 # Feature linearity score based on ALE approx with univariate lm
 # =============================================================================
-weighted.var <- function(x, w, na.rm = FALSE) {
+weighted.var <- function(x, w = NULL, na.rm = FALSE) {
+  if (is.null(w)) {
+    w = rep(1, times = length(x))
+  }
   if (na.rm) {
     w <- w[i <- !is.na(x)]
     x <- x[i]

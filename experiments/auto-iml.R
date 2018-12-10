@@ -7,8 +7,12 @@ set.seed(42)
 TASK_TYPE = "regr"
 
 tasks = listOMLTasks()
-tasks = tasks[grepl("Supervised Classification", tasks$task.type), ]
-#tasks = tasks[grepl("Supervised Regression", tasks$task.type), ]
+if(TASK_TYPE == "regr") {
+  tasks = tasks[grepl("Supervised Regression", tasks$task.type), ]
+} else {
+  tasks = tasks[grepl("Supervised Classification", tasks$task.type), ]
+  tasks = tasks[tasks$number.of.classes  == 2, ]
+}
 tasks = tasks[tasks$number.of.instances.with.missing.values == 0, ]
 tasks = tasks[tasks$number.of.symbolic.features > 0, ]
 tasks = tasks[tasks$number.of.features < 50, ]
@@ -16,8 +20,8 @@ tasks = tasks[tasks$number.of.features > 4, ]
 tasks = tasks[tasks$number.of.instances < 5000, ]
 tasks = tasks[tasks$number.of.instances > 400, ]
 tasks = tasks[!is.na(tasks$task.id), ]
-tasks = tasks[tasks$number.of.classes  == 2, ]
-i = 26
+
+i = 3
 
 task = getOMLTask(task.id = tasks$task.id[i])
 task = convertOMLTaskToMlr(task)
@@ -26,32 +30,13 @@ task.dat = getTaskData(task)
 summary(task.dat)
 print(dim(task.dat))
 
+#
+n = 3000
+dat = data.frame(mlbench::mlbench.friedman3(n))
 
-n = 100
-dat = data.frame(mlbench::mlbench.friedman1(n))
-
-dat$x.1 = cut(dat$x.1, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
-dat$x.2 = cut(dat$x.2, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
 task = makeRegrTask(data = dat, target = "y")
 task.dat = dat
-#
-# # lrn = makeLearner("regr.gamboost", mstop = 171)
-# lrn = makeLearner("classif.rpart", maxdepth = 7, predict.type = 'prob')
-# lrn = makeLearner("classif.logreg", predict.type = 'prob')
-# lrn = makeLearner("classif.lda", predict.type = 'prob')
-#
-# lrn = makeLearner("classif.naiveBayes", predict.type = 'prob')
-#
-# # lrn = makeLearner("regr.lm")
-# # lrn = makeLearner("regr.ranger")
-# # lrn = makeLearner("regr.ksvm")
-#
-# #
-# #
-# pred = Predictor$new(trained, data = task.dat, y = task$task.desc$target, class = 1)
-# # #
-# ale_fanova(pred)
-# sum_df(pred)
+
 
 
 
@@ -114,7 +99,7 @@ fn = function(x){
     measures = list(loss))$aggr
   mod = train(lrn, task)
   pred = Predictor$new(mod, task.dat, y = task$task.desc$target)
-  c(1 - perf, round(n_segs(pred), 2), max(0, ale_fanova(pred)))
+  c(perf, round(n_segs(pred), 2), max(0, ale_fanova(pred)))
 }
 
 obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = ps, n.objectives = 3, has.simple.signature = FALSE)

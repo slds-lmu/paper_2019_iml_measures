@@ -9,10 +9,17 @@ library(randomForest)
 library(rpart)
 library(partykit)
 
+
+
+
+# make all things readable in plots
+theme_set(theme_gray(base_size=12*(81/169)))
+
+
 n = 500
-dat = data.frame(mlbench::mlbench.friedman1(n))
-dat$x.1 = cut(dat$x.1, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
-dat$x.2 = cut(dat$x.2, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
+dat = data.frame(mlbench::mlbench.friedman2(n))
+# dat$x.1 = cut(dat$x.1, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
+# dat$x.2 = cut(dat$x.2, breaks = c(0, 0.1, 0.2, 0.4, 0.7, 0.8, 1))
 
 
 tsk = makeRegrTask(data = dat, target = "y")
@@ -113,12 +120,36 @@ p_predictor_diff = ggplot(dat3, aes(x = x1, y = x2, fill = y_ale - y)) +
 p_predictor
 xx2 = gridExtra::grid.arrange(plot(ale1), plot(ale2), nrow = 1)
 
-xx1 = gridExtra::grid.arrange(p_predictor, p_predictor_ale, p_predictor_diff, nrow = 1)
+xx1 = gridExtra::grid.arrange(p_predictor, p_predictor_ale,  nrow = 1)
 
-gridExtra::grid.arrange(xx1, xx2)
+ale_fanova_plot = gridExtra::grid.arrange(xx1, xx2)
+png(file = file.path(image_dir, "ale_fanova.png"), width = 960, res = 200)
+plot(ale_fanova_plot)
+dev.off()
 
 
+get.cor = function(x) {
+  n = 100
+  dat  = data.frame(x1 = rnorm(n))
+
+  dat$x2 = 2 * dat$x1 + rnorm(n, sd = 1.7)
+  dat$y = dat$x1 + dat$x2 + rnorm(n, sd = 0.2)
+
+  mod = lm(y ~ ., data = dat)
+
+  pred = Predictor$new(mod, dat)
+
+  ale1 = FeatureEffect$new(pred, "x1")
+  ale12 = FeatureEffect$new(pred, c("x1", "x2"))
 
 
+  ale1$results$.ale2 = ale1$results$.ale
+  ale1$results$.ale = NULL
+
+  ale.all = left_join(ale1$results, ale12$results)
+  cor(ale.all$.ale, ale.all$.ale2)
+}
 
 
+cors = lapply(1:100, get.cor)
+mean(unlist(cors))

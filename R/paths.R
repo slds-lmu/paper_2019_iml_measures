@@ -1,0 +1,1 @@
+image_dir = "images"

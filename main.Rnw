@@ -1,0 +1,87 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb,array}
+
+\begin{document}
+
+<<setup, echo=FALSE, results='hide', message=FALSE>>=
+devtools::load_all()
+opts_chunk$set(size = "small",
+  highlight = FALSE,
+  fig.path = "images/",
+  echo = FALSE,
+  cache = FALSE)
+
+## ggplot black and white
+theme_set(ggplot2::theme_bw() +
+    ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
+      strip.background = ggplot2::element_rect(fill = "white",
+        colour = "white")))
+@
+
+
+\section{Functional Decomposition}
+
+
+We can decompose $f(x)$ into orthogonal parts %\citet{Efron1981} \citet{Chastaing2017}, :
+
+
+$$f(x) = \underbrace{f_0}_\text{Avg} + \underbrace{\sum_{j=1}^p f_j(x_j)}_\text{1st order effects} + \underbrace{\sum_{k\neq j}^p f_{jk}(x_j, x_k)}_\text{2nd order effects (interactions)} + \ldots + \underbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}_\text{p-th order effect (interactions)} \\= \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S) $$
+
+
+Goal: Measure the complexity of the model via the decomposition
+
+$$f(x) = \underbrace{f_0 + f_1(x_1) + \ldots f_p(x_p)}_\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_S(x_S)}_{\text{Higher order effects}} $$
+
+$$Var(f(x)) = \underbrace{Var(f_0 + f_1(x_1) + \ldots f_p(x_p))}_\text{1st order effects} + \underbrace{Var(\sum_{S \subseteq \{1,\ldots,p\}, |S| \geq 2} f_S(x_S))}_{\text{Higher order effects}} $$
+
+
+We use the ALE decomposition
+
+$$f(x) =  \sum_{j=1}^d f_{j,ALE}(x_j) + \sum_{J \subseteq \{1,\ldots,p\}, |J| \geq 2} f_{J,ALE}(x_J) $$
+
+$$Var(f(x)) =  Var(\sum_{j=1}^d f_{j,ALE}(x_j)) + Var(\sum_{J \subseteq \{1,\ldots,p\}, |J| \geq 2} f_{J,ALE}(x_J))$$
+
+
+\section{Interaction measure}
+
+
+<<>>=
+knitr::include_graphics(file.path(image_dir, "ale_fanova.png"))
+@
+
+
+\section{First-order model complexity}
+
+
+Using mlbench::friedman1
+
+
+With linear model
+
+<<With linear model>>=
+knitr::include_graphics(file.path(image_dir, "complexity-lm-friedman1.png"))
+@
+
+With decision tree
+
+<<>>=
+knitr::include_graphics(file.path(image_dir, "complexity-rpart-friedman1.png"))
+@
+
+
+With Support Vector machine
+
+<<>>=
+knitr::include_graphics(file.path(image_dir, "complexity-svm-friedman1.png"))
+@
+
+
+Effects of different epsilons (here SVM)
+
+<<>>=
+knitr::include_graphics(file.path(image_dir, "complexity-svm-epsilons-friedman1.png"))
+@
+
+
+
+\end{document}

@@ -21,50 +21,66 @@ lrn = makeLearner("regr.lm")
 mod = train(lrn, tsk)
 mod$learner.model
 pred = Predictor$new(mod, dat)
-n_segs(pred)
-n_segs_feature(pred, "x.1", cat.mode = FALSE, plot = TRUE, epsilon = 0.05)
-n_segs_feature(pred, "x.4", cat.mode = FALSE, plot = TRUE, epsilon = 0.05)
-n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
+n_segs_linear = n_segs(pred)
+
+
+p1 = plot_segs_feature(pred, "x.1")
+p2 = plot_segs_feature(pred, "x.2")
+p3 = plot_segs_feature(pred, "x.4")
+
+png(file = file.path(image_dir, "complexity-lm-friedman1.png"), res =  200, height = 400, width = 1000)
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+dev.off()
 
 # Example with tree ALE
 lrn = makeLearner("regr.rpart")
 mod = train(lrn, tsk)
 mod$learner.model
 pred = Predictor$new(mod, dat)
-n_segs(pred)
-n_segs_feature(pred, "x.1", cat.mode = FALSE, plot = TRUE, epsilon = 0.001)
-n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
 
-# TODO: Check for errors in nodeprune
-n_segs_feature(pred, "x.4",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
 
-n_segs_feature(pred, "x.2",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
 
-# TODO: Check for errors in nodeprune
-n_segs_feature(pred, "x.2",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
+p1 = plot_segs_feature(pred, "x.1")
+p2 = plot_segs_feature(pred, "x.2", cat.mode = TRUE)
+p3 = plot_segs_feature(pred, "x.4")
 
-n_segs_feature(pred, "x.3",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
-n_segs_feature(pred, "x.3",  plot = TRUE, epsilon = 0.1, cat.mode = TRUE)
+png(file = file.path(image_dir, "complexity-rpart-friedman1.png"), res =  200, height = 400, width = 1000)
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+dev.off()
+
 
 # Example with SVM ALE
 lrn = makeLearner("regr.ksvm")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 n_segs(pred)
-n_segs_feature(pred, "x.1", cat.mode = FALSE, plot = TRUE, epsilon = 0.05)
-n_segs_feature(pred, "x.2", cat.mode = FALSE, plot = TRUE, epsilon = 0.05)
-n_segs_feature(pred, "x.2", cat.mode = TRUE, plot = TRUE, epsilon = 0.05)
 
-n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = TRUE)
-n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
+
+p1 = plot_segs_feature(pred, "x.1")
+p2 = plot_segs_feature(pred, "x.2")
+p3 = plot_segs_feature(pred, "x.4")
+
+png(file = file.path(image_dir, "complexity-svm-friedman1.png"), res =  200, height = 400, width = 1000)
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+dev.off()
 
 # ----------------------------------------------------------------------------
 # Effect of choosing different epsilons/alphas
 # ----------------------------------------------------------------------------
 
-n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
-n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.1, cat.mode = FALSE)
-n_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.001, cat.mode = FALSE, max_df = 20)
+p1 = plot_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
+p2 = plot_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.1, cat.mode = FALSE)
+p3 = plot_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.001, cat.mode = FALSE, max_df = 20)
+
+png(file = file.path(image_dir, "complexity-svm-epsilons-friedman1.png"), res =  200, height = 400, width = 1000)
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+dev.off()
+
+
+# ----------------------------------------------------------------------------
+# Showcase the minimum of cat.mode FALSE and TRUE
+# ----------------------------------------------------------------------------
+
 
 # ----------------------------------------------------------------------------
 # Effect of weighting vs. no weighting

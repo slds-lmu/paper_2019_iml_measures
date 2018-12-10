@@ -6,7 +6,7 @@ Novelty: New model-agnostic measures for interpretability. End-to-end, multicrit
 
 Multicrit often looks at complexity: Examples
 But nowhere are explicit, model-agnostic interpretability measures used
-BIC is a tradeoff measure between accuracy and interpretability
+AIC, BIC is a tradeoff measure between accuracy and interpretability
 
 # Prerequisites
 
@@ -50,6 +50,9 @@ Examples on which measures are demonstrated:
   - one version with and one without interactions
   - categorical features with more 5 or so levels, only 3 df needed
 
+One of the measures describes the complexity of first-order model with the degrees of freedom. 
+The other measure describes how big the higher-order portion of the model is, and with that kind of equating anything higher order as non-interpretable.
+
 ## First order ALE decomposition and SSE
 
 Use fanova decomposition, but with ALE.
@@ -58,7 +61,7 @@ Discussion
 - When true marginal function is step function, then it adds to the SSE unecessarily
 - Unclear how many intervals
 - Weighted by data sensity (can be unintuitive when looking at plot) or all plot point same weight (probably very wrong). Solution: Make clear in ALE plot where most data is with rug or alpha.
-
+- Short-comings: not tested with humans, but could be adapted and used with the same mult-crit framework. 
 ## Degrees of freedom univariate
 
 R square controlled degrees of freedom approximation.

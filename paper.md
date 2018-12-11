@@ -56,12 +56,18 @@ The other measure describes how big the higher-order portion of the model is, an
 ## First order ALE decomposition and SSE
 
 Use fanova decomposition, but with ALE.
+While the decomoosition of variance does not work with correlated features (1st order correlated with higher order) it should be still ok to just describe the SSE I get when using first order ALE model.
+
+Making no assumptions, but simply describe how much residuals are left after modeling with first order ALE.
 
 Discussion
 - When true marginal function is step function, then it adds to the SSE unecessarily
 - Unclear how many intervals
 - Weighted by data sensity (can be unintuitive when looking at plot) or all plot point same weight (probably very wrong). Solution: Make clear in ALE plot where most data is with rug or alpha.
 - Short-comings: not tested with humans, but could be adapted and used with the same mult-crit framework. 
+
+
+
 ## Degrees of freedom univariate
 
 R square controlled degrees of freedom approximation.

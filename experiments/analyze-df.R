@@ -38,10 +38,11 @@ mod = train(lrn, tsk)
 mod$learner.model
 pred = Predictor$new(mod, dat)
 
-
+mod = fit_segs_feature(pred, "x.2")
 
 p1 = plot_segs_feature(pred, "x.1")
 p2 = plot_segs_feature(pred, "x.2", cat.mode = TRUE)
+p2 = plot_segs_feature(pred, "x.2", cat.mode = FALSE)
 p3 = plot_segs_feature(pred, "x.4")
 
 png(file = file.path(image_dir, "complexity-rpart-friedman1.png"), res =  200, height = 400, width = 1000)

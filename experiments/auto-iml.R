@@ -31,7 +31,7 @@ summary(task.dat)
 print(dim(task.dat))
 
 #
-n = 3000
+n = 300
 dat = data.frame(mlbench::mlbench.friedman3(n))
 
 task = makeRegrTask(data = dat, target = "y")

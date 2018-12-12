@@ -69,9 +69,9 @@ dev.off()
 # Effect of choosing different epsilons/alphas
 # ----------------------------------------------------------------------------
 
-p1 = plot_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.05, cat.mode = FALSE)
-p2 = plot_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.1, cat.mode = FALSE)
-p3 = plot_segs_feature(pred, "x.6",  plot = TRUE, epsilon = 0.001, cat.mode = FALSE, max_df = 20)
+p1 = plot_segs_feature(pred, "x.6",epsilon = 0.05, cat.mode = FALSE)
+p2 = plot_segs_feature(pred, "x.6",   epsilon = 0.1, cat.mode = FALSE)
+p3 = plot_segs_feature(pred, "x.6",   epsilon = 0.001, cat.mode = FALSE, max_df = 20)
 
 png(file = file.path(image_dir, "complexity-svm-epsilons-friedman1.png"), res =  200, height = 400, width = 1000)
 gridExtra::grid.arrange(p1, p2, p3, nrow = 1)

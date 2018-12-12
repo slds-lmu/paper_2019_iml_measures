@@ -107,9 +107,8 @@ fit_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, 
   }
   if(is.numeric(feature) & !cat.mode) {
     # fully grown tree
-    sink("test.txt")
-    mod =  partykit::lmtree(ale.values ~ feature | feature,  alpha = 0.5, minsize = 2)
-    sink()
+    # mod =  partykit::lmtree(ale.values ~ feature | feature,  alpha = 0.5, minsize = 2)
+    mod =  lmtree2(ale.values ~ feature | feature,  alpha = 0.5, minsize = 2, vcov = "info")
   } else {
     mod = partykit::ctree(ale.values ~ feature,  control = ctree_control(alpha = 0.5, minbucket = 1))
   }

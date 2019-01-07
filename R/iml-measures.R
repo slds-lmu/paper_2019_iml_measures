@@ -159,7 +159,7 @@ ale_fanova  = function(pred, grid.size  = 50){
   }
   dat = data.frame(pred$data$get.x())
   predictions = pred$predict(dat)[[1]]
-  ale_model= get_ale_1stmodel(pred)
+  ale_model= get_ale_1stmodel(pred, grid.size = grid.size)
   ale_predictions = ale_model(dat)
   SST = var(predictions)
   if(SST == 0) {
@@ -169,8 +169,7 @@ ale_fanova  = function(pred, grid.size  = 50){
   SSE/SST
 }
 
-get_ale_1stmodel = function(pred) {
-  #print(pred$model$learner.model)
+get_ale_1stmodel = function(pred, grid.size = grid.size) {
   feature.names = pred$data$feature.names
   dat = data.frame(pred$data$get.x())
   # for all features:

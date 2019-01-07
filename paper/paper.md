@@ -1,6 +1,13 @@
 # Introduction
 Motivation: User should decide on interpretability  / accuracy tradeoff
 Novelty: New model-agnostic measures for interpretability. End-to-end, multicrit optimization for accuracy and interpretability (interpretability not measured with intermediary number from model.)
+We define interpretability as "How well do post-hoc methods work" and how sparse are they.
+For us the model is interpretable, when I have to look at as little as post-hoc analysis as possible and when those post-hoc analyses are as truthful to the model as possible.
+
+Argumentation: We have a couple of post-hoc methods. 
+They work better under certain conditions of the model (TODO: define and show). 
+We introduce interpretability measures based on those conditions.
+The better the interpretability measure, the better the post-hoc methods will work.
 
 # Review
 

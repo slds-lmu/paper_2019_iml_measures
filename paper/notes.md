@@ -22,7 +22,10 @@
 - Add table for how post-hoc methods scale with number of features. rows: methods, cols: scalings, like O() of comp, size of output scaling with p, fidelity.
   - methods: featureimp, pdp, ale, lime, shapley, shap, 2way interaction, ice
 - Show negative correlation between LIME R squared and both of the interpretability measures.
-- Show 
+- Soft monotonicity constraints can be incorporated into the model as well with my complexity measure framework
+- Another great measurement would be the correlation between the features that are used in the model. 
+The less correlated, the better the interpretation methods work.
+But don't measure with pearson correlation but maybe use notion of "predictability"
 
 # Table, Figures, Experiments for Paper
 - Simulate 3 different uni-dimensional example without interaction for showcasing the degrees-of-freedom measure. x: feature, y: prediction/ale, geom:line, 
@@ -56,3 +59,7 @@
 
 # Citing Stuff
 - Tradeoff between accuracy and interpretability has to be decided by the user. / Arguments for Multiobjective instead of weighted single objective. [A Critical Review of Multi-Objective Optimization in Data Mining: a position paper Alex A.] Freitas
+- TIP: Typifying the Interpretability of Procedures
+- Towards A rigorous science ... : we use the task level evaluation that can be automated
+- TODO: Cite a few examples where interpretability is measured with human experiments.
+- TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. My critique: Always needs some baseline which might not exist. For example discovering new knowledge. Also, target model is fixed, can't decide accuracy interpretability tradeoff.  sparsity is not rewarded.

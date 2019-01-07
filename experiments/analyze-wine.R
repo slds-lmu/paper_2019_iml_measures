@@ -9,7 +9,6 @@ wdat = wdat[sample(1:nrow(wdat)),]
 n = nrow(wdat)
 
 
-
 lrn = makeLearner("regr.ranger")
 tsk = makeRegrTask(data = wdat, target = "quality")
 mod = mlr::train(lrn, tsk,  subset = seq(1, n, 2))
@@ -20,25 +19,31 @@ pred  = Predictor$new(mod, data = wdat, y = "quality")
 n_segs(pred)
 ale_fanova(pred)
 
+plot_all_ale = function(pred) {
+  pls = lapply(setdiff(colnames(wdat), c("quality")), function(fname) {
+    fe = FeatureEffect$new(pred, fname, method = "ale")
+    res = fe$results
+    colnames(res)[colnames(res) == fname] = ".feature"
+    res$.feature.name = fname
+    res$.feature = as.numeric(res$.feature)
+    res$.feature.type = fe$feature.type
+    res
+  })
+
+  res  = rbindlist(pls, use.names = TRUE)
+  res$.feature = as.numeric(res$.feature)
+
+  ggplot(res, aes(x = as.numeric(.feature), y= .ale)) +
+    geom_line(aes(alpha = .feature.type)) +
+    geom_point() +
+    facet_wrap(".feature.name", scales = "free_x") +
+    scale_alpha_discrete(guide = "none")
+}
+
+plot_all_ale(pred)
+
 fi = FeatureImp$new(pred, loss = "mae", n.repetitions = 10)
-plot(fi)
-
-fe = FeatureEffect$new(pred, "density")
-plot(fe)
-
-
-fe = FeatureEffect$new(pred, "type")
-plot(fe)
-
-
-fe = FeatureEffect$new(pred, "fixed.acidity")
-plot(fe)
-
-
-fe = FeatureEffect$new(pred, "citric.acid")
-plot(fe)
-
-
+fi$plot()
 
 x.interest = wdat[20,]
 sh = Shapley$new(pred, x.interest = x.interest)
@@ -54,21 +59,14 @@ tsk = makeRegrTask(data = wdat, target = "quality")
 mod = mlr::train(lrn, tsk,  subset = seq(1, n, 2))
 preds = predict(mod, task = tsk, subset = seq(2, n, 2))
 performance(preds, measures = list(mae, mse))
-pred  = Predictor$new(mod, data = wdat, y = "quality")
+pred.tree  = Predictor$new(mod, data = wdat, y = "quality")
 
-n_segs(pred)
-ale_fanova(pred)
+n_segs(pred.tree)
+ale_fanova(pred.tree)
 
+plot_all_ale(pred.tree)
 
 mod$learner.model
-fe = FeatureEffect$new(pred, "alcohol")
-plot(fe)
-
-fe = FeatureEffect$new(pred, "volatile.acidity")
-plot(fe)
-
-fe = FeatureEffect$new(pred, "sulphates")
-plot(fe)
 
 
 fi = FeatureImp$new(pred, loss = "mae", n.repetitions = 10)

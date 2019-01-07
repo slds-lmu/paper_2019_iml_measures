@@ -31,6 +31,13 @@ pred = Predictor$new(mod, dat)
 
 round(ale_fanova(pred), 5)
 
+# Example with GLM ALE
+gm = mgcv::gam(y ~ s(x1) + x2, data = dat)
+pred = Predictor$new(gm, dat)
+
+round(ale_fanova(pred), 5)
+
+
 
 # Example with tree ALE
 lrn = makeLearner("regr.rpart")
@@ -82,7 +89,7 @@ dat$y = f_hat(dat)
 p_predictor = ggplot(dat, aes(x = x1, y = x2, fill = y, z = y)) +
   geom_tile() + geom_contour() +
   scale_fill_continuous(guide = "none") +
-  ggtitle("Prediction function (100% variance to be explained)")
+  ggtitle("Prediction function (100% variance to be explained). SST.")
 
 # plot ale for each component
 
@@ -104,7 +111,7 @@ dat3$y_ale = predict_ale(dat)
 p_predictor_ale = ggplot(dat3, aes(x = x1, y = x2, fill = y_ale, z = y_ale)) +
   geom_tile() + geom_contour() +
   scale_fill_continuous(guide = "none") +
-  ggtitle(sprintf("Prediction function first order ALE. Explains %.2f %s variance.", 100 * ale_fanova(pred), "%"))
+  ggtitle(sprintf("Prediction function first order ALE. Explains %.2f %s variance. SSM.", 100 * ale_fanova(pred), "%"))
 
 
 
@@ -114,7 +121,7 @@ p_predictor_ale = ggplot(dat3, aes(x = x1, y = x2, fill = y_ale, z = y_ale)) +
 p_predictor_diff = ggplot(dat3, aes(x = x1, y = x2, fill = y_ale - y)) +
   geom_tile() +
   scale_fill_gradient2(low = "yellow", mid = "white", high = "red", guide = "none") +
-  ggtitle(sprintf("Interactions. Explains %.2f %s variance.", 100 - 100 * ale_fanova(pred), "%"))
+  ggtitle(sprintf("Interactions. Explains %.2f %s variance. SSE.", 100 - 100 * ale_fanova(pred), "%"))
 
 
 p_predictor

@@ -1,1 +1,2 @@
-image_dir = "images"
+image_dir = "paper/images"
+data_dir = "./data"

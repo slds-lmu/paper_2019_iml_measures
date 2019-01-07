@@ -13,7 +13,7 @@ n_segs = function(pred, max_df = 20, ...){
   sum(n_seg_values)
 }
 
-plot_segs_feature =function(pred, feature.name, grid.size = 50, epsilon = 0.05, cat.mode = FALSE) {
+plot_segs_feature = function(pred, feature.name, grid.size = 50, epsilon = 0.05, cat.mode = FALSE) {
   mod = fit_segs_feature(pred, feature.name, grid.size, epsilon, cat.mode)
   df = segs_complexity(pred, mod, feature.name, cat.mode)
   plot_segments(mod, pred, feature.name, pred_seg(mod), grid.size, df = df, epsilon = epsilon)
@@ -54,7 +54,12 @@ segs_complexity = function(pred, mod, feature.name, cat.mode){
   cost_of_feature = 5
 
   if(inherits(mod, "lm")) {
-    return(cost_of_feature + 1)
+    # Feature is not used
+    if(length(coef(mod)) == 1) {
+      return(0)
+    } else {
+      return(cost_of_feature + 1)
+    }
   }
 
   if(inherits(mod, "party")) {
@@ -62,6 +67,7 @@ segs_complexity = function(pred, mod, feature.name, cat.mode){
   } else {
     n_df = length(coef(mod)) - 1
   }
+
 
   if(is.numeric(feature) & !cat.mode) {
     # first segment costs 1 degrees of freedom, every following costs 2
@@ -202,3 +208,25 @@ get_ale_function = function(pred, feature.name, grid.size) {
     }
   }
 }
+
+
+# =============================================================================
+# Monotonicity
+# =============================================================================
+
+n_monotone = function(pred, ...){
+  ## TODO Implement
+
+}
+
+n_monotone_feature = function(pred, ...){
+  ## TODO Implement
+}
+
+
+# =============================================================================
+# Correlation (Predictability of features)
+# =============================================================================
+## TODO
+# Measure all pairwise correlations (predictabilities), which yields a non-symetric matrix.
+

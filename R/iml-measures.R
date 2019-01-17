@@ -1,3 +1,69 @@
+FunComplexity = R6::R6Class(
+  "FunComplexity",
+  inherit = iml::FeatureEffects,
+  public = list(
+    epsilon = NULL,
+    feature_cost = NULL,
+    max_feat_cost = NULL,
+    var_explained = NULL,
+    SST = NULL,
+    SSE = NULL,
+    SSM = NULL,
+    complexity_total = NULL,
+    complexities = NULL,
+    initialize = function(predictor, grid.size = 20, parallel = FALSE,
+      epsilon = 0.05, feature_cost = 1, max_feat_cost = 10) {
+      if(predictor$task == "classification" & is.null(pred$class)) {
+        stop("Please set class in Predictor")
+      }
+      assert_numeric(epsilon, lower = 0, upper = 1, any.missing = FALSE, len = 1)
+      assert_numeric(feature_cost, len = 1, any.missing = FALSE)
+      assert_numeric(max_feat_cost, len = 1, any.missing = FALSE)
+      self$feature_cost = feature_cost
+      self$max_feat_cost = max_feat_cost
+      super$initialize(predictor, features = predictor$data$feature.names,
+        method = "ale", grid.size = grid.size, center.at = NULL,
+        parallel = parallel)
+      self$compute(epsilon)
+    },
+    predict = function(dat) {
+      res = data.frame(lapply(self$effects, function(eff) {
+        eff$predict(dat)
+      }))
+      rowSums(res)
+    },
+    compute = function(epsilon) {
+      self$epsilon = epsilon
+      private$measure_var()
+      private$measure_non_linearities()
+    }
+  ),
+  private = list(
+    # Named list of approximation models
+    approx_models = NULL,
+    measure_var = function(){
+      if(is.null(private$multiClass) || !private$multiClass) {
+        dat = data.frame(self$predictor$data$get.x())
+        predictions = self$predictor$predict(dat)[[1]]
+        ale_predictions = self$predict(dat)
+        SST = var(predictions)
+        if(SST == 0) {
+          self$var_explained = 1
+        } else {
+          SSE = var(ale_predictions - predictions)
+          self$var_explained = 1 - SSE/SST
+        }
+      }
+    },
+    measure_non_linearities = function(){
+
+    }
+  )
+)
+
+
+
+
 # =============================================================================
 # Number of linear segments in segmented linear regression
 # =============================================================================
@@ -155,59 +221,6 @@ check_r = function(mod, ale.values, epsilon){
 
 
 
-# =============================================================================
-# ALE fanova
-# =============================================================================
-
-ale_fanova  = function(pred, grid.size  = 50){
-  if(pred$task == "classification" & is.null(pred$class)) {
-    stop("Please set class in Predictor")
-  }
-  dat = data.frame(pred$data$get.x())
-  predictions = pred$predict(dat)[[1]]
-  ale_model= get_ale_1stmodel(pred, grid.size = grid.size)
-  ale_predictions = ale_model(dat)
-  SST = var(predictions)
-  if(SST == 0) {
-    return(1)
-  }
-  SSE = var(ale_predictions - predictions)
-  SSE/SST
-}
-
-get_ale_1stmodel = function(pred, grid.size = grid.size) {
-  feature.names = pred$data$feature.names
-  dat = data.frame(pred$data$get.x())
-  # for all features:
-  funs = lapply(feature.names, function(fname) {
-    func = get_ale_function(pred, fname, grid.size = grid.size)
-  })
-  names(funs) = feature.names
-  mean_prediction = mean(pred$predict(dat)[[1]])
-
-  function(newdata) {
-    effects = first_effects = lapply(colnames(newdata), function(fname) {
-      funs[[fname]](newdata[,fname])
-    })
-    effects = data.frame(effects)
-    mean_prediction + rowSums(effects)
-  }
-}
-
-get_ale_function = function(pred, feature.name, grid.size) {
-  ale = FeatureEffect$new(pred, feature = feature.name, method = "ale", grid.size = grid.size)
-  if(ale$feature.type == "numerical"){
-    approxfun(x = ale$results[,feature.name], y = ale$results$.ale)
-  } else {
-    function(x){
-      df = data.frame(as.character(x), stringsAsFactors = FALSE)
-      colnames(df) = feature.name
-      results = ale$results
-      results[,feature.name] = as.character(results[,feature.name])
-      dplyr::left_join(df, results, sort = FALSE, by = feature.name, all.x=TRUE)$.ale
-    }
-  }
-}
 
 
 # =============================================================================

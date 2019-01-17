@@ -1,15 +1,16 @@
 # ----------------------------------------------------------------------------
 # Analyze the degrees of freedom measure
 # ----------------------------------------------------------------------------
-devtools::load_all()
+#devtools::load_all()
 set.seed(42)
 
 library(mlbench)
 library(randomForest)
 library(rpart)
 library(partykit)
+library(mlr)
 
-
+devtools::load_all("~/repos/iml/")
 
 
 # make all things readable in plots
@@ -29,13 +30,14 @@ lrn = makeLearner("regr.lm")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 
-round(ale_fanova(pred), 5)
+ff = FunComplexity$new(pred)
+ff$var_explained
 
 # Example with GLM ALE
-gm = mgcv::gam(y ~ s(x1) + x2, data = dat)
+gm = mgcv::gam(y ~ s(x.1) + x.2, data = dat)
 pred = Predictor$new(gm, dat)
 
-round(ale_fanova(pred), 5)
+FunComplexity$new(pred)$var_explained
 
 
 
@@ -44,7 +46,7 @@ lrn = makeLearner("regr.rpart")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 
-round(ale_fanova(pred), 3)
+FunComplexity$new(pred)$var_explained
 
 
 # Example with ranger ALE
@@ -53,7 +55,7 @@ mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 
 
-round(ale_fanova(pred), 3)
+FunComplexity$new(pred)$var_explained
 
 # ----------------------------------------------------------------------------
 # Increasing interactions with increasing tree depth
@@ -65,7 +67,8 @@ for(mdepth in 1:5) {
   mod = train(lrn, tsk)
   pred = Predictor$new(mod, dat)
 
-  print(sprintf("Depth of tree %i, interaction strength: %.2f", mdepth, round(ale_fanova(pred), 3)))
+  print(sprintf("Depth of tree %i, interaction strength: %.2f", mdepth, FunComplexity$new(pred)$var_explained
+))
 }
 
 # Interesting example: Tree with depth 2 has two different features, but still no interaction since level 2 splits are both the same

@@ -15,13 +15,14 @@ if(TASK_TYPE == "regr") {
 }
 tasks = tasks[tasks$number.of.instances.with.missing.values == 0, ]
 tasks = tasks[tasks$number.of.symbolic.features > 0, ]
-tasks = tasks[tasks$number.of.features < 50, ]
+tasks = tasks[tasks$number.of.features < 150, ]
 tasks = tasks[tasks$number.of.features > 4, ]
-tasks = tasks[tasks$number.of.instances < 5000, ]
-tasks = tasks[tasks$number.of.instances > 400, ]
+tasks = tasks[tasks$number.of.instances < 10000, ]
+tasks = tasks[tasks$number.of.instances > 200, ]
 tasks = tasks[!is.na(tasks$task.id), ]
 
-i = 3
+i = 6
+
 
 task = getOMLTask(task.id = tasks$task.id[i])
 task = convertOMLTaskToMlr(task)
@@ -37,7 +38,21 @@ dat = data.frame(mlbench::mlbench.friedman3(n))
 task = makeRegrTask(data = dat, target = "y")
 task.dat = dat
 
+lrn1 = makeLearner("regr.rpart")
+mod1 = train(lrn1, task)
+pred1 = Predictor$new(mod1, task.dat)
+fc1 = FunComplexity$new(pred1)
 
+fc1$complexity_total
+fc1$complexity_total
+fc1$complexity_total
+fc1$var_explained
+fc1$plot_complexity("x.1")
+
+FeatureEffects$new(pred1)$plot()
+
+f4 = FeatureEffect$new(pred1, "SEX")
+table(f4$predict(task.dat), task.dat$SEX)
 
 
 base.learners.classif = list(
@@ -99,7 +114,8 @@ fn = function(x){
     measures = list(loss))$aggr
   mod = train(lrn, task)
   pred = Predictor$new(mod, task.dat, y = task$task.desc$target)
-  c(perf, round(n_segs(pred), 2), max(0, ale_fanova(pred)))
+  imeasure = FunComplexity$new(pred)
+  c(perf, imeasure$complexity_total, 1 - imeasure$var_explained)
 }
 
 obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = ps, n.objectives = 3, has.simple.signature = FALSE)
@@ -123,7 +139,7 @@ best.models %>%
 
 
 best.models %>%
-  arrange(y_1)
+  arrange(y_2)
 
 y = task.dat[task$task.desc$target][[1]]
 #mae_0 = measureMAE(truth = y, response = mean(y))

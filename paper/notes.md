@@ -10,6 +10,9 @@
 - For tree based methods and other models with step curves, the ale fanova decomp never goes to perfectly zero, because it interpolates a little bit between the steps.
 
 
+# TODOs
+- Improve computational speed by using density function instead of data for computing R2 for complexity approximation.
+- 
 
 # Thoughts:
 

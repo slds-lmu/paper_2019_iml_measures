@@ -32,23 +32,28 @@ pred = Predictor$new(mod, dat)
 
 ff = FunComplexity$new(pred)
 ff$var_explained
+ff$complexity_total
+ff$complexities
 
 # Example with GLM ALE
 gm = mgcv::gam(y ~ s(x.1) + x.2, data = dat)
 pred = Predictor$new(gm, dat)
 
-FunComplexity$new(pred)$var_explained
-
-
+fc = FunComplexity$new(pred)
+fc$var_explained
+fc$complexity_total
+fc$complexities
+fc$plot_feature("x.4")
 
 # Example with tree ALE
 lrn = makeLearner("regr.rpart")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 
-FunComplexity$new(pred)$var_explained
-
-
+fc = FunComplexity$new(pred)
+fc$var_explained
+fc$complexities
+fc$complexity_total
 # Example with ranger ALE
 lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)

@@ -24,4 +24,24 @@ approach to extract semantic monotonicity constraints from data
 leads to improved classification models.
 
 
-#
+# Distinguish between interpretability measure and representation
+
+In the literature, there is no clear-cut distinction between the interpretability
+measure of models and representations. The two research questions "what is an
+interpretable model?" and "what is an interpretable representation?" need to be
+investigated independently. Furthermore, many papers rely on intuition in the
+use of interpretability, which leads to a focus on "white-boxes" (decision trees,
+decision rules, etc.) and a lack of consideration of "black-boxes" (SVM, neu-
+ral networks, etc.). -- Interpretability of Machine Learning Models
+and Representations: an Introduction
+
+
+# We need model-agnostic measures
+
+One drawback of formal complexity measures is that they are either only
+applicable for a specific class of models, e.g. the depth of a decision tree, the
+norm of a parameter vector or the number of prototypes, or provide only a very
+coarse measure of complexity, like the number of attributes used. Hence, they
+provide little help in choosing the right hypothesis space in the first place. People
+sometimes argue that one hypothesis language is “obviously” more intuitive than
+others, but this is of course highly subjective and hence useless. -- Rüping

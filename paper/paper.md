@@ -1,13 +1,25 @@
 # Introduction
-Motivation: User should decide on interpretability  / accuracy tradeoff
+Motivation: We want to be able to compare interpretability across models.
+Problem: No measure available.
 Novelty: New model-agnostic measures for interpretability. End-to-end, multicrit optimization for accuracy and interpretability (interpretability not measured with intermediary number from model.)
 We define interpretability as "How well do post-hoc methods work" and how sparse are they.
 For us the model is interpretable, when I have to look at as little as post-hoc analysis as possible and when those post-hoc analyses are as truthful to the model as possible.
 
-Argumentation: We have a couple of post-hoc methods. 
-They work better under certain conditions of the model (TODO: define and show). 
-We introduce interpretability measures based on those conditions.
-The better the interpretability measure, the better the post-hoc methods will work.
+Argumemntation: We can decompose the function.
+Individual components ccan be approximated by ALE. 
+We measure the complexity and all the interactions we did not approximate.
+We show that when interaction is small, we have an additive model.
+And when other measure is minimized, we get linear effects or sparsity.
+All the post-hoc methods tend to work better when the two criteria are optimized.
+
+
+Some authors suggest that we need to have some interpretability across different models. 
+Bibal, Adrien, and Benoît Frénay. "Interpretability of machine learning models and representations: an introduction." Proceedings on ESANN. 2016.
+We address this by using model-agnostic methods that can be applied to the model. 
+They also call for multi-objective optimization "In contrast, heuristics
+can be integrated in learning through multi-objective optimisation techniques."
+
+We also are based on theory (functional ANOVA decomposition)
 
 # Review
 
@@ -15,8 +27,12 @@ Multicrit often looks at complexity: Examples
 But nowhere are explicit, model-agnostic interpretability measures used
 AIC, BIC is a tradeoff measure between accuracy and interpretability
 
+Other approach, but only for decision tree and logistic regression: "Measuring Interpretability for Different Types
+of Machine Learning Models" by Qing Zhou 1 , Fenglu Liao 1 , Chao Mou 1(&) , and Ping Wang 2
+
 # Prerequisites
 
+- Functional decomposition
 - ALE plots
 - Multicrit, Pareto Front
 
@@ -40,6 +56,25 @@ Show problems with LIME.
 
 # Interpretability measures
 
+Desiderata:
+- Information should be contained in as few plots as possible.
+- We prefer marginal relationships between features and prediction that can be explained with few parameters
+- Plots and summary statistics should show as much information as possible of the black box
+
+
+
+Paper says that desiderata are 
+- Accuracy (of interpretation method), which matches that we look at R squared. Predictive accuracy is measured as usual. Descriptive accuracy is measured with novel measures
+- Relevancy: Show only relevant information. With our measures we can decide which plots to show. Remove when effect is zero. Also we can measure variance of each of the 1st order components and only show the most relevant ones.
+- Sparsity: Directly optimized with our measures
+- Simulatability: Can human internally simulate and reason about 
+- Modularity: Can model parts be interpreted independently? Interaction measure allows us to determine how independently we can analyze the individual features with their ALE plots
+- 
+They also say: "Moreover, it is unclear if any of the current inter-pretation forms can fully capture a model’s behaviour, or if a new format altogether is needed. How to close that gap, while producing outputs relevant to a particular audience/problem, is an open problem."
+"Interpretable machine learning: definitions,methods, and applications"
+W. James Murdoch a,1 , Chandan Singh b,1 , Karl Kumbier a,2 , Reza Abbasi-Asl b,c,2 , and Bin Yu a,b
+
+The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
 
 Motivation: 
 - ALE and functional decomposition of \hat{f}(x)
@@ -94,6 +129,9 @@ Discussion
 - When ALE is used, correlation of features is ok.
 - 
 
+For categorical features we have to count how many degrees of freedom the model burns.
+E.g. if month is a feature, it makes a difference if the model just distinguishes between two groups of months or fits a node for each month.
+
 
 ## Others
 
@@ -120,6 +158,10 @@ one dataset.
 instead of best fitting model, you get pareto front.
 maybe example is not so relevant.
 
+## Show with tree how an additive model is formed with 1st ALE approx
+
+Show all 1st ALE and for one prediction the explanation?
+
 ## Tune xgboost gbtree/gblinear
 One dataset?
 Shows how many different solution and tradeoffs you get within xgboost
@@ -141,6 +183,14 @@ Compare in table:
   rows: dataset x tuning method
   columns: methods
   cells: [performance, interaction.strength, degrees of freedom]
+
+
+
+## Proof that some interpretable models already optimize some measures
+
+- LASSO directly optimizes both measures (interaction is zero), linear models, few weights.
+- Tree does not, because of interactions
+- knn not interpretable based on this, but  could be on a different level when instances interpretable
 
 
 # Formatting

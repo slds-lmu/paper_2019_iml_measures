@@ -1,0 +1,78 @@
+
+We use the wine quality dataset to demonstrate the analysis of functional complexity.
+TODO: CITE
+Regression task to predict quality of the wine given physicochemical properties of the wine.
+Features are explained here (TODO: LINK).
+Rows containing missing values were deleted.
+
+
+We train to models: 
+First a CART decision tree with following setting: TODO
+Then a random forest with the following settings: TODO
+
+```{r}
+devtools::load_all()
+set.seed(42)
+wine = read.csv("../data/winequalityN.csv")
+wine = na.omit(wine)
+tsk = makeRegrTask(data = wine, target = "quality")
+lrn.tree = makeLearner("regr.rpart")
+lrn.rf = makeLearner("regr.randomForest")
+
+mod.tree = train(lrn.tree, tsk)
+mod.rf = train(lrn.rf, tsk)
+
+pred.tree = Predictor$new(mod.tree, data = wine)
+pred.rf = Predictor$new(mod.rf, data = wine)
+
+fc.tree = FunComplexity$new(pred.tree)
+fc.rf = FunComplexity$new(pred.rf)
+```
+
+
+TODO: Show cross-validated error.
+
+
+
+The FunComplexity was computed on models trained again with all data.
+
+
+The tree has the following ALE:
+```{r}
+plot(fc.tree, features = names(fc.tree$complexities)[fc.tree$complexities > 0])
+```
+The overall measured complexity of these 1st order effects is: `r sprintf("%.2f", fc.tree$complexity_total)`. 
+The feature contributed in the following way: 
+```{r}
+knitr::kable(data.frame(feature = names(fc.tree$complexities), n.components = unname(unlist(fc.tree$complexities))))
+```
+
+
+The interactions explain `r sprintf("%.2f", fc.tree$var_explained)`
+TODO: REmove plots without features
+FEature not shown here were not used for the prediction.
+
+
+
+
+
+
+The random forest has the following ALE:
+```{r}
+plot(fc.rf)
+```
+The interactions explain `r sprintf("%.2f", fc.rf$var_explained)`%.
+
+```{r}
+knitr::kable(data.frame(feature = names(fc.rf$complexities), n.components = unname(unlist(fc.rf$complexities))))
+```
+
+We can compare the partial complexity individually for both models, e.g. for the feature alcohol:
+
+```{r}
+p1 = fc.tree$plot_complexity("alcohol")
+p2 = fc.rf$plot_complexity("alcohol")
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
+The plot shows that the random forest learned lower complexity, because for the mass of the data, the learned is almost linear.
+

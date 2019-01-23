@@ -1,0 +1,30 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Introduction}
+\label{sec:introduction}
+
+% Motivation
+Machine learning (ML) algorithms such as neural networks and support vector machines (SVM) are often considered to produce black box models because they do not provide any direct explanation for their predictions.
+However, these methods often outperform simple linear models or decision trees in predictive performance as they are able to model complex relationships in the data.
+%\citep{fernandez2014we}.
+Nevertheless, trees and linear models are still preferred in areas such as life sciences and social sciences due to their simplicity and interpretability \citep{Lipton2016}. %Caruana2015a
+Some researchers have therefore developed model-agnostic interpretability tools for black box models, which often measure or visualize feature effects or feature importance \citep{goldstein2015peeking, kononenko2010efficient, Fisher2018}.
+
+
+Machine Learning
+Problem: Interpretability
+Solution: Interpretable Models and Post-hoc methods
+Both not perfect
+
+
+Approaches:
+Finding most influential data points \citep{Datta2016}
+Feature importance \citep{Fisher2018} TODO: Cite giuseppe
+SHAP \citep{lundberg2017unified}
+Interpretable models: \citep{Caruana2015a} TODO: Cite some more here
+Shapley Values \citep{vstrumbelj2014explaining} \citep{vstrumbelj2011general}
+
+ICE curves \citep{goldstein2015peeking}
+PDP \citep{friedman2001greedy}
+LIME \citep{Ribeiro2016b}
+
+Prototypes and Criticisms  \citep{kim2016examples}

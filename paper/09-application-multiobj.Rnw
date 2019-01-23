@@ -1,0 +1,27 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Application: Multi-objective optimization}
+\label{sec:app2}
+
+
+"Note also that it is very hard to define a priori which model
+size would be considered “too large” to be analyzed by a user.
+Hence, instead of specifying the maximum size of a classification
+model as a parameter of a classification algorithm, we prefer a
+more principled approach to cope with the accuracy-
+comprehensibility trade-off, such as a multi-objective approach
+based on Pareto dominance or lexicographic optimization""
+\citep{freitas2014comprehensible}
+
+TODO:
+
+- Re-Create the interpretability vs accuracy figure
+
+
+Mathematically writing down objectives
+
+Short mbo summary and setup.
+ Tune across many learners (xgboost, svm, lm, rpart, ...)
+Many datasets
+Show Pareto Front for some datasets.
+
+Aggregated results per learner (maybe do mbo per learner) and recreate accuracy / interpretability figures

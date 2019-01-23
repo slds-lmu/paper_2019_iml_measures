@@ -1,0 +1,65 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Motivation}
+\label{sec:motivation}
+
+
+Some authors suggest that we need to have some interpretability across different models. \citep{bibal2016interpretability}
+We address this by using model-agnostic methods that can be applied to the model.
+They also call for multi-objective optimization "In contrast, heuristics
+can be integrated in learning through multi-objective optimisation techniques."
+
+Motivation: We want to be able to compare interpretability across models.
+Problem: No measure available.
+Novelty: New model-agnostic measures for interpretability. End-to-end, multicrit optimization for accuracy and interpretability (interpretability not measured with intermediary number from model.)
+We define interpretability as "How well do post-hoc methods work" and how sparse are they.
+For us the model is interpretable, when I have to look at as little as post-hoc analysis as possible and when those post-hoc analyses are as truthful to the model as possible.
+
+Our contribution / novelty: Suggesting (novel) interpretability measures and testing them
+
+
+Argumentation: We can decompose the function.
+Individual components ccan be approximated by ALE.
+We measure the complexity and all the interactions we did not approximate.
+We show that when interaction is small, we have an additive model.
+And when other measure is minimized, we get linear effects or sparsity.
+All the post-hoc methods tend to work better when the two criteria are optimized.
+
+
+We also are based on theory (functional ANOVA decomposition)
+
+
+Tradeoff between accuracy and interpretability has to be decided by the user. / Arguments for Multiobjective instead of weighted single objective.f \citep{freitas2004critical}
+
+
+## Limitations of post-hoc methods
+
+**Effect of high number of features**
+Example with few and many features and showing Shapley explanations and many partial dependence plots.
+
+**Effect of interactions**
+Show ICE / PDP example.
+Show problem with local and global linear surrogate models.
+
+**Effect of complex non-linear feature effects**
+Show crazy pdp.
+Show problems with LIME.
+
+
+Sources of lack of interpretability: many features, complex relationship with prediction and interactions -> interpretability measure should capture those
+
+
+One of the measures describes the complexity of first-order model with the degrees of freedom.
+The other measure describes how big the higher-order portion of the model is, and with that kind of equating anything higher order as non-interpretable.
+
+
+We need model-agnostic measures: \citep{ruping2006learning}
+One drawback of formal complexity measures is that they are either only
+applicable for a specific class of models, e.g. the depth of a decision tree, the
+norm of a parameter vector or the number of prototypes, or provide only a very
+coarse measure of complexity, like the number of attributes used. Hence, they
+provide little help in choosing the right hypothesis space in the first place. People
+sometimes argue that one hypothesis language is “obviously” more intuitive than
+others, but this is of course highly subjective and hence useless.
+
+
+Critique: Interpretability not well defined \citep{Lipton2016}

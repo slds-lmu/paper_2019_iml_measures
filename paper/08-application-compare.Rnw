@@ -1,0 +1,10 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Application: Compare interpretability of two models}
+\label{sec:app1}
+
+Data from OpenML? \citep{Casalicchio2017}
+
+All examples with mlr \citep{JMLR:v17:15-066} in R \citep{r2016}.
+Available on Github the source code for examples.
+
+Modeled with Random Forest \citep{Breiman2001}

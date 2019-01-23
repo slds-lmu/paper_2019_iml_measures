@@ -1,0 +1,113 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.20 of 2017/10/04
+%
+\documentclass[runningheads]{llncs}
+% Insert the name of "your journal" with
+% \journalname{myjournal}
+%
+
+<<packages, child = "packages.Rnw", cache=FALSE>>=
+@
+
+<<common, child = "common.Rnw", cache = FALSE>>=
+@
+
+\begin{document}
+
+\title{Measuring interpretability for any machine learning model through functional decomposition}
+\titlerunning{}
+
+\author{Christoph~Molnar~\and~Giuseppe~Casalicchio~\and~Bernd~Bischl}
+\authorrunning{C. Molnar et al.}
+
+\institute{Department of Statistics, Ludwig-Maximilians-University Munich, \\
+  Ludwigstr. 33, 80539 Munich, Germany \\
+  \email{christoph.molnar@stat.uni-muenchen.de}%\\
+}
+
+\maketitle
+
+\begin{abstract}
+One of the biggest disadvantages of machine learnings is the lack of interpretability.
+Scientists proposed intrinsically interpretable models such as decision trees and post-hoc interpretation methods such as partial dependence plots as solutions.
+Interpretable models limit their users to a certain model class and often have a lower accuracy.
+Post-hoc methods are applied after the model has been optimized for performance and can help to better understand the model, but the relationships modelled can be complex and have interactions.
+
+We propose model-agnostic measures of interpretability for machine learning models.
+These measures can be used to compare interpretability for different hyperparameter configurations and across different model classes.
+
+We show an application of these measures in multi-criteria optimization.
+We optimize model hyperparameters across different types of models for predictive performance and interpretability together, yielding a Pareto front of models with different tradeoffs between interpretability and accuracy.
+\keywords{Interpretable Machine Learning \and Explainable AI \and Accumulated Local Effects.}
+\end{abstract}
+
+
+\section{TODOs}
+\begin{itemize}
+\item Improve computational speed by using density function instead of data for computing R2 for complexity approximation.
+\item Brainstorm: How to combine interpretability measure into one measure?
+\item Find out why  generateDesign could only produce 138 points instead of 1000?
+\item Add number of features measure to FunComplexity
+\item Cite a few examples where interpretability is measured with human experiments
+\end{itemize}
+
+\section{Ideas}
+\begin{itemize}
+\item Do analysis how tuning parameters map to interpretability
+\item Add table for how post-hoc methods scale with number of features. rows: methods, cols: scalings, like O() of comp, size of output scaling with p, fidelity.methods: featureimp, pdp, ale, lime, shapley, shap, 2way interaction, ice
+\item Show negative correlation between LIME R squared and both of the interpretability measures.
+\item Soft monotonicity constraints can be incorporated into the model as well with my complexity measure framework
+\item Another great measurement would be the correlation between the features that are used in the model.
+The less correlated, the better the interpretation methods work.
+But don't measure with pearson correlation but maybe use notion of "predictability"/dependence
+\item Benchmarking methods that claim to be interpretable
+\end{itemize}
+
+<<01-intro, child = "01-intro.Rnw", cache = FALSE>>=
+@
+
+<<02-motivation, child = "02-motivation.Rnw", cache = FALSE>>=
+@
+
+<<03-related-work, child = "03-related-work.Rnw", cache = FALSE>>=
+@
+
+<<04-decomposition, child = "04-decomposition.Rnw", cache = FALSE>>=
+@
+
+<<05-ale, child = "05-ale.Rnw", cache = FALSE>>=
+@
+
+
+<<measures, child = "measures.Rnw", cache = FALSE>>=
+@
+
+
+<<06-measure-interaction, child = "06-measure-interaction.Rnw", cache = FALSE>>=
+@
+
+<<07-measure-curve-complexity, child = "07-measure-curve-complexity.Rnw", cache = FALSE>>=
+@
+
+<<08-application-compare, child = "08-application-compare.Rnw", cache = FALSE>>=
+@
+
+<<09-application-multiobj, child = "09-application-multiobj.Rnw", cache = FALSE>>=
+@
+
+<<10-discussion, child = "10-discussion.Rnw", cache = FALSE>>=
+@
+
+%
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+% \bibliographystyle{splncs04}
+% \bibliography{mybibliography}
+%
+\bibliographystyle{splncs04}
+\bibliography{Bib}
+\end{document}

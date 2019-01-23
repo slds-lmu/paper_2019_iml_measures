@@ -1,0 +1,28 @@
+\Sexpr{set_parent('paper.Rnw')}
+\subsection{Interpretability measures}
+\label{sec:measures}
+
+
+
+
+Paper says that desiderata are
+- Accuracy (of interpretation method), which matches that we look at R squared. Predictive accuracy is measured as usual. Descriptive accuracy is measured with novel measures
+- Relevancy: Show only relevant information. With our measures we can decide which plots to show. Remove when effect is zero. Also we can measure variance of each of the 1st order components and only show the most relevant ones.
+- Sparsity: Directly optimized with our measures
+- Simulatability: Can human internally simulate and reason about
+- Modularity: Can model parts be interpreted independently? Interaction measure allows us to determine how independently we can analyze the individual features with their ALE plots
+-
+They also say: "Moreover, it is unclear if any of the current inter-pretation forms can fully capture a model’s behaviour, or if a new format altogether is needed. How to close that gap, while producing outputs relevant to a particular audience/problem, is an open problem." \citep{murdoch2019interpretable}
+
+
+Desiderata:
+- Information should be contained in as few plots as possible.
+- We prefer marginal relationships between features and prediction that can be explained with few parameters
+- Plots and summary statistics should show as much information as possible of the black box
+
+
+The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
+
+
+
+

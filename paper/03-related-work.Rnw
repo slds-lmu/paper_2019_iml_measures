@@ -1,0 +1,26 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Related Work}
+\label{sec:related}
+
+
+Multicrit often looks at complexity: Examples
+But nowhere are explicit, model-agnostic interpretability measures used
+AIC, BIC is a tradeoff measure between accuracy and interpretability
+
+Other approach, but only for decision tree and logistic regression: "Measuring Interpretability for Different Types
+of Machine Learning Models" by Qing Zhou 1 , Fenglu Liao 1 , Chao Mou 1(&) , and Ping Wang 2
+
+TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. My critique: Always needs some baseline which might not exist. For example discovering new knowledge. Also, target model is fixed, can't decide accuracy interpretability tradeoff.  sparsity is not rewarded.
+\citep{dhurandhar2017tip}
+
+
+Towards A rigourous sience ... \citep{doshi2017towards}
+In this framework, we are at function level
+
+In the literature, there is no clear-cut distinction between the interpretability
+measure of models and representations. The two research questions "what is an
+interpretable model?" and "what is an interpretable representation?" need to be
+investigated independently. Furthermore, many papers rely on intuition in the
+use of interpretability, which leads to a focus on "white-boxes" (decision trees,
+decision rules, etc.) and a lack of consideration of "black-boxes" (SVM, neu-
+ral networks, etc.). \citep{bibal2016interpretability} say we have to

@@ -1,0 +1,14 @@
+\Sexpr{set_parent('paper.Rnw')}
+\subsection{Measure ALE First Order Approximiation}
+\label{sec:interaction}
+
+
+<<>>=
+knitr::include_graphics(file.path(image_dir, "ale_fanova.png"))
+@
+
+
+
+Things that did not work:
+- Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}. Based on first-order indices
+Too much variance, doesn't handle interactions well. Not as nice as ALE decomp, because ALE decomp gives us first-order model approximation.

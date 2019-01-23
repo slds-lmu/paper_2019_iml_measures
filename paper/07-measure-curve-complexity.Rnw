@@ -1,0 +1,42 @@
+\Sexpr{set_parent('paper.Rnw')}
+\subsection{Measure ALE First Order Complexity}
+\label{sec:curve}
+
+Measure simply answers: How many weights would we need if we were to approximate all of the ALE plots with a linear model
+R square controlled degrees of freedom approximation.
+
+
+Using mlbench::friedman1
+
+
+With linear model
+
+<<With linear model>>=
+knitr::include_graphics(file.path(image_dir, "complexity-lm-friedman1.png"))
+@
+
+With decision tree
+
+<<>>=
+knitr::include_graphics(file.path(image_dir, "complexity-rpart-friedman1.png"))
+@
+
+
+With Support Vector machine
+
+<<>>=
+knitr::include_graphics(file.path(image_dir, "complexity-svm-friedman1.png"))
+@
+
+
+Effects of different epsilons (here SVM)
+
+<<>>=
+knitr::include_graphics(file.path(image_dir, "complexity-svm-epsilons-friedman1.png"))
+@
+
+
+Things that did not work out:
+Version for cubic splines approx
+Version for tree split approx
+

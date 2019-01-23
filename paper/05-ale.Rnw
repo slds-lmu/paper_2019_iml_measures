@@ -1,0 +1,23 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Accumulated Local Effects}
+\label{sec:ale}
+
+
+We use the ALE decomposition \citep{apley2016visualizing}
+why all with ALE? -> Works also with correlated inputs
+
+$$f(x) =  \sum_{j=1}^d f_{j,ALE}(x_j) + \sum_{J \subseteq \{1,\ldots,p\}, |J| \geq 2} f_{J,ALE}(x_J) $$
+
+$$Var(f(x)) =  Var(\sum_{j=1}^d f_{j,ALE}(x_j)) + Var(\sum_{J \subseteq \{1,\ldots,p\}, |J| \geq 2} f_{J,ALE}(x_J))$$
+
+
+The ALE decomposition can be estimated via:
+
+TODO
+
+Use fanova decomposition, but with ALE.
+While the decomoosition of variance does not work with correlated features (1st order correlated with higher order) it should be still ok to just describe the SSE I get when using first order ALE model.
+
+Making no assumptions, but simply describe how much residuals are left after modeling with first order ALE.
+
+Why not functional Anova a la hooker? computationally ineffective and his decomposition properties not needed. Also good software with ALE.

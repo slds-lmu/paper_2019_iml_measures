@@ -1,0 +1,20 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Discussion}
+\label{sec:discussion}
+
+
+
+Problems:
+
+- For tree based methods and other models with step curves, the ale fanova decomp never goes to perfectly zero, because it interpolates a little bit between the steps.
+- When true marginal function is step function, then it adds to the SSE unecessarily
+- Unclear how many intervals
+- Weighted by data sensity (can be unintuitive when looking at plot) or all plot point same weight (probably very wrong). Solution: Make clear in ALE plot where most data is with rug or alpha.
+- Short-comings: not tested with humans, but could be adapted and used with the same mult-crit framework.
+
+
+
+Implemented in iml package \citep{iml2018}
+
+
+Better to tune complete pipeline with feature selection \citep{guyon2003introduction} to improve interpetability

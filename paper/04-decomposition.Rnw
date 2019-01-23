@@ -1,0 +1,18 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Functional Decomposition}
+\label{sec:decomposition}
+
+
+
+We can decompose the model prediction function $f(x)$ into orthogonal parts %\citet{Efron1981} \citet{Chastaing2017}, :
+
+$$f(x) = \underbrace{f_0}_\text{Avg} + \underbrace{\sum_{j=1}^p f_j(x_j)}_\text{1st order effects} + \underbrace{\sum_{k\neq j}^p f_{jk}(x_j, x_k)}_\text{2nd order effects (interactions)} + \ldots + \underbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}_\text{p-th order effect (interactions)} \\= \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S) $$
+
+Goal: Measure the complexity of the model via the decomposition
+
+$$f(x) = \underbrace{f_0 + f_1(x_1) + \ldots f_p(x_p)}_\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_S(x_S)}_{\text{Higher order effects}} $$
+
+$$Var(f(x)) = \underbrace{Var(f_0 + f_1(x_1) + \ldots f_p(x_p))}_\text{1st order effects} + \underbrace{Var(\sum_{S \subseteq \{1,\ldots,p\}, |S| \geq 2} f_S(x_S))}_{\text{Higher order effects}} $$
+
+
+Other approach: functional Anova decomposition by Hooker \citep{hooker2004discovering} and \citep{hooker2007generalized}

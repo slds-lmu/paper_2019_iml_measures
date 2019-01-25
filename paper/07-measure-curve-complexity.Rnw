@@ -2,41 +2,36 @@
 \subsection{Measure ALE First Order Complexity}
 \label{sec:curve}
 
-Measure simply answers: How many weights would we need if we were to approximate all of the ALE plots with a linear model
-R square controlled degrees of freedom approximation.
+We propose a measure that, for each of the main effects, approximates the ALE curve with linear segments and adds up the parameters needed if we were to model all those segments in a linear regression model.
+
+Recipe:
+
+\begin{enumerate}
+\item Input: Model f, PRL-bound $\epsilon$, upper bound complexity $c_{max}$
+\item For all features $x_1,\ldots,x_p$:
+\begin{itemize}
+\item Estimated first order ALE
+\item Compute the approximation using the least amount of linear segments possible while still having a PRL above $1-\epsilon$
+\item Measure complexity of segments as number of weights needed when approximating the segments with a piecewise linear regression model ($m_j$)
+\item Compute complexity of best step-wise function (segments with slope 0) approximation model $m_{j,step}$
+\item Compute complexity of best iece-wise linear  approximation model $m_{j,seg}$
+\item $c_j = min(c_{max}, m_{j, seg}, m_{j, step})$
+\end{itemize}
+\item Sum up all complexity measures $c_j$: $c = \sum_{j=1}^p c_j$
+\end{enumerate}
 
 
-Using mlbench::friedman1
+The step and segments approximation are both computed with conditional inference and model-based trees, taking into account the data distribution to compute how well the segments apprimate the ALE function based on PRL.
+
+We look at each of the ALE plots and  answer: How many weights would we need if we were to approximate all of the ALE plots with a linear model
 
 
-With linear model
-
-<<With linear model>>=
-knitr::include_graphics(file.path(image_dir, "complexity-lm-friedman1.png"))
-@
-
-With decision tree
-
-<<>>=
-knitr::include_graphics(file.path(image_dir, "complexity-rpart-friedman1.png"))
-@
-
-
-With Support Vector machine
-
-<<>>=
-knitr::include_graphics(file.path(image_dir, "complexity-svm-friedman1.png"))
-@
-
-
-Effects of different epsilons (here SVM)
-
-<<>>=
-knitr::include_graphics(file.path(image_dir, "complexity-svm-epsilons-friedman1.png"))
-@
+TODO: Show a few examples with simulated data (mlbench).
 
 
 Things that did not work out:
-Version for cubic splines approx
-Version for tree split approx
+\begin{itemize}
+\item Version for cubic splines approx
+\item Version for tree split approx
+\end{itemize}
 

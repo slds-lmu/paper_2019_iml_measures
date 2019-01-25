@@ -2,6 +2,31 @@
 \subsection{Measure ALE First Order Approximiation}
 \label{sec:interaction}
 
+Based on the ALE decomposition, we can define an additive model that is composed of the first-order effects:
+
+$$f_{1st,ALE}(x) = f_0 + f_{1,ALE}(x_1) + \ldots  + f_{p,ALE}(x_p)$$
+
+$f_0$ is estimated using $f_0 = \frac{1}{n}\sum_{i=1}^n x_i$
+The individual ALE components $f_{j,ALE}$ can be estimated as described in ALE section.
+
+We use the Proportional Reduction in Expected Loss as measure for how well the first-order model predictions approximates $f(x)$.
+
+With some adaptions based on \citep{cooil1994reliability}, we define PRL as:
+
+$$PRL(f, f_{ALE}, L, f_0) = 1 - \frac{\mathbb{E}(L(f, f_ALE))}{\mathbb{E}(L(f, c))}$$
+
+Where $c$ is a constant that optimizes the loss function $L$, which is the mean for the L2 loss, and the median for the L1 loss for example.
+
+The $R^2$-measure is a special case of the PRL using the squared loss:
+
+$$R^2 = 1 - \frac{SSE}{SST}$$
+
+$$SSE = \sum_{i=1}^n (f(x_i) - f_{1st,ALE}(x_i))^2$$
+
+$$SST = \sum_{i=1}^n (f(x_i) -  \frac{1}{n}\sum_{i=1}^n f(x_i))^2$$
+
+Using the R-squared measure, has the interpretation of the variance, so we use this further on and for the examples.
+When a model is optimized with a different loss, it might make sense to measure the PRL also with another loss to quantify how appropriate an approximation with a first order ALE model is.
 
 <<>>=
 knitr::include_graphics(file.path(image_dir, "ale_fanova.png"))
@@ -10,5 +35,7 @@ knitr::include_graphics(file.path(image_dir, "ale_fanova.png"))
 
 
 Things that did not work:
-- Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}. Based on first-order indices
+\begin{itemize}
+\item Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}. Based on first-order indices
 Too much variance, doesn't handle interactions well. Not as nice as ALE decomp, because ALE decomp gives us first-order model approximation.
+\end{itemize}

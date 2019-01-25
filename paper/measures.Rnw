@@ -3,29 +3,61 @@
 \label{sec:measures}
 
 
-Why is a decomposition interesting?
 With a decomposition, we can identify individual parts of the prediction function and quantify there complexity.
 Goal: Measure the complexity of the model via the decomposition
 
-$$f(x) = \underbrace{f_0 + f_1(x_1) + \ldots f_p(x_p)}_\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_S(x_S)}_{\text{Higher order effects}}$$
+We propose the following view of the decomposition:
 
-Paper says that desiderata are
-- Accuracy (of interpretation method), which matches that we look at R squared. Predictive accuracy is measured as usual. Descriptive accuracy is measured with novel measures
-- Relevancy: Show only relevant information. With our measures we can decide which plots to show. Remove when effect is zero. Also we can measure variance of each of the 1st order components and only show the most relevant ones.
-- Sparsity: Directly optimized with our measures
-- Simulatability: Can human internally simulate and reason about
-- Modularity: Can model parts be interpreted independently? Interaction measure allows us to determine how independently we can analyze the individual features with their ALE plots
--
-They also say: "Moreover, it is unclear if any of the current inter-pretation forms can fully capture a model’s behaviour, or if a new format altogether is needed. How to close that gap, while producing outputs relevant to a particular audience/problem, is an open problem." \citep{murdoch2019interpretable}
+$$f(x) = \underbrace{f_0}_{mean} + \underbrace{f_{1, ALE}(x_1) + \ldots f_{p, ALE}(x_p)}_\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S, ALE}(x_S)}_{\text{Higher order effects}}$$
 
+Now we have to parts:
+\begin{itemize}
+\item Main effects
+\item 2nd and higher order effects (interactions)
+\end{itemize}
 
-Desiderata:
-- Information should be contained in as few plots as possible.
-- We prefer marginal relationships between features and prediction that can be explained with few parameters
-- Plots and summary statistics should show as much information as possible of the black box
+The main effects can be arbitrarily complex one-dimensional functions.
+But we can always visualize them easily with ALE plots.
+And then we can try to quantify how complex those look.
+The second part is tougher to visualize or to grasp, as it contains arbitrary higher order interactions.
+We propose to simply measure how much of the variance of the predictions can be attributed to the whole sum of interactions.
 
+This decomposition allows us to explain a model by plotting all of its main effects and quantifying how much we have (or have not) captured of the variance of the predictions.
+
+We propose two measures to capture both parts of this decomposition:
+
+\begin{itemize}
+\item LinSeg epsilon approximation to quantify the total complexity of the main effects model.
+\item Variance explained by the interactions.
+\end{itemize}
 
 The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
+
+
+Paper \citep{murdoch2019interpretable} says that desiderata are
+\begin{itemize}
+\item Accuracy (of interpretation method), which matches that we look at R squared. Predictive accuracy is measured as usual. Descriptive accuracy is measured with novel measures
+\item Relevancy: Show only relevant information. With our measures we can decide which plots to show. Remove when effect is zero. Also we can measure variance of each of the 1st order components and only show the most relevant ones.
+\item Sparsity: Directly optimized with our measures
+\item Simulatability: Can human internally simulate and reason about
+\item Modularity: Can model parts be interpreted independently? Interaction measure allows us to determine how independently we can analyze the individual features with their ALE plots
+\item They also say: "Moreover, it is unclear if any of the current interpretation forms can fully capture a model’s behaviour, or if a new format altogether is needed. How to close that gap, while producing outputs relevant to a particular audience/problem, is an open problem."
+\end{itemize}
+
+We claim that optimizing the two measures we will propose will improve those desiderata:
+Decreasing interactions will improve the accuracy of the view of ALE first order plots.
+modularity is achieved by doing a decomposition.
+With interaction measure you can see how much the first order ALE plots of the variance already explain.
+
+
+Desiderata that we define:
+\begin{itemize}
+\item Information should be contained in as few plots as possible.
+\item We prefer marginal relationships between features and prediction that can be explained with few parameters
+\item Plots and summary statistics should show as much information as possible of the black box
+\end{itemize}
+
+
 
 
 

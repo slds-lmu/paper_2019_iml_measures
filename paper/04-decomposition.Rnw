@@ -4,15 +4,57 @@
 
 
 
-We can decompose the model prediction function $f(x)$ into orthogonal parts %\citet{Efron1981} \citet{Chastaing2017}, :
+We can decompose the model prediction function $f(x)$ into orthogonal parts. %\citet{Efron1981} \citet{Chastaing2017}, :
+Let f be the model prediction function that maps from features to the prediction, $f(x): X \rightarrow \mathbb{R}$ where x is a p-dimenionsal feature vector: $x = (x_1, \ldots, x_p)$.
 
-$$f(x) = \underbrace{f_0}_\text{Avg} + \underbrace{\sum_{j=1}^p f_j(x_j)}_\text{1st order effects} + \underbrace{\sum_{k\neq j}^p f_{jk}(x_j, x_k)}_\text{2nd order effects (interactions)} + \ldots + \underbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}_\text{p-th order effect (interactions)} \\= \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S) $$
+\begin{eqnarray*} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S) \\
+\end{eqnarray*}
 
-Goal: Measure the complexity of the model via the decomposition
+The decomposition contains a constant mean plus the feature first order effects, second order effects up to the p-th order effect.
+The notation of the j-th order effect can be simplified by using a multi-index notation: $S \subset \{1,\ldots,p\}$.
 
-$$f(x) = \underbrace{f_0 + f_1(x_1) + \ldots f_p(x_p)}_\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_S(x_S)}_{\text{Higher order effects}} $$
+We need further constraints to get a unique decomposition.
+For example, Hooker \citep{hooker2004discovering} and \citep{hooker2007generalized}
+He defined centering, orthogonality and variance decomposition as desirable properties.
+One approach: functional Anova decomposition by Hooker \citep{hooker2004discovering} and \citep{hooker2007generalized}
+The adopt the approach by Stone \citep{stone1994use} to approximate the function with weighted integrals and function orthogonality constraints.
+Results in hierarchically orthogonal components (in decomposition)under the correlation inner product.
+This means that higher order effects are uncorrelated with any lower-order effects that are subsets of the higher order effect: $f_{j,ANOVA}$ and $f_{S,ANOVA}$ are uncorrelated when $j\subset S$.
+Any other combination of j and S are not in general uncorrelated.
 
-$$Var(f(x)) = \underbrace{Var(f_0 + f_1(x_1) + \ldots f_p(x_p))}_\text{1st order effects} + \underbrace{Var(\sum_{S \subseteq \{1,\ldots,p\}, |S| \geq 2} f_S(x_S))}_{\text{Higher order effects}} $$
+
+We will use the Accumulated Local Effects \citep{apley2016visualizingapley2016visualizing} (ALE) decomposition explained later in the paper.
+They show that the f(x) can be decomposed with ALE components:
+
+A fitted supervised machine learning model $f$ can be decomposed as:
+$f(x) = \sum_{S\subseteq P} f_{S,ALE}(x_S)$
+where $f_{S,ALE}$ represents the $|S|$-order effect of feature(s) $x_S$ on $f$.
+
+\citep{apley2016visualizingapley2016visualizing} show that this decomposition is unique, meaning that for any decomposition that fulfills the "pseudo-orthogonality" property, the only solution is the ALE component.
 
 
-Other approach: functional Anova decomposition by Hooker \citep{hooker2004discovering} and \citep{hooker2007generalized}
+Let $H_S(f_S)$ be a function that maps a function to its ALE function with features S.
+
+"Pseudo-orthogonality": $H_j(f_j) = f_j$ and $H_u(f_j) = 0$ for each $j \subseteq D$ and $u \subseteq D$ with $u \neq j$.
+
+In words, pseudo-orthogonality is:
+The S-ALE of an S-ALE function is again S-ALE and the S-ALE function of u-ALE is 0 when S and u are not equal.
+
+ALE defines the components in such a way that they are "pseudo-orthogonal", which is not true orthogonality, but a similar concept.
+They claim that true orthogonality is not desirable.
+For example if $f(x) = x_1 + x_2$ and $X_1$ and $X_2$ are correlated, then fANOVA decomposition will not give the correct main effects $f_1(x_1)$ and $f_2(x_2)$, but ALE components will decompose it in such a way.
+
+For fANOVA approach this would be.
+We assume that expected value of $x_1$ and $x_2$ is 0:
+\begin{eqnarray*}
+f_{1,fANOVA}(x_1) =& \mathbb{E}(f(x)|X_1=x_1) - E_X(f(x)) \\
+                  =& \mathbb{E}(X_1| X_1=x_1) + \mathbb{E}(X_2|X_1 = x_1) - (\mathbb{E}(X_1) + \mathbb{E}(X_2)) \\
+                  =& x_1 +  \mathbb{E}(X_2|X_1 = x_1)  \\
+                  \neq & x_1
+\end{eqnarray*}
+
+ALE plots are easier to compute, because the can be computed sequentially (each main effect, then each 2nd-order and so on), do not require to estimate the data distribution as Hookers approach.
+fANOVA has to be computed all at once, involving a complex system of equations.
+
+
+

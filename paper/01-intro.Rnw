@@ -28,3 +28,17 @@ PDP \citep{friedman2001greedy}
 LIME \citep{Ribeiro2016b}
 
 Prototypes and Criticisms  \citep{kim2016examples}
+
+
+We have the following paper structure:
+\begin{itemize}
+\item In Motivation we motivate why we need model-agnostic interpretability measures
+\item In Decomposition we show ways to decompose the model into lower order feature effects
+\item The decomposition can be estimated with Accumulated Local effects, which we demonstrate in this chapter
+\item In Measure chapter we show a specific way to view the decomposition that allows us to measure its complexity in a meaningful way
+\item We go deeper by showing how to measure the degree of interactions in a model
+\item And how to measure the complexity of the main effects
+\item First a simple application to demonstrate the measures with wine dataset comparing two models
+\item An application that shows how these measures can be used in multi-objective optimization to solve the accuracy / interpretability tradeoff.
+\end{itemize}
+

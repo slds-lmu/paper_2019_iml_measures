@@ -2,3 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
+*.pdf
+*.log
+*.tex
+*.swp
+*.blg
+*.bbg
+*.gz
+*.bbl

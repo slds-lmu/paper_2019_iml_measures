@@ -15,7 +15,19 @@ based on Pareto dominance or lexicographic optimization""
 TODO:
 
 - Re-Create the interpretability vs accuracy figure
+To get interpretability to one dimension:
+We have 100 percent variance of y.
+x percent is explained by interations
+1 - x percent is explained by 1st order model.
+first order complexity is C.
+we claim that the average complexity of higher-order is the same as 1st order and simply project the functional complexity to the rest:
+overall_complexity = c  + c* x  = c * (1 + x)
+and to flip direction and scale to 0 and 1 (only when multiple models are tested):
+interpretability = 1 - overall_c / max(overall_c)
 
+theoretically maximal complexity:
+max_components * n_features * (1 + c)
+where max_components is the maximal complexity a feature can get based on user input and n_features the number of features.
 
 Mathematically writing down objectives
 
@@ -25,3 +37,8 @@ Many datasets
 Show Pareto Front for some datasets.
 
 Aggregated results per learner (maybe do mbo per learner) and recreate accuracy / interpretability figures
+
+
+
+
+

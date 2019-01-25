@@ -3,7 +3,11 @@
 \label{sec:measures}
 
 
+Why is a decomposition interesting?
+With a decomposition, we can identify individual parts of the prediction function and quantify there complexity.
+Goal: Measure the complexity of the model via the decomposition
 
+$$f(x) = \underbrace{f_0 + f_1(x_1) + \ldots f_p(x_p)}_\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_S(x_S)}_{\text{Higher order effects}}$$
 
 Paper says that desiderata are
 - Accuracy (of interpretation method), which matches that we look at R squared. Predictive accuracy is measured as usual. Descriptive accuracy is measured with novel measures

@@ -1,4 +1,3 @@
-# Title: Multicrit performance and interpretability
 devtools::load_all()
 set.seed(42)
 
@@ -31,28 +30,44 @@ task.dat = getTaskData(task)
 summary(task.dat)
 print(dim(task.dat))
 
+
+
+devtools::load_all()
+set.seed(42)
+wine = read.csv("./data/winequalityN.csv")
+wine = na.omit(wine)
+
+WINE_SAMPLE = sample(1:nrow(wine), size = 1000)
+wine = wine[WINE_SAMPLE, ]
+
+task = makeRegrTask(data = wine, target = "quality")
+task.dat = getTaskData(task)
+summary(task.dat)
+print(dim(task.dat))
+
+
+# #
+# n = 300
+# dat = data.frame(mlbench::mlbench.friedman3(n))
 #
-n = 300
-dat = data.frame(mlbench::mlbench.friedman3(n))
-
-task = makeRegrTask(data = dat, target = "y")
-task.dat = dat
-
-lrn1 = makeLearner("regr.rpart")
-mod1 = train(lrn1, task)
-pred1 = Predictor$new(mod1, task.dat)
-fc1 = FunComplexity$new(pred1)
-
-fc1$complexity_total
-fc1$complexity_total
-fc1$complexity_total
-fc1$var_explained
-fc1$plot_complexity("x.1")
-
-FeatureEffects$new(pred1)$plot()
-
-f4 = FeatureEffect$new(pred1, "SEX")
-table(f4$predict(task.dat), task.dat$SEX)
+# task = makeRegrTask(data = dat, target = "y")
+# task.dat = dat
+#
+# lrn1 = makeLearner("regr.rpart")
+# mod1 = train(lrn1, task)
+# pred1 = Predictor$new(mod1, task.dat)
+# fc1 = FunComplexity$new(pred1)
+#
+# fc1$complexity_total
+# fc1$complexity_total
+# fc1$complexity_total
+# fc1$var_explained
+# fc1$plot_complexity("x.1")
+#
+# FeatureEffects$new(pred1)$plot()
+#
+# f4 = FeatureEffect$new(pred1, "SEX")
+# table(f4$predict(task.dat), task.dat$SEX)
 
 
 base.learners.classif = list(
@@ -104,6 +119,8 @@ if(TASK_TYPE == "classif") {
 }
 
 
+sample.size = min(nrow(task.dat), 300)
+subset_index = sample(1:nrow(task.dat), size = sample.size)
 
 fn = function(x){
   # removes unused params
@@ -113,9 +130,11 @@ fn = function(x){
     task = task , resampling = rin ,
     measures = list(loss))$aggr
   mod = train(lrn, task)
-  pred = Predictor$new(mod, task.dat, y = task$task.desc$target)
+  pred = Predictor$new(mod, task.dat[subset_index,], y = task$task.desc$target)
   imeasure = FunComplexity$new(pred)
-  c(perf, imeasure$complexity_total, 1 - imeasure$var_explained)
+  c(round(perf, 2),
+    round(imeasure$complexity_total, 2),
+    round(1 - imeasure$var_explained, 2))
 }
 
 obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = ps, n.objectives = 3, has.simple.signature = FALSE)
@@ -141,11 +160,15 @@ best.models %>%
 best.models %>%
   arrange(y_2)
 
+
+best.models$overall_complexity = best.models$y_2 * (1 + best.models$y_3)
+best.models$interpretability  = 1 - (best.models$overall_complexity / max(best.models$overall_complexity))
+
 y = task.dat[task$task.desc$target][[1]]
-#mae_0 = measureMAE(truth = y, response = mean(y))
+mae_0 = measureMAE(truth = y, response = mean(y))
 mae_0 = 0.5
 ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
-  x = (max(y_2) - y_2) / max(y_2))) + geom_point() +
+  x = interpretability)) + geom_point() +
   geom_label(aes(label = selected.learner, fill = y_3)) +
   scale_x_continuous("Interpretability") +
   scale_y_continuous("Accuracy")

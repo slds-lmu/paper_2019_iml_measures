@@ -17,7 +17,8 @@ Depends: OpenML,
          partykit
 Imports: checkmate,
          mlrMBO,
-         rpart
+         rpart, 
+         GenSA
 Suggests: xgboost,
           randomForest,
           svm,

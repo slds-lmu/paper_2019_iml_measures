@@ -38,18 +38,29 @@ We look at each of the ALE plots and  answer: How many weights would we need if 
 
 The following figure shows an ALE plot for a feature from the Friedman formula.
 We generated 200 data points from this formula an trained a random forest to predict.
+
 <<>>=
-n = 500
+n = 5000
 dat1 = mlbench::mlbench.friedman1(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
+
+dat1$V1 = cut(dat1$V1, breaks = c(0, 0.1, 0.5, 0.7, 1), include.lowest = TRUE)
 tsk = makeRegrTask(data = dat1, target = "y")
-lrn = makeLearner("regr.rpart")
+lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
 pred = iml::Predictor$new(mod, dat1)
 
-fname = "V1"
+fname = "V3"
 ale = FeatureEffect$new(pred, fname)
 plot(ale)
+
+fc = FunComplexity$new(pred, epsilon = 0.1)
+fc$plot_complexity("V8")
+fc$var_explained
+
+mods = fc$.__enclos_env__$private$approx_models
+
+summary(mods[[1]])
 @
 
 

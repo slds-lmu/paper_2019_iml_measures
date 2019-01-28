@@ -43,26 +43,7 @@ FunComplexity = R6::R6Class(
       ale = self$effects[[feature]]
       complexity = self$complexities[[feature]]
       feature_values = self$predictor$data$get.x()[[feature]]
-      mod_values = predict_approx_mod(mod)
-      dat = data.frame(x = feature_values, y = mod_values)
-
-      if(inherits(mod, "party")) {
-        dat$node = factor(predict_approx_mod(mod, type = "node"))
-      } else {
-        dat$node = 1
-      }
-
-      p = ale$plot()
-      if(is.numeric(feature_values)) {
-        p  = p + geom_line(aes(x = x, y = y, group = node), color = "red",
-          data = dat, lty = 2)
-      } else {
-        dat = unique(dat)
-        p = p + geom_point(aes(x = x, y = y, color = node), data = dat)
-      }
-      r_squared = 1 - get_r2(mod, ale.values = ale$predict(feature_values))
-      p + ggtitle(sprintf("C: %i, eps: %.4f, Rsquared: %.4f", complexity, self$epsilon,
-        r_squared))
+      plot_complexity_(feature_values, mod, ale, complexity, self$epsilon)
     }
 
   ),
@@ -89,39 +70,13 @@ FunComplexity = R6::R6Class(
         # fit step
         mod_step = fit_approx_mod(self$predictor, eff, grid.size = 50, epsilon = self$epsilon,
           type = "step")
-        n_steps = count_pieces(mod_step)
         # fit segments
         mod_segment = fit_approx_mod(self$predictor, eff, grid.size = 50,
           epsilon = self$epsilon, type = "segment")
-        n_segments = count_pieces(mod_segment)
-
-        if(all(is.na(c(n_segments, n_steps)))) {
-          cc = self$max_cost_feature
-          mod = NULL
-        } else if(any(is.na(c(n_segments, n_steps)))) {
-          cc = ifelse(is.na(n_segments), n_steps, n_segments)
-          if(is.na(n_segments)) {
-            mod = mod_step
-          } else {
-            mod = mod_segment
-          }
-        } else {
-          cc = ifelse(n_steps < n_segments, n_steps, n_segments)
-          if(n_steps < n_segments) {
-            mod = mod_step
-          } else {
-            mod = mod_segment
-          }
-        }
-        if(is.null(mod_step) & is.null(mod_segment)) {
-          warning(sprintf("Could not approximate ALE plot for %s. Assigning max_feat_cost of %.2f", feature_name, self$max_feat_cost))
-          cc = self$max_feat_cost
-        }
-        if (cc != 0) {
-          cc = min(cc + self$base_feat_cost, self$max_feat_cost)
-        }
-        self$complexities[feature_name] = cc
-        mod
+        res = min_model(mod_step, mod_segment, self$max_feat_cost, self$base_feat_cost,
+          feature_name)
+        self$complexities[feature_name] = res$c
+        res$mod
       })
       self$complexity_total  = sum(unlist(self$complexities))
     }
@@ -132,6 +87,63 @@ FunComplexity = R6::R6Class(
 # =============================================================================
 # Number of linear segments in segmented linear regression
 # =============================================================================
+plot_complexity_ = function(feature_values, mod, ale, complexity, epsilon) {
+  feature = ale$feature.name
+  mod_values = predict_approx_mod(mod)
+  dat = data.frame(x = feature_values, y = mod_values)
+
+  if(inherits(mod, "party")) {
+    dat$node = factor(predict_approx_mod(mod, type = "node"))
+  } else {
+    dat$node = 1
+  }
+
+  p = ale$plot()
+  if(is.numeric(feature_values)) {
+    p  = p + geom_line(aes(x = x, y = y, group = node), color = "red",
+      data = dat, lty = 2)
+  } else {
+    dat = unique(dat)
+    p = p + geom_point(aes(x = x, y = y, color = node), data = dat)
+  }
+  r_squared = 1 - get_r2(mod, ale.values = ale$predict(feature_values))
+  p + ggtitle(sprintf("C: %i, eps: %.4f, Rsquared: %.4f", complexity, epsilon,
+    r_squared))
+}
+
+
+
+min_model  = function(mod_step, mod_segment, max_feat_cost, base_feat_cost, feature_name) {
+  n_steps = count_pieces(mod_step)
+  n_segments = count_pieces(mod_segment)
+  if(all(is.na(c(n_segments, n_steps)))) {
+    cc = max_feat_cost
+    mod = NULL
+  } else if(any(is.na(c(n_segments, n_steps)))) {
+    cc = ifelse(is.na(n_segments), n_steps, n_segments)
+    if(is.na(n_segments)) {
+      mod = mod_step
+    } else {
+      mod = mod_segment
+    }
+  } else {
+    cc = ifelse(n_steps < n_segments, n_steps, n_segments)
+    if(n_steps < n_segments) {
+      mod = mod_step
+    } else {
+      mod = mod_segment
+    }
+  }
+  if(is.null(mod_step) & is.null(mod_segment)) {
+    warning(sprintf("Could not approximate ALE plot for %s.
+      Assigning max_feat_cost of %.2f", feature_name, max_feat_cost))
+    cc = max_feat_cost
+  }
+  if (cc != 0) {
+    cc = min(cc + base_feat_cost, max_feat_cost)
+  }
+  list(mod = mod, c = cc)
+}
 
 
 # Measures the complexity of a model
@@ -139,7 +151,7 @@ count_pieces = function(mod){
   if(is.null(mod)) return(NA)
   if(inherits(mod, "lm")) {
     # Feature is not used
-    if(length(coef(mod)) == 1) {
+    if(length(coef(mod)) == 1) {conopt minos in R
       return(0)
     } else {
       return(1)
@@ -213,3 +225,61 @@ predict_approx_mod = function(mod, type = "response", ...) {
     predict(mod, type = type, ...)
   }
 }
+
+
+
+
+
+### Sampling based linear segments approximation approach:
+
+lsamp_best_o = function(ale, max_feat_cost, epsilon, m = 100) {
+  max_breaks = max_feat_cost / 2
+  n_breaks = 1
+  r1 = 1
+  while(r2 > epsilon) {
+    mod = lsamp_best(ale, n_breaks, m = m, epsilon = epsilon)
+    r2 = mod$r2
+    n_breaks = n_breaks + 1
+  }
+  return(mod)
+}
+
+lsamp_best = function(ale, n_breaks, m, type, epsilon) {
+  r2_best = 1
+  ## TODO: If m > number of possible combinations, reduce m
+  for(i in 1:m) {
+    res = lsamp(ale, n_breaks = n_breaks, "segment")
+    if(res$r2 < r2_best) {
+      mod_best = res$mod
+      r2_best = res$r2
+    }
+    if (r2_best < epsilon) {
+      return(list(mod = mod_best, r2 = r2_best))
+    }
+  }
+  list(mod = mod_best, r2 = r2_best)
+}
+
+lsamp = function(ale, n_breaks = 2, type){
+  assert_choice(type, choices = c("step", "segment"))
+  fname = setdiff(colnames(ale$results), c(".ale", ".type"))
+  breakpoints_all = unique(ale$results[,fname])
+  x = ale$predictor$data$get.x()[,fname, with=FALSE][[1]]
+  xmin = min(x)
+  xmax = max(x)
+  breakpoints_all = setdiff(breakpoints_all, c(xmin, xmax))
+  breakpoints = sample(breakpoints_all, size = n_breaks, replace = FALSE)
+  intervals_point = c(min(x), breakpoints, max(x))
+
+  x_interval = cut(x, breaks = intervals_point, include.lowest = TRUE)
+  ale_prediction = ale$predict(x)
+  dat = data.frame(x = x, interval = x_interval, ale = ale_prediction )
+  mod = lm(ale ~ x * interval, data = dat)
+  list(mod = mod, r2 = get_r2(mod, ale_prediction))
+}
+
+res = lsamp_best_o(ale, 10, 0.01)
+plot(ale$predictor$data$get.x()[, "V1", with=FALSE][[1]],predict(res$mod))
+
+
+plot(ale)

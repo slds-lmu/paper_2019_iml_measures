@@ -54,11 +54,24 @@ fname = "V1"
 ale = FeatureEffect$new(pred, fname)
 plot(ale)
 
-fc = FunComplexity$new(pred, epsilon = 0.1)
-fc$plot_complexity("V10")
-  fc$var_explained
+fc = FunComplexity$new(pred, epsilon = 0.1, max_feat_cost = 10)
+fc$plot_complexity("V3")
+fc$var_explained
 fc$complexity_total
 
+aa = AleNumApprox$new(ale, 0.1, 10)
+aa$predict(dat1)
+aa$r2
+aa$n_coefs
+aa$model
+aa$plot()
+aa = AleCatApprox$new(ale, 0.1, 10)
+aa$transform(dat1)
+dim(aa$transform(dat1))
+aa$predict(dat1)
+aa$r2
+aa$n_coefs
+plot(aa)
 mods = fc$.__enclos_env__$private$approx_models
 
 summary(mods[[1]])

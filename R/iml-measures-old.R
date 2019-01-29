@@ -309,21 +309,6 @@ score_linearity = function(predictor) {
 # =============================================================================
 # Feature linearity score based on ALE approx with univariate lm
 # =============================================================================
-weighted.var <- function(x, w = NULL, na.rm = FALSE) {
-  if (is.null(w)) {
-    w = rep(1, times = length(x))
-  }
-  if (na.rm) {
-    w <- w[i <- !is.na(x)]
-    x <- x[i]
-  }
-  sum.w <- sum(w)
-  sum.w2 <- sum(w^2)
-  mean.w <- sum(x * w) / sum(w)
-  (sum.w / (sum.w^2 - sum.w2)) * sum(w * (x - mean.w)^2, na.rm =
-      na.rm)
-}
-
 score_linearity_feature_lm = function(predictor, feature_name) {
   feature_type = predictor$data$feature.types[feature_name]
   if(feature_type == "categorical") {

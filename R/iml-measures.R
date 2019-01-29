@@ -55,11 +55,11 @@ FunComplexity = R6::R6Class(
         dat = data.frame(self$predictor$data$get.x())
         predictions = self$predictor$predict(dat)[[1]]
         ale_predictions = self$predict(dat)
-        SST = var(predictions)
+        SST = sum((predictions - mean(predictions))^2)
         if(SST == 0) {
           self$var_explained = 1
         } else {
-          SSE = var(ale_predictions - predictions)
+          SSE = sum((ale_predictions - predictions)^2)
           self$var_explained = 1 - SSE/SST
         }
       }
@@ -70,11 +70,12 @@ FunComplexity = R6::R6Class(
         if(eff$feature.type == "numerical") {
           max_breaks = (self$max_feat_cost / 2) + 1
           res = optim_approx(eff, max_breaks = max_breaks, epsilon = self$epsilon)
-          cc = min(self$max_feat_cost, length(coef(res$mod)))
+          cc = min(self$max_feat_cost, res$n_coef)
           mod = res$mod
         } else {
-          mod = approx_ale_cat(eff, self$max_feat_cost, self$epsilon)
-          cc = width(mod)
+          res = optim_approx_cat(eff, epsilon = self$epsilon, max_breaks = self$max_feat_cost)
+          cc = min(self$max_feat_cost, res$n_cat)
+          mod = res$mod
         }
 
         self$complexities[feature_name] = cc
@@ -91,8 +92,9 @@ FunComplexity = R6::R6Class(
 # =============================================================================
 plot_complexity_ = function(feature_values, mod, ale, complexity, epsilon) {
   feature = ale$feature.name
-  mod_values = predict(mod)
-  dat = data.frame(x = feature_values, y = mod_values)
+  dat = ale$predictor$data$get.x()
+  mod_values = mod(dat)
+  dat = data.frame(x = dat[[feature]], y = mod_values)
 
   p = ale$plot()
   if(is.numeric(feature_values)) {
@@ -102,7 +104,7 @@ plot_complexity_ = function(feature_values, mod, ale, complexity, epsilon) {
     dat = unique(dat)
     p = p + geom_point(aes(x = x, y = y), data = dat)
   }
-  r_squared = 1 - get_r2(mod, ale.values = ale$predict(feature_values))
+  r_squared = 1 - get_r2(mod_values, ale.values = ale$predict(feature_values))
   p + ggtitle(sprintf("C: %i, eps: %.4f, Rsquared: %.4f", complexity, epsilon,
     r_squared))
 }
@@ -115,78 +117,115 @@ count_pieces = function(mod){
   sum(cs$coefficients[, "Pr(>|t|)"] < 1)
 }
 
-get_r2 = function(mod, ale.values) {
-  seg.predictions = predict(mod)
-  SST = var(ale.values)
+get_r2 = function(seg.predictions, ale.values) {
+  SST = sum(ale.values^2)
   if(SST == 0) { return(FALSE)}
-  SSE = var(seg.predictions - ale.values)
+  SSE = sum((seg.predictions - ale.values)^2)
   SSE / SST
 }
 
 check_r2 = function(mod, ale.values, epsilon){
-  get_r2(mod, ale.values) < epsilon
+  seg.predictions = predict(mod)
+  get_r2(seg.predictions, ale.values) < epsilon
 }
+
+
+
+
+optim_approx_cat = function(ale, epsilon, max_breaks) {
+  fname = ale$feature.name
+  x = ale$predictor$data$get.x()[,fname, with=FALSE][[1]]
+  ale_prediction = ale$predict(x)
+
+  # Create table with x, ale, n
+  df = data.table(ale = ale_prediction, x = x)
+  df = df[,.(n = .N), by = list(ale, x)]
+
+  # centered at zero
+  SST = sum(ale_prediction^2)
+  max_breaks = min(max_breaks, length(unique(df$ale)))
+  for(n_breaks in 1:max_breaks) {
+    lower = rep(min(df$ale), times = n_breaks)
+    upper = rep(max(df$ale), times = n_breaks)
+    init_breaks = quantile(df$ale, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
+    opt_gensa  = GenSA(par = init_breaks, step_fn, lower, upper, dat = df,
+      control = list(maxit = 100, threshold.stop = epsilon), SST)
+    pars = opt_gensa$par
+    if(opt_gensa$value < epsilon)  break()
+  }
+
+  df$lvl = cut(df$ale, breaks = c(min(df$ale), pars, max(df$ale)), include.lowest = TRUE)
+  df_pred = df[,.(pred_approx = weighted.mean(ale, w = n)),by = lvl]
+  df_inter = merge(df, df_pred, by.x = "lvl", by.y = "lvl")
+
+  pred = function(dat){
+    merge(dat, df_inter, by.x = fname, by.y = "x", sort = FALSE)[["pred_approx"]]
+  }
+  seg.predictions = pred(ale$predictor$data$get.x())
+  SSE = sum((seg.predictions - ale_prediction)^2)
+  r2 = 1 - SSE / SST
+  list(mod = pred, r2 = r2, n_cat = length(unique(df$lvl)))
+}
+
+step_fn = function(par, dat, SST){
+  dat$lvl = cut(dat$ale, breaks = c(min(dat$ale), par, max(dat$ale)), include.lowest = TRUE)
+  dat2 = dat[,.(ale_mean = weighted.mean(ale, w = n), n = sum(n)),by = lvl]
+  # ALE plots have mean zero
+  SSM = sum((dat2$ale_mean)^2 * dat2$n)
+  1 - (SSM/SST)
+}
+
 
 
 #' Function to optimize for ALE approx
 #'
 #' @param par The breakpoints
-fn = function(par, ale, SST, x, ale_prediction){
-  x_interval = cut(x, breaks = c(min(x), par, max(x)), include.lowest = TRUE)
+segment_fn = function(par, ale, SST, x, ale_prediction){
+  x_interval = cut(x, breaks = unique(c(min(x), par, max(x))), include.lowest = TRUE)
   dat = data.table(xv = x, interval = x_interval, alev = ale_prediction)
-  # TODO: Increase speed by using fit.lm or using matrix algebra or Rcpp
   res = dat[, .(sum(.lm.fit(cbind(rep.int(1, times = length(xv)),xv),alev)$residuals^2)), by = interval]
   sum(res$V1)/SST
 }
 
 optim_approx = function(ale, epsilon, max_breaks) {
   fname = ale$feature.name
-  x = as.numeric(ale$predictor$data$get.x()[,fname, with=FALSE][[1]])
+  x = ale$predictor$data$get.x()[,fname, with=FALSE][[1]]
   ale_prediction = ale$predict(x)
 
   # test 0 breaks
   mod = lm(ale_prediction ~ x)
   if(check_r2(mod, ale_prediction, epsilon)) {
-    return(list(mod = mod, r2 = get_r2(mod, ale_prediction)))
+    seg.predictions = predict(mod)
+    return(list(mod = function(x) predict(mod, newdata = x),
+                r2 = get_r2(seg.predictions, ale_prediction)))
   }
-  SSE = 1
-  for(i in 1:max_breaks) {
-    opt_gensa = optim_approx_k(ale, i, epsilon)
-    pars = unique(opt_gensa$par)
+
+  SST = sum(ale$predict(x)^2)
+  for(n_breaks in 1:max_breaks) {
+    lower = rep(min(x), times = n_breaks)
+    upper = rep(max(x), times = n_breaks)
+    init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
+    opt_gensa = GenSA(par = init_breaks, segment_fn, lower, upper, ale = ale,
+      control = list(maxit = 100, threshold.stop = epsilon), SST,
+      x = x, ale_prediction = ale$predict(x))
+    pars = opt_gensa$par
     if(opt_gensa$value < epsilon)  break()
   }
   # fit lm with par as cut points
-  fname = ale$feature.name
-  intervals_point = c(min(x), pars, max(x))
+  intervals_point = unique(c(min(x), pars, max(x)))
   x_interval = cut(x, breaks = intervals_point, include.lowest = TRUE)
   dat = data.frame(x = x, interval = x_interval, ale = ale_prediction )
   mod = lm(ale ~ x * interval, data = dat)
-  list(mod = mod, r2 = get_r2(mod, ale_prediction))
-}
 
-optim_approx_k = function(ale, n_breaks,  epsilon){
-  fname = ale$feature.name
-  x = ale$predictor$data$get.x()[,fname, with=FALSE][[1]]
-  lower = rep(min(x), times = n_breaks)
-  upper = rep(max(x), times = n_breaks)
-  SST = var(ale$predict(x)) * length(x)
-  par = NULL
-  init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
-  GenSA(par = init_breaks, fn, lower, upper, ale = ale,
-    control = list(maxit = 100, threshold.stop = epsilon), SST,
-    x = x, ale_prediction = ale$predict(x))
-}
-
-approx_ale_cat = function(ale, max_feat_cost, epsilon){
-  fname = ale$feature.name
-  x = ale$predictor$data$get.x()[,fname, with=FALSE][[1]]
-  ale_prediction = ale$predict(x)
-  # Fully grow tree
-  mod = partykit::ctree(ale_prediction ~ x, control = ctree_control(alpha = 0.5, minbucket = 1))
-  # prune back until r2 bigger than 0.95
-  while(check_r2(mod, ale_prediction, epsilon)) {
-    mod_best = mod
-    mod = prune_tree_1n(mod)
+  pred = function(dat) {
+    x = dat[[fname]]
+    x_interval = cut(x, breaks = intervals_point, include.lowest = TRUE)
+    dat = data.frame(x = x, interval = x_interval)
+    predict(mod, newdata = dat)
   }
-  mod_best
+
+  seg.predictions = predict(mod)
+  list(mod = pred, r2 = get_r2(seg.predictions, ale_prediction),
+       n_coef = length(coef(mod)))
 }
+

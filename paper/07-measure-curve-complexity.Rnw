@@ -40,7 +40,7 @@ The following figure shows an ALE plot for a feature from the Friedman formula.
 We generated 200 data points from this formula an trained a random forest to predict.
 
 <<>>=
-n = 5000
+n = 1000
 dat1 = mlbench::mlbench.friedman1(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
 
@@ -50,13 +50,14 @@ lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
 pred = iml::Predictor$new(mod, dat1)
 
-fname = "V3"
+fname = "V1"
 ale = FeatureEffect$new(pred, fname)
 plot(ale)
 
 fc = FunComplexity$new(pred, epsilon = 0.1)
-fc$plot_complexity("V8")
-fc$var_explained
+fc$plot_complexity("V10")
+  fc$var_explained
+fc$complexity_total
 
 mods = fc$.__enclos_env__$private$approx_models
 

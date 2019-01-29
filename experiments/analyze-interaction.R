@@ -26,7 +26,7 @@ dat = data.frame(mlbench::mlbench.friedman2(n))
 tsk = makeRegrTask(data = dat, target = "y")
 
 # Example with linear model ALE
-lrn = makeLearner("regr.lm")
+lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
 pred = Predictor$new(mod, dat)
 

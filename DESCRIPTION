@@ -14,11 +14,10 @@ Depends: OpenML,
          data.table,
          dplyr,
          ggplot2,
-         partykit
+         GenSA
 Imports: checkmate,
          mlrMBO,
-         rpart, 
-         GenSA
+         rpart
 Suggests: xgboost,
           randomForest,
           svm,

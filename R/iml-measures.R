@@ -1,3 +1,12 @@
+# TODO
+# Improve plotting to stop at break points
+# Write tests
+# Add some comments
+
+# TODO when paper is done
+# Document FunComplexity
+# Profile code to see where bottleneck is
+
 FunComplexity = R6::R6Class(
   "FunComplexity",
   inherit = iml::FeatureEffects,
@@ -30,7 +39,9 @@ FunComplexity = R6::R6Class(
       res = data.frame(lapply(self$effects, function(eff) {
         eff$predict(dat)
       }))
-      rowSums(res)
+      dat = data.frame(self$predictor$data$get.x())
+      predictions = self$predictor$predict(dat)[[1]]
+      rowSums(res) + mean(predictions)
     },
     compute = function(epsilon) {
       self$epsilon = epsilon
@@ -49,11 +60,11 @@ FunComplexity = R6::R6Class(
         dat = data.frame(self$predictor$data$get.x())
         predictions = self$predictor$predict(dat)[[1]]
         ale_predictions = self$predict(dat)
-        SST = ssq((predictions - mean(predictions)))
+        SST = ssq(predictions - mean(predictions))
         if(SST == 0) {
           self$var_explained = 1
         } else {
-          SSE = ssq((ale_predictions - predictions))
+          SSE = ssq(ale_predictions - predictions)
           self$var_explained = 1 - SSE/SST
         }
       }
@@ -61,6 +72,7 @@ FunComplexity = R6::R6Class(
     measure_non_linearities = function(){
       self$approx_models = lapply(self$effects, function(eff) {
         feature_name = eff$feature.name
+        print(feature_name)
         if(eff$feature.type == "numerical") {
           max_breaks = (self$max_feat_cost / 2) + 1
           AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_breaks = max_breaks)
@@ -68,7 +80,7 @@ FunComplexity = R6::R6Class(
           AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_breaks = self$max_feat_cost)
         }
       })
-      self$complexity_total  = sum(unlist(self$complexities))
+      self$complexity_total = 1 + sum(unlist(lapply(self$approx_models, function(x) x$n_coefs)))
     }
   )
 )
@@ -85,16 +97,44 @@ AleApprox = R6::R6Class("AleApprox",
     max_breaks = NULL,
     feature = NULL,
     epsilon = NULL,
+    transform = NULL,
+    predict = NULL,
+    SST = NULL,
+    max_complex = FALSE,
     initialize = function(ale, epsilon, max_breaks){
       assert_class(ale, "FeatureEffect")
       assert_numeric(epsilon, lower = 0, upper = 1, len = 1, any.missing = FALSE)
       assert_numeric(max_breaks, len = 1)
-
       self$ale = ale
       self$epsilon = epsilon
       self$max_breaks = max_breaks
       self$feature = ale$feature.name
+      private$x = self$ale$predictor$data$get.x()[,self$feature, with=FALSE][[1]]
+      private$ale_values = self$ale$predict(private$x)
+      self$SST = ssq(private$ale_values)
     }
+  ),
+  private = list(
+    is_null_ale = function() {
+      private$null_ale = all(self$ale$results$.ale == 0)
+      if(private$null_ale) {
+        self$r2 = 1
+        self$n_coefs = 0
+        self$transform = function(X) {
+          data.frame()
+        }
+        self$predict = function(X) rep(0, times = nrow(X))
+        private$approx_values = rep(0, times = self$ale$predictor$data$n.rows)
+        self$is_max_complex = FALSE
+        TRUE
+      } else {
+        FALSE
+      }
+    },
+    null_ale = NULL,
+    x = NULL,
+    ale_values = NULL,
+    approx_values = NULL
   )
 )
 
@@ -103,25 +143,32 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
   public = list(
     # Table holding the level/new_level info
     tab = NULL,
-    SST = NULL,
     initialize = function(ale, epsilon, max_breaks) {
       assert_true(ale$feature.type == "categorical")
       super$initialize(ale, epsilon, max_breaks)
-      self$approximate()
-      self$n_coefs = length(unique(self$tab$lvl))
-      private$approx_values = self$predict(self$ale$predictor$data$get.x())
-      SSE = ssq(private$approx_values -  private$ale_values)
-      self$r2 = 1 - SSE / self$SST
+      if(!private$is_null_ale()) {
+        self$approximate()
+        self$n_coefs = length(unique(self$tab$lvl)) - 1
+        self$transform = function(dat){
+          newdat = merge(dat, self$tab, by.x = self$feature,
+            by.y = "x", sort = FALSE)[, c("lvl", "ale")]
+          model.matrix(ale ~ factor(lvl) - 1, data = newdat)
+        }
+
+        self$predict = function(dat){
+          merge(dat, self$tab, by.x = self$feature, by.y = "x", sort = FALSE)[["pred_approx"]]
+        }
+
+        private$approx_values = self$predict(self$ale$predictor$data$get.x())
+        SSE = ssq(private$approx_values -  private$ale_values)
+        self$r2 = 1 - SSE / self$SST
+      }
     },
     approximate = function(){
-      x = self$ale$predictor$data$get.x()[,self$feature, with=FALSE][[1]]
-      private$ale_values = ale$predict(x)
-
+      x = private$x
       # Create table with x, ale, n
       df = data.table(ale =  private$ale_values, x = x)
       df = df[,.(n = .N), by = list(ale, x)]
-
-      self$SST = ssq(private$ale_values)
       max_breaks = min(self$max_breaks, length(unique(df$ale)))
       for(n_breaks in 1:max_breaks) {
         lower = rep(min(df$ale), times = n_breaks)
@@ -130,38 +177,27 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
         opt_gensa  = GenSA(par = init_breaks, step_fn, lower, upper, dat = df,
           control = list(maxit = 100, threshold.stop = self$epsilon), self$SST)
         pars = opt_gensa$par
-        if(opt_gensa$value < self$epsilon)  break()
+        if(opt_gensa$value <= self$epsilon)  break()
       }
+      if(opt_gensa$value > self$epsilon)  self$max_complex = TRUE
       # Create table for predictions
       df$lvl = cut(df$ale, breaks = c(min(df$ale), pars, max(df$ale)), include.lowest = TRUE)
       df_pred = df[,.(pred_approx = weighted.mean(ale, w = n)),by = lvl]
       self$tab = merge(df, df_pred, by.x = "lvl", by.y = "lvl")
     },
-    predict = function(dat){
-      merge(dat, self$tab, by.x = self$feature, by.y = "x", sort = FALSE)[["pred_approx"]]
-    },
-    transform = function(dat){
-      newdat = merge(dat, self$tab, by.x = self$feature,
-        by.y = "x", sort = FALSE)[, c("lvl", "ale")]
-      model.matrix(ale ~ factor(lvl) - 1, data = newdat)
-    },
     plot = function() {
       dat = self$ale$predictor$data$get.x()
       dat = unique(data.frame(x = dat[[self$feature]], y = private$approx_values))
-      p = self$ale$plot() + geom_point(aes(x = x, y = y), data = dat)+
+      self$ale$plot() + geom_point(aes(x = x, y = y), data = dat)+
         ggtitle(sprintf("C: %i, eps: %.4f, R2: %.4f", self$n_coefs, self$epsilon,
           self$r2))
     }
-
-  ),
-  private = list(
-    ale_values = NULL,
-    approx_values = NULL
   )
 )
 
 step_fn = function(par, dat, SST){
-  dat$lvl = cut(dat$ale, breaks = c(min(dat$ale), par, max(dat$ale)), include.lowest = TRUE)
+  breaks = unique(c(min(dat$ale), par, max(dat$ale)))
+  dat$lvl = cut(dat$ale, breaks = breaks, include.lowest = TRUE)
   dat2 = dat[,.(ale_mean = weighted.mean(ale, w = n), n = sum(n)),by = lvl]
   # ALE plots have mean zero
   SSM = sum((dat2$ale_mean)^2 * dat2$n)
@@ -175,32 +211,48 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
   public = list(
     # Table holding the level/new_level info
     model = NULL,
-    SST = NULL,
     breaks = NULL,
     initialize = function(ale, epsilon, max_breaks) {
       assert_true(ale$feature.type == "numerical")
       super$initialize(ale, epsilon, max_breaks)
       self$approximate()
-      self$n_coefs = length(coef(self$model))
+      # Don't count the intercept
+      self$n_coefs = length(coef(self$model)) - 1
+
+      # TODO: Implement using transform and lm.fit and multiplication with coefs
+      self$predict = function(dat) {
+        x = dat[[self$feature]]
+        x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
+        dat = data.frame(x = x, interval = x_interval)
+        predict(self$model, newdata = dat)
+      }
+
+      self$transform = function(dat, intercept = TRUE){
+        x = ifelse(is.data.frame(dat), dat[,self$feature], dat)
+        if(is.null(self$breaks)) return(dat)
+        x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
+        dat = data.frame(x = x, interval = x_interval)
+        if(intercept) {
+          model.matrix(x ~ interval, data = dat)
+        } else {
+          model.matrix(x ~ interval - 1, data = dat)
+        }
+      }
       private$approx_values = self$predict(self$ale$predictor$data$get.x())
       SSE = ssq(private$approx_values -  private$ale_values)
       self$r2 = 1 - SSE / self$SST
     },
     approximate = function(){
-      x = self$ale$predictor$data$get.x()[,self$feature, with=FALSE][[1]]
-      private$ale_values = self$ale$predict(x)
-      self$SST = ssq(private$ale_values)
-
+      x = private$x
       # test 0 breaks
       mod = lm(private$ale_values ~ x)
       SSE = ssq(private$ale_values - predict(mod))
-      if((SSE/self$SST) < self$epsilon) {
+      if(self$SST == 0 || (SSE/self$SST) < self$epsilon) {
         self$r2 = get_r2(predict(mod), private$ale_values)
-        self$n_coefs = 2
         private$approx_values = predict(mod)
         self$model = mod
+        return()
       }
-
       for(n_breaks in 1:self$max_breaks) {
         lower = rep(min(x), times = n_breaks)
         upper = rep(max(x), times = n_breaks)
@@ -209,8 +261,9 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
           control = list(maxit = 100, threshold.stop = self$epsilon), self$SST,
           x = x, ale_prediction = private$ale_values)
         pars = opt_gensa$par
-        if(opt_gensa$value < self$epsilon)  break()
+        if(opt_gensa$value <= self$epsilon)  break()
       }
+      if(opt_gensa$value > self$epsilon)  self$max_complex = TRUE
       # fit lm with par as cut points
       self$breaks = unique(c(min(x), pars, max(x)))
       x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
@@ -219,42 +272,15 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       private$approx_values = predict(mod)
       self$r2 = get_r2(private$approx_values, private$ale_values)
     },
-    # TODO: Implement using transform and lm.fit and multiplication with coefs
-    predict = function(dat) {
-      x = dat[[self$feature]]
-      x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
-      dat = data.frame(x = x, interval = x_interval)
-      predict(self$model, newdata = dat)
-    },
-    transform = function(dat, intercept = TRUE){
-      if(is.data.frame(dat)) {
-        x = dat[,self$feature]
-      } else {
-        x = dat
-      }
-      if(is.null(self$breaks)) return(dat)
-      x_interval = cut(x, breaks = intervals_point, include.lowest = TRUE)
-      dat = data.frame(x = x, interval = x_interval)
-      if(intercept) {
-        model.matrix(x ~ interval, data = dat)
-      } else {
-        model.matrix(x ~ interval - 1, data = dat)
-      }
-    },
     plot = function() {
       dat = self$ale$predictor$data$get.x()
       dat = data.frame(x = dat[[self$feature]], y = private$approx_values)
-
       self$ale$plot() + geom_line(aes(x = x, y = y), color = "red",
         data = dat, lty = 2) +
         ggtitle(sprintf("C: %i, eps: %.4f, R2: %.4f", self$n_coefs, self$epsilon,
           self$r2))
     }
 
-  ),
-  private = list(
-    ale_values = NULL,
-    approx_values = NULL
   )
 )
 

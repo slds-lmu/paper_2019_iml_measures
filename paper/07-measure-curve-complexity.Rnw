@@ -11,17 +11,15 @@ Recipe:
 \item For all features $x_1,\ldots,x_p$:
 \begin{itemize}
 \item Estimated first order ALE
-\item Compute the approximation using the least amount of linear segments possible while still having a PRL above $1-\epsilon$
-\item Measure complexity of segments as number of weights needed when approximating the segments with a piecewise linear regression model ($m_j$)
-\item Compute complexity of best step-wise function (segments with slope 0) approximation model $m_{j,step}$ using ctree TODO: CITE
-\item Compute complexity of best iece-wise linear  approximation model $m_{j,seg}$ using mob TODO: CITE
+\item Approximate with segmented linear regression
+\item Complexity of approximation = Number of weights needed in linear regression model ($m_j$)
 \item $c_j = min(c_{max}, m_{j, seg}, m_{j, step})$
 \end{itemize}
 \item Sum up all complexity measures $c_j$: $c = \sum_{j=1}^p c_j$
 \end{enumerate}
 
 
-Algorithm for computing best piece-wise model or step-wise model for a single feature.
+Algorithm for computing best approximation:
 \begin{enumerate}
 \item Fully grow tree with feature $x_j$ predicting $f_{j,ALE}$
 \item If  PRL of fit is below $1-\epsilon$ return max-c
@@ -40,24 +38,28 @@ The following figure shows an ALE plot for a feature from the Friedman formula.
 We generated 200 data points from this formula an trained a random forest to predict.
 
 <<>>=
-n = 1000
+n = 500
 dat1 = mlbench::mlbench.friedman1(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
 
 dat1$V1 = cut(dat1$V1, breaks = c(0, 0.1, 0.5, 0.7, 1), include.lowest = TRUE)
+dat1$test = factor(c("a", "b"))
 tsk = makeRegrTask(data = dat1, target = "y")
-lrn = makeLearner("regr.ranger")
+lrn = makeLearner("regr.ksvm")
 mod = train(lrn, tsk)
 pred = iml::Predictor$new(mod, dat1)
+
+
+fc = FunComplexity$new(pred, epsilon = 0.05, max_feat_cost = 10)
+fc$plot_complexity("V10")
+fc$var_explained
+fc$complexity_total
+
 
 fname = "V1"
 ale = FeatureEffect$new(pred, fname)
 plot(ale)
 
-fc = FunComplexity$new(pred, epsilon = 0.1, max_feat_cost = 10)
-fc$plot_complexity("V3")
-fc$var_explained
-fc$complexity_total
 
 aa = AleNumApprox$new(ale, 0.1, 10)
 aa$predict(dat1)
@@ -71,6 +73,7 @@ dim(aa$transform(dat1))
 aa$predict(dat1)
 aa$r2
 aa$n_coefs
+aa$max_complex
 plot(aa)
 mods = fc$.__enclos_env__$private$approx_models
 

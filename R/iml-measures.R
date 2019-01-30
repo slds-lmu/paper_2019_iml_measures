@@ -13,15 +13,12 @@ FunComplexity = R6::R6Class(
   public = list(
     epsilon = NULL,
     var_explained = NULL,
-    SST = NULL,
-    SSE = NULL,
-    SSM = NULL,
     base_feat_cost = NULL,
     max_feat_cost = NULL,
     complexity_total = NULL,
     approx_models = NULL,
     initialize = function(predictor, grid.size = 50, parallel = FALSE,
-      epsilon = 0.05, base_feat_cost = 1, max_feat_cost = 10) {
+      epsilon = 0.05, base_feat_cost = 0, max_feat_cost = 10) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
         stop("Please set class in Predictor")
       }
@@ -74,10 +71,9 @@ FunComplexity = R6::R6Class(
         feature_name = eff$feature.name
         print(feature_name)
         if(eff$feature.type == "numerical") {
-          max_breaks = (self$max_feat_cost / 2) + 1
-          AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_breaks = max_breaks)
+          AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_feat_cost = self$max_feat_cost)
         } else {
-          AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_breaks = self$max_feat_cost)
+          AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_feat_cost = self$max_feat_cost)
         }
       })
       self$complexity_total = 1 + sum(unlist(lapply(self$approx_models, function(x) x$n_coefs)))
@@ -116,22 +112,21 @@ AleApprox = R6::R6Class("AleApprox",
   ),
   private = list(
     is_null_ale = function() {
-      private$null_ale = all(self$ale$results$.ale == 0)
-      if(private$null_ale) {
+      if(all(self$ale$results$.ale == 0)) {
         self$r2 = 1
         self$n_coefs = 0
-        self$transform = function(X) {
-          data.frame()
+        self$transform = function(X)  data.frame()
+        self$predict = function(X) {
+          times = ifelse(is.data.frame(X), nrow(X), length(X))
+          rep(0, times = times)
         }
-        self$predict = function(X) rep(0, times = nrow(X))
         private$approx_values = rep(0, times = self$ale$predictor$data$n.rows)
-        self$is_max_complex = FALSE
+        self$max_complex = FALSE
         TRUE
       } else {
         FALSE
       }
     },
-    null_ale = NULL,
     x = NULL,
     ale_values = NULL,
     approx_values = NULL
@@ -143,9 +138,9 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
   public = list(
     # Table holding the level/new_level info
     tab = NULL,
-    initialize = function(ale, epsilon, max_breaks) {
+    initialize = function(ale, epsilon, max_feat_cost) {
       assert_true(ale$feature.type == "categorical")
-      super$initialize(ale, epsilon, max_breaks)
+      super$initialize(ale, epsilon, max_breaks = max_feat_cost)
       if(!private$is_null_ale()) {
         self$approximate()
         self$n_coefs = length(unique(self$tab$lvl)) - 1
@@ -188,8 +183,9 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
     plot = function() {
       dat = self$ale$predictor$data$get.x()
       dat = unique(data.frame(x = dat[[self$feature]], y = private$approx_values))
-      self$ale$plot() + geom_point(aes(x = x, y = y), data = dat)+
-        ggtitle(sprintf("C: %i, eps: %.4f, R2: %.4f", self$n_coefs, self$epsilon,
+      max_string = ifelse(self$max_complex, "+", "")
+      self$ale$plot() + geom_point(aes(x = x, y = y), data = dat, color = "red", size = 2)+
+        ggtitle(sprintf("C: %i%s, eps: %.4f, R2: %.4f", self$n_coefs, max_string, self$epsilon,
           self$r2))
     }
   )
@@ -212,35 +208,44 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
     # Table holding the level/new_level info
     model = NULL,
     breaks = NULL,
-    initialize = function(ale, epsilon, max_breaks) {
+    initialize = function(ale, epsilon, max_feat_cost) {
       assert_true(ale$feature.type == "numerical")
+      max_breaks = floor(max_feat_cost / 2) - 1
       super$initialize(ale, epsilon, max_breaks)
-      self$approximate()
-      # Don't count the intercept
-      self$n_coefs = length(coef(self$model)) - 1
 
-      # TODO: Implement using transform and lm.fit and multiplication with coefs
-      self$predict = function(dat) {
-        x = dat[[self$feature]]
-        x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
-        dat = data.frame(x = x, interval = x_interval)
-        predict(self$model, newdata = dat)
-      }
+      if(!private$is_null_ale()) {
 
-      self$transform = function(dat, intercept = TRUE){
-        x = ifelse(is.data.frame(dat), dat[,self$feature], dat)
-        if(is.null(self$breaks)) return(dat)
-        x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
-        dat = data.frame(x = x, interval = x_interval)
-        if(intercept) {
-          model.matrix(x ~ interval, data = dat)
-        } else {
-          model.matrix(x ~ interval - 1, data = dat)
+        self$approximate()
+        # Don't count the intercept
+        self$n_coefs = length(coef(self$model)) - 1
+
+        # TODO: Implement using transform and lm.fit and multiplication with coefs
+        self$predict = function(dat) {
+          if(is.data.frame(dat)) {
+            x = dat[[self$feature]]
+          } else {
+            x = dat
+          }
+          x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
+          dat = data.frame(x = x, interval = x_interval)
+          predict(self$model, newdata = dat)
         }
+
+        self$transform = function(dat, intercept = TRUE){
+          x = ifelse(is.data.frame(dat), dat[,self$feature], dat)
+          if(is.null(self$breaks)) return(dat)
+          x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
+          dat = data.frame(x = x, interval = x_interval)
+          if(intercept) {
+            model.matrix(x ~ interval, data = dat)
+          } else {
+            model.matrix(x ~ interval - 1, data = dat)
+          }
+        }
+        private$approx_values = self$predict(self$ale$predictor$data$get.x())
+        SSE = ssq(private$approx_values -  private$ale_values)
+        self$r2 = 1 - SSE / self$SST
       }
-      private$approx_values = self$predict(self$ale$predictor$data$get.x())
-      SSE = ssq(private$approx_values -  private$ale_values)
-      self$r2 = 1 - SSE / self$SST
     },
     approximate = function(){
       x = private$x
@@ -254,6 +259,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         return()
       }
       for(n_breaks in 1:self$max_breaks) {
+        print(n_breaks)
         lower = rep(min(x), times = n_breaks)
         upper = rep(max(x), times = n_breaks)
         init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
@@ -273,12 +279,19 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       self$r2 = get_r2(private$approx_values, private$ale_values)
     },
     plot = function() {
-      dat = self$ale$predictor$data$get.x()
-      dat = data.frame(x = dat[[self$feature]], y = private$approx_values)
-      self$ale$plot() + geom_line(aes(x = x, y = y), color = "red",
+      fdat = self$ale$predictor$data$get.x()[[self$feature]]
+      x = seq(from = min(fdat), to = max(fdat), length.out = 200)
+      y = self$predict(x)
+      intervals = cut(x, breaks = self$breaks)
+      dat = data.frame(x = x, y = y, interval = intervals)
+      max_string = ifelse(self$max_complex, "+", "")
+      p = self$ale$plot() + geom_line(aes(x = x, y = y, group = interval), color = "red",
         data = dat, lty = 2) +
-        ggtitle(sprintf("C: %i, eps: %.4f, R2: %.4f", self$n_coefs, self$epsilon,
+        ggtitle(sprintf("C: %i%s, eps: %.4f, R2: %.4f", self$n_coefs, max_string, self$epsilon,
           self$r2))
+      if(!is.null(self$breaks)) p = p + geom_vline(data = data.frame(breaks = self$breaks), aes(xintercept = self$breaks))
+      p
+
     }
 
   )

@@ -33,6 +33,14 @@ We propose two measures to capture both parts of this decomposition:
 
 The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
 
+We do the following approximation:
+
+\begin{eqnarray}
+f(x) &= f_0 + \sum f_{1st,j} + \sum f_{higher-order}\\
+     &= \bar{f(x)} + \sum f_{ALE, 1st}  + Rest \\
+     &= \bar{f(x)} + \sum f_{ALEapprox, 1st} + err_{approx} + Rest \\
+\end{eqnarray}
+
 
 Paper \citep{murdoch2019interpretable} says that desiderata are
 \begin{itemize}

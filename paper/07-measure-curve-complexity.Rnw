@@ -13,111 +13,122 @@ Recipe:
 \item Estimated first order ALE
 \item Approximate with segmented linear regression
 \item Complexity of approximation = Number of weights needed in linear regression model ($m_j$)
-\item $c_j = min(c_{max}, m_{j, seg}, m_{j, step})$
+\item For numerical: Number of linear segments - 1 (Because of intercept)
+\item For categorical: Number of sets - 1 (Because of intercept)
 \end{itemize}
-\item Sum up all complexity measures $c_j$: $c = \sum_{j=1}^p c_j$
+\item Sum up all complexity measures $c_j$: $c = 1 + \sum_{j=1}^p c_j$. The 1 is for global intercept.
 \end{enumerate}
 
 
 Algorithm for computing best approximation:
 \begin{enumerate}
-\item Fully grow tree with feature $x_j$ predicting $f_{j,ALE}$
-\item If  PRL of fit is below $1-\epsilon$ return max-c
-\item Prune back tree until $PRL > 1-\epsilon$.
-\item Count segments
+\item Input: ALE function $f_{j,ALE}$, feature $x_j$, max. number of segments $max_{seg}$, Allowed error $\epsilon$
+\item Output: Approximiation model $g_{j}$
+\item If $f_{j,ALE}(x) = 0$ for any x, stop and return $g_j(x)=0$
+\item For $k \in 1,\ldots,max_{seg}$:
+\begin{itemize}
+\item If feature $x_j$ is categorical, order by increasing $f_{j, ALE}(x)$ per level.
+\item Minimize SSE for given break points in x (for numerical) or in $f_{j, ALE}(x)$ for categorical
+\item For numerical we fit linear models in each segment, for categorical just the mean of the levels in a segment.
+\item If $R^2 < 1-\epsilon$, stop and return.
+\end{itemize}
 \end{enumerate}
 
-Repeat this algorithm for each of the features and add up all complexities.
+
+Optimization problem for numerical features:
+
+Given a fixed number $K$ of intervals $I_k$ defined by K-1 break points $z_k$: $\[\min(x_j), z_1\], \]z_1, z_2\], \ldots \] z_k,\max(x_j)\]$
+
+$$\argmin{z_1,\ldots,z_{K-1}} \sum_{k=1}{K}\sum_{x^{(i)} \in I_k} (f_{j,ALE}(x^{(i)}) - (\beta_{0,k} + \beta_{1,k} x^{(i)}))^2$$
+
+where $\beta_{0,k}$ and $\beta_{1,k}$ are the ordinary least square estimates in interval $I_k$.
 
 
-The step and segments approximation are both computed with conditional inference and model-based trees, taking into account the data distribution to compute how well the segments apprimate the ALE function based on PRL.
+Optimization problem for numerical features:
+Given a fixed number $K$ of intervals $I_k$ defined by K-1 break points $z_k$:
+
+$$x^{(i)} \in I_k: z_{k-1} \leq f_{j,ALE}(x^{(i)}) \lt z_{k}$$
+where  $z_0 = min(f_{j,ALE}(x^{(i)})) i=1,\ldots,n$ and $z_k = max(f_{j,ALE}(x^{(i)})) i=1,\ldots,n$
+
+$$\argmin{z_1,\ldots,z_{K-1}} \sum_{k=1}{K}\sum_{i: x^{(i)} \in I_k} (f_{j,ALE}(x^{(i)}) - c)^2$$
+
+where $c = \frac{1}{n}\sum_{i: x^{(i)} \in I_k} f_{j,ALE}(x^{(i)})$ is the mean  ALE in that interval.
+
 
 We look at each of the ALE plots and  answer: How many weights would we need if we were to approximate all of the ALE plots with a linear model
 
-The following figure shows an ALE plot for a feature from the Friedman formula.
-We generated 200 data points from this formula an trained a random forest to predict.
+The following figure shows an ALE plot for a feature from the Friedman2 formula from mlbench TODO:CITE Friedman paper.
+We generated 500 data points from this formula an trained a random forest to predict.
 
-<<>>=
-n = 500
-dat1 = mlbench::mlbench.friedman1(n)
+<<fun-complex, cache = TRUE>>=
+theme_set(theme_minimal())
+n = 100
+dat1 = mlbench::mlbench.friedman2(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
 
-dat1$V1 = cut(dat1$V1, breaks = c(0, 0.1, 0.5, 0.7, 1), include.lowest = TRUE)
-dat1$test = factor(c("a", "b"))
+dat1$V1 = cut(dat1$V1, breaks = 100 * c(0, 0.2, 0.4, 0.6, 0.8, 1), include.lowest = TRUE)
 tsk = makeRegrTask(data = dat1, target = "y")
-lrn = makeLearner("regr.ksvm")
+lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
-pred = iml::Predictor$new(mod, dat1)
-
-
-fc = FunComplexity$new(pred, epsilon = 0.05, max_feat_cost = 10)
-fc$plot_complexity("V10")
-fc$var_explained
-fc$complexity_total
-
-
-fname = "V1"
-ale = FeatureEffect$new(pred, fname)
-plot(ale)
-
-
-aa = AleNumApprox$new(ale, 0.1, 10)
-aa$predict(dat1)
-aa$r2
-aa$n_coefs
-aa$model
-aa$plot()
-aa = AleCatApprox$new(ale, 0.1, 10)
-aa$transform(dat1)
-dim(aa$transform(dat1))
-aa$predict(dat1)
-aa$r2
-aa$n_coefs
-aa$max_complex
-plot(aa)
-mods = fc$.__enclos_env__$private$approx_models
-
-summary(mods[[1]])
+pred.ksvm = iml::Predictor$new(mod, dat1)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10)
 @
 
 
 Best step and best piece-wise linear models for $epsilon = 0.05$
-<<>>=
-epsilon = 0.05
-amod = fit_approx_mod(pred, ale, type = "step", epsilon = epsilon)
-cp = count_pieces(amod)
-p1 = plot_complexity_(feature_values = dat1[,fname], ale = ale, mod = amod, epsilon = epsilon, complexity = cp)
 
-amod = fit_approx_mod(pred, ale, type = "segment", epsilon = epsilon)
-cp = count_pieces(amod)
-p2 = plot_complexity_(feature_values = dat1[,fname], ale = ale, mod = amod, epsilon = epsilon, complexity = cp)
-
-gridExtra::grid.arrange(p1, p2, nrow = 1)
+Categorical feature
+<<depends = "fun-complex">>=
+plot(fc$approx_models$V1)
 @
+
+
+Numerical feature
+<<depends = "fun-complex">>=
+plot(fc$approx_models$V4)
+@
+
 
 
 The effect of different values for $epsilon$, here on the piece-wise linear model:
-<<>>=
-epsilon = 0.9
-amod = fit_approx_mod(pred, ale, type = "segment", epsilon = epsilon)
-cp = count_pieces(amod)
-p1 = plot_complexity_(feature_values = dat1[,fname], ale = ale, mod = amod, epsilon = epsilon, complexity = cp)
+<<depends = "fun-complex">>=
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost  = 10)
+p1 = plot(fc$approx_models$V4)
 
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_feat_cost = 10)
+p2 = plot(fc$approx_models$V4)
 
-epsilon = 0.1
-amod = fit_approx_mod(pred, ale, type = "segment", epsilon = epsilon)
-cp = count_pieces(amod)
-p2 = plot_complexity_(feature_values = dat1[,fname], ale = ale, mod = amod, epsilon = epsilon, complexity = cp)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10)
+p3 = plot(fc$approx_models$V1)
 
-epsilon = 0.05
-amod = fit_approx_mod(pred, ale, type = "segment", epsilon = epsilon)
-cp = count_pieces(amod)
-p3 = plot_complexity_(feature_values = dat1[,fname], ale = ale, mod = amod, epsilon = epsilon, complexity = cp)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_feat_cost = 10)
+p4 = plot(fc$approx_models$V1)
 
-gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
+gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 
 @
 
+
+<<depends = "fun-complex">>=
+fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10)
+p1  = plot(fc.ksvm$approx_models$V1)
+p2  = plot(fc.ksvm$approx_models$V2)
+p3  = plot(fc.ksvm$approx_models$V3)
+p4  = plot(fc.ksvm$approx_models$V4)
+
+
+lrn = makeLearner("regr.rpart")
+mod = train(lrn, tsk)
+pred = iml::Predictor$new(mod, dat1)
+fc.rpart = FunComplexity$new(pred, epsilon = 0.05, max_feat_cost = 10)
+p5  = plot(fc.rpart$approx_models$V1)
+p6  = plot(fc.rpart$approx_models$V2)
+p7  = plot(fc.rpart$approx_models$V3)
+p8  = plot(fc.rpart$approx_models$V4)
+
+gridExtra::grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, nrow = 2)
+
+@
 
 
 Things that did not work out:

@@ -51,7 +51,7 @@
 % \newcommand{}{}
 
 <<packages, echo=FALSE, results='hide', message=FALSE>>=
-#library(ggpubr)
+library("knitr")
 devtools::load_all()
 
 # define color

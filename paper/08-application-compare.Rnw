@@ -2,9 +2,97 @@
 \section{Application: Compare interpretability of two models}
 \label{sec:app1}
 
+This example shows the following;
+\begin{itemize}
+\item Measures in action
+\item How to extract a model from a complex model
+\end{itemize}
+
+
 Data from OpenML? \citep{Casalicchio2017}
 
 All examples with mlr \citep{JMLR:v17:15-066} in R \citep{r2016}.
 Available on Github the source code for examples.
 
 Modeled with Random Forest \citep{Breiman2001}
+
+
+
+We compare random forest with linear model in terms of performance
+TODO: Tune models inside
+
+
+<<wine-data, cache = TRUE>>=
+wine_orig = read.csv("./data/winequalityN.csv")
+wine_orig = na.omit(wine_orig)
+
+set.seed(42)
+train_test_i = sample(1:nrow(wine_orig), size = 5000)
+validation_i = setdiff(1:nrow(wine_orig), train_test_i)
+wine = wine_orig[train_test_i, ]
+
+
+# Benchmark both random forest and linear model
+lrn.ranger = makeLearner("regr.ranger")
+lrn.lm = makeLearner("regr.lm")
+lrn.gamboost = makeLearner("regr.gamboost")
+rdesc = cv5
+lrns = list(lrn.ranger, lrn.lm, lrn.gamboost)
+tsk = makeRegrTask(data = wine, target = "quality")
+bmr = benchmark(lrns, tsk, rdesc, measures = list(mae))
+bmr_tab = getBMRAggrPerformances(bmr, as.df = TRUE)
+
+xtable::xtable(bmr_tab)
+
+
+tsk = makeRegrTask(data = wine, target = "quality")
+mod = train(lrn.ranger, tsk)
+pred_rf = iml::Predictor$new(mod, getTaskData(tsk))
+fc_rf = FunComplexity$new(pred_rf, epsilon = 0.05, max_feat_cost = 10)
+@
+
+
+
+Now we compare it in terms of interpretability
+
+<<bike-data-analyze, depends = "wine-data">>=
+plot(fc_rf, nrow = 2, rug = FALSE)
+
+fc_rf$var_explained
+fc_rf$complexity_total
+
+plot(fc_rf$approx_models$citric.acid)
+
+
+mod = train(lrn.lm, tsk)
+pred_lm = iml::Predictor$new(mod, getTaskData(tsk))
+fc_lm = FunComplexity$new(pred_lm, epsilon = 0.05, max_feat_cost = 10)
+fc_lm$var_explained
+fc_lm$complexity_total
+plot(fc_lm, nrow = 2, rug = FALSE)
+@
+
+
+Extract simpler model and compare performance
+
+<<bike-data-analyze2, cache = TRUE>>=
+newdata = wine_orig[validation_i,]
+predictions = fc_rf$predict(newdata)
+predictions_approx = fc_rf$predict_approx(newdata)
+dd = data.frame(y = newdata$quality, prediction = predictions, predictions_approx = predictions_approx)
+
+# remove some rows due to missing values because of extrapolation
+dd = na.omit(dd)
+measureMAE(dd$y, dd$prediction)
+measureMAE(dd$y, dd$predictions_approx)
+measureMAE(newdata$quality, pred_lm$predict(newdata)[[1]])
+@
+
+<<bike-data-analyze3, cache = TRUE>>=
+library(mboost)
+gmod = gamboost(quality ~ ., data = wine)
+measureMAE(newdata$quality, predict(gmod, newdata))
+@
+
+
+Performance on par with lm

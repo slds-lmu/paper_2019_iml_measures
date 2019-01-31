@@ -36,9 +36,17 @@ FunComplexity = R6::R6Class(
       res = data.frame(lapply(self$effects, function(eff) {
         eff$predict(dat)
       }))
-      dat = data.frame(self$predictor$data$get.x())
-      predictions = self$predictor$predict(dat)[[1]]
+      dat2 = data.frame(self$predictor$data$get.x())
+      predictions = self$predictor$predict(dat2)[[1]]
       rowSums(res) + mean(predictions)
+    },
+    predict_approx = function(dat){
+      dat2 = data.frame(self$predictor$data$get.x())
+      mean_pred = mean(self$predictor$predict(dat2)[[1]])
+      res = data.frame(lapply(self$approx_models, function(mod) {
+        mod$predict(dat)
+      }))
+      rowSums(res) + mean_pred
     },
     compute = function(epsilon) {
       self$epsilon = epsilon
@@ -69,7 +77,6 @@ FunComplexity = R6::R6Class(
     measure_non_linearities = function(){
       self$approx_models = lapply(self$effects, function(eff) {
         feature_name = eff$feature.name
-        print(feature_name)
         if(eff$feature.type == "numerical") {
           AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_feat_cost = self$max_feat_cost)
         } else {
@@ -259,7 +266,6 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         return()
       }
       for(n_breaks in 1:self$max_breaks) {
-        print(n_breaks)
         lower = rep(min(x), times = n_breaks)
         upper = rep(max(x), times = n_breaks)
         init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]

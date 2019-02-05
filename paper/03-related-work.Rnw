@@ -8,7 +8,7 @@ But nowhere are explicit, model-agnostic interpretability measures used
 AIC, BIC is a tradeoff measure between accuracy and interpretability
 
 Other approach, but only for decision tree and logistic regression: "Measuring Interpretability for Different Types
-of Machine Learning Models" by Qing Zhou 1 , Fenglu Liao 1 , Chao Mou 1(&) , and Ping Wang 2
+of Machine Learning Models" by Qing Zhou 1 , Fenglu Liao 1 , Chao Mou 1(and) , and Ping Wang 2
 
 TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. My critique: Always needs some baseline which might not exist. For example discovering new knowledge. Also, target model is fixed, can't decide accuracy interpretability tradeoff.  sparsity is not rewarded.
 \citep{dhurandhar2017tip}

@@ -21,13 +21,13 @@ x percent is explained by interations
 1 - x percent is explained by 1st order model.
 first order complexity is C.
 we claim that the average complexity of higher-order is the same as 1st order and simply project the functional complexity to the rest:
-overall_complexity = c  + c* x  = c * (1 + x)
+$overall.complexity = c  + c \cdot x  = c times (1 + x)$
 and to flip direction and scale to 0 and 1 (only when multiple models are tested):
-interpretability = 1 - overall_c / max(overall_c)
+$interpretability = 1 - overall_c / max(overall_c)$
 
 theoretically maximal complexity:
-max_components * n_features * (1 + c)
-where max_components is the maximal complexity a feature can get based on user input and n_features the number of features.
+$max.components \cdot n_features \cdot (1 + c)$
+where max.components is the maximal complexity a feature can get based on user input and n.features the number of features.
 
 Mathematically writing down objectives
 

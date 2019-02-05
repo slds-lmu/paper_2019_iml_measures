@@ -31,7 +31,7 @@ We also are based on theory (functional ANOVA decomposition)
 Tradeoff between accuracy and interpretability has to be decided by the user. / Arguments for Multiobjective instead of weighted single objective.f \citep{freitas2004critical}
 
 
-## Limitations of post-hoc methods
+Limitations of post-hoc methods
 
 **Effect of high number of features**
 Example with few and many features and showing Shapley explanations and many partial dependence plots.

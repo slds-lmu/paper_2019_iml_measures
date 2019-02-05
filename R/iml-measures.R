@@ -1,7 +1,7 @@
 # TODO
-# Improve plotting to stop at break points
 # Write tests
 # Add some comments
+# Scale complexity plots onto same y-axis
 
 # TODO when paper is done
 # Document FunComplexity
@@ -12,10 +12,14 @@ FunComplexity = R6::R6Class(
   inherit = iml::FeatureEffects,
   public = list(
     epsilon = NULL,
-    var_explained = NULL,
+    # How well the main effects model approximates total model
+    r2 = NULL,
     base_feat_cost = NULL,
     max_feat_cost = NULL,
     complexity_total = NULL,
+    complexity_wtotal = NULL,
+    complexity_wavg = NULL,
+    complexity_avg = NULL,
     approx_models = NULL,
     initialize = function(predictor, grid.size = 50, parallel = FALSE,
       epsilon = 0.05, base_feat_cost = 0, max_feat_cost = 10) {
@@ -40,10 +44,11 @@ FunComplexity = R6::R6Class(
       predictions = self$predictor$predict(dat2)[[1]]
       rowSums(res) + mean(predictions)
     },
-    predict_approx = function(dat){
+    predict_approx = function(dat, features = NULL){
+      if(is.null(features)) features = self$features
       dat2 = data.frame(self$predictor$data$get.x())
       mean_pred = mean(self$predictor$predict(dat2)[[1]])
-      res = data.frame(lapply(self$approx_models, function(mod) {
+      res = data.frame(lapply(self$approx_models[features], function(mod) {
         mod$predict(dat)
       }))
       rowSums(res) + mean_pred
@@ -59,18 +64,21 @@ FunComplexity = R6::R6Class(
 
   ),
   private = list(
+    # SST of black box model
+    SST = NULL,
+    SSE = NULL,
     # Named list of approximation models
     measure_var = function(){
       if(is.null(private$multiClass) || !private$multiClass) {
         dat = data.frame(self$predictor$data$get.x())
         predictions = self$predictor$predict(dat)[[1]]
         ale_predictions = self$predict(dat)
-        SST = ssq(predictions - mean(predictions))
-        if(SST == 0) {
-          self$var_explained = 1
+        private$SST = ssq(predictions - mean(predictions))
+        if(private$SST == 0) {
+          self$r2 = 1
         } else {
-          SSE = ssq(ale_predictions - predictions)
-          self$var_explained = 1 - SSE/SST
+          private$SSE = ssq(ale_predictions - predictions)
+          self$r2 = 1 - private$SSE/private$SST
         }
       }
     },
@@ -84,9 +92,57 @@ FunComplexity = R6::R6Class(
         }
       })
       self$complexity_total = 1 + sum(unlist(lapply(self$approx_models, function(x) x$n_coefs)))
+      self$complexity_avg = mean(unlist(lapply(self$approx_models, function(x) x$n_coefs)))
+      # Compute Shapley weights based on r2
+      dat = self$predictor$data$get.x()
+      mean_pred = mean(self$predictor$predict(dat)[[1]])
+      SSM = ssq(self$predict_approx(dat) - mean_pred)
+
+      shapleyv = shapley(self$approx_models, dat, mean_pred, 100)
+      shapleyv = shapleyv / sum(shapleyv)
+      for(i in 1:length(shapleyv)) self$approx_models[[i]]$shapley_var = shapleyv[i]
+      self$complexity_wtotal = 1 + sum(length(self$features) * shapleyv * unlist(lapply(self$approx_models, function(x) x$n_coefs)))
+      self$complexity_wavg = weighted.mean(unlist(lapply(self$approx_models, function(x) x$n_coefs)), w = shapleyv)
     }
   )
 )
+
+# TODO: upweight the sampled rows by subtracting the 0 and 1 rows weights from global weight
+shapley = function(approx_models, dat, mean_pred, m) {
+  p = length(approx_models)
+
+  ales = data.frame(lapply(approx_models, function(mod) {
+    mod$predict(dat)
+  }))
+  # Each column is an ALE feature, each row an observation
+  model = function(newdata) {
+    res = apply(newdata, 1, function(x) {
+      ssq(rowSums(ales[,which(x==1), drop = FALSE]))
+    })
+    res
+  }
+  perms = matrix(sample(c(1,0), size = p * n, replace = TRUE), nrow = n)
+  perms = rbind(rep(0, times = p), rep(1, times = p), perms)
+  shaps = lapply(1:p, function(feature) {
+    # create 1,0 matrix from perm with j
+    pperms = perms
+    pperms[,feature] = 0
+    pperms = unique(pperms)
+    pperms2 = pperms
+    pperms2[,feature] = 1
+    # create second matrix from wihtout j
+    # get model() and difference
+    diffs = model(pperms2) - model(pperms)
+    # compute shapley weighting for differences
+    S = rowSums(pperms)
+    w = 1/choose(p-1,S)
+    # return
+    weighted.mean(diffs, w  =w)
+  })
+  unlist(shaps)
+}
+
+
 
 
 AleApprox = R6::R6Class("AleApprox",
@@ -103,6 +159,8 @@ AleApprox = R6::R6Class("AleApprox",
     transform = NULL,
     predict = NULL,
     SST = NULL,
+    var = NULL,
+    shapley_var = NULL,
     max_complex = FALSE,
     initialize = function(ale, epsilon, max_breaks){
       assert_class(ale, "FeatureEffect")
@@ -115,6 +173,7 @@ AleApprox = R6::R6Class("AleApprox",
       private$x = self$ale$predictor$data$get.x()[,self$feature, with=FALSE][[1]]
       private$ale_values = self$ale$predict(private$x)
       self$SST = ssq(private$ale_values)
+      self$var = self$SST / length(private$x)
     }
   ),
   private = list(
@@ -187,12 +246,13 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
       df_pred = df[,.(pred_approx = weighted.mean(ale, w = n)),by = lvl]
       self$tab = merge(df, df_pred, by.x = "lvl", by.y = "lvl")
     },
-    plot = function() {
+    plot = function(ylim = c(NA,NA)) {
       dat = self$ale$predictor$data$get.x()
       dat = unique(data.frame(x = dat[[self$feature]], y = private$approx_values))
       max_string = ifelse(self$max_complex, "+", "")
-      self$ale$plot() + geom_point(aes(x = x, y = y), data = dat, color = "red", size = 2)+
-        ggtitle(sprintf("C: %i%s, eps: %.4f, R2: %.4f", self$n_coefs, max_string, self$epsilon,
+      self$ale$plot() + geom_point(aes(x = x, y = y), data = dat, color = "red", size = 2) +
+        scale_y_continuous(limits = ylim) +
+        ggtitle(sprintf("C: %i%s, e: %.3f, R2: %.2f", self$n_coefs, max_string, self$epsilon,
           self$r2))
     }
   )
@@ -284,7 +344,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       private$approx_values = predict(mod)
       self$r2 = get_r2(private$approx_values, private$ale_values)
     },
-    plot = function() {
+    plot = function(ylim = c(NA, NA)) {
       fdat = self$ale$predictor$data$get.x()[[self$feature]]
       x = seq(from = min(fdat), to = max(fdat), length.out = 200)
       y = self$predict(x)
@@ -293,7 +353,8 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       max_string = ifelse(self$max_complex, "+", "")
       p = self$ale$plot() + geom_line(aes(x = x, y = y, group = interval), color = "red",
         data = dat, lty = 2) +
-        ggtitle(sprintf("C: %i%s, eps: %.4f, R2: %.4f", self$n_coefs, max_string, self$epsilon,
+        scale_y_continuous(limits = ylim) +
+        ggtitle(sprintf("C: %i%s, e: %.3f, R2: %.3f", self$n_coefs, max_string, self$epsilon,
           self$r2))
       if(!is.null(self$breaks)) p = p + geom_vline(data = data.frame(breaks = self$breaks), aes(xintercept = self$breaks))
       p

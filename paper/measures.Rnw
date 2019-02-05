@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\subsection{Interpretability measures}
+\section{Interpretability measures}
 \label{sec:measures}
 
 
@@ -35,11 +35,16 @@ The approach we take (functional decomposition) is flexible enough to adapt to d
 
 We do the following approximation:
 
-\begin{eqnarray}
-f(x) &= f_0 + \sum f_{1st,j} + \sum f_{higher-order}\\
-     &= \bar{f(x)} + \sum f_{ALE, 1st}  + Rest \\
-     &= \bar{f(x)} + \sum f_{ALEapprox, 1st} + err_{approx} + Rest \\
-\end{eqnarray}
+\begin{eqnarray*}
+f(x)  =& \overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_{jk})}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_{1,\ldots,p})}^\text{p-th order effect}\\
+     =& f_0 + \sum_{j=1}^{p} f_{j}(x_j) + \sum_{S \subseteq \{1,\ldots,p\}} f_{S}(x_S)\\
+     =& \bar{f}(x) + \sum_{j=1}^{p} f_{j,ALE}(x_j)  + IA(x) \\
+     =& \bar{f}(x) + \sum_{j=1}^{p} (\tilde{f}_{j,ALE}(x_j) + \epsilon_{j}(x_j)) + IA(x) \\
+\end{eqnarray*}
+
+$\tilde{f}_{j,ALE}(x_j) $ is the approximation of the j-th main effect.\\
+$\epsilon_{j}(x_j)$ is the approximiation error $f_{j,ALE}(x_j) - \tilde{f}_{j,ALE}(x_j)$\\
+$IA(x)$ the interaction terms.\\
 
 
 Paper \citep{murdoch2019interpretable} says that desiderata are

@@ -37,7 +37,7 @@ Algorithm for computing best approximation:
 
 Optimization problem for numerical features:
 
-Given a fixed number $K$ of intervals $I_k$ defined by K-1 break points $z_k$: $\[\min(x_j), z_1\], \]z_1, z_2\], \ldots \] z_k,\max(x_j)\]$
+Given a fixed number $K$ of intervals $I_k$ defined by K-1 break points $z_k$: $[\min(x_j), z_1], ]z_1, z_2], \ldots ] z_k,\max(x_j)]$
 
 $$\argmin{z_1,\ldots,z_{K-1}} \sum_{k=1}{K}\sum_{x^{(i)} \in I_k} (f_{j,ALE}(x^{(i)}) - (\beta_{0,k} + \beta_{1,k} x^{(i)}))^2$$
 
@@ -47,7 +47,7 @@ where $\beta_{0,k}$ and $\beta_{1,k}$ are the ordinary least square estimates in
 Optimization problem for numerical features:
 Given a fixed number $K$ of intervals $I_k$ defined by K-1 break points $z_k$:
 
-$$x^{(i)} \in I_k: z_{k-1} \leq f_{j,ALE}(x^{(i)}) \lt z_{k}$$
+$$x^{(i)} \in I_k: z_{k-1} \leq f_{j,ALE}(x^{(i)}) < z_{k}$$
 where  $z_0 = min(f_{j,ALE}(x^{(i)})) i=1,\ldots,n$ and $z_k = max(f_{j,ALE}(x^{(i)})) i=1,\ldots,n$
 
 $$\argmin{z_1,\ldots,z_{K-1}} \sum_{k=1}{K}\sum_{i: x^{(i)} \in I_k} (f_{j,ALE}(x^{(i)}) - c)^2$$
@@ -60,9 +60,20 @@ We look at each of the ALE plots and  answer: How many weights would we need if 
 The following figure shows an ALE plot for a feature from the Friedman2 formula from mlbench TODO:CITE Friedman paper.
 We generated 500 data points from this formula an trained a random forest to predict.
 
-<<fun-complex, cache = TRUE>>=
-theme_set(theme_minimal())
-n = 100
+$$y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$$
+
+Input are uniformly distributed in ranges:
+$$0\leq x_1 \leq 100$$
+$$ 40\pi \leq x_2 \leq 560 \pi$$
+$$ 0 \leq x_3 \leq 1$$
+$$ 1 \leq x_4 \leq 11$$
+
+and
+
+$$ e \sim N(0,125)$$
+<<fun-complex>>=
+n = 3000
+grid.size = 40
 dat1 = mlbench::mlbench.friedman2(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
 
@@ -71,7 +82,9 @@ tsk = makeRegrTask(data = dat1, target = "y")
 lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
+FeatureEffects$new(pred.ksvm, grid.size = grid.size)$plot(nrow = 1)
+
 @
 
 
@@ -92,16 +105,16 @@ plot(fc$approx_models$V4)
 
 The effect of different values for $epsilon$, here on the piece-wise linear model:
 <<depends = "fun-complex">>=
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost  = 10)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost  = 10, grid.size = grid.size)
 p1 = plot(fc$approx_models$V4)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_feat_cost = 10)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_feat_cost = 10, grid.size = grid.size)
 p2 = plot(fc$approx_models$V4)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
 p3 = plot(fc$approx_models$V1)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_feat_cost = 10)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_feat_cost = 10, grid.size = grid.size)
 p4 = plot(fc$approx_models$V1)
 
 gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
@@ -110,7 +123,7 @@ gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 
 
 <<depends = "fun-complex">>=
-fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10)
+fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
 p1  = plot(fc.ksvm$approx_models$V1)
 p2  = plot(fc.ksvm$approx_models$V2)
 p3  = plot(fc.ksvm$approx_models$V3)
@@ -118,16 +131,19 @@ p4  = plot(fc.ksvm$approx_models$V4)
 
 
 lrn = makeLearner("regr.rpart")
+#lrn = makeLearner("regr.kknn")
+
 mod = train(lrn, tsk)
-pred = iml::Predictor$new(mod, dat1)
-fc.rpart = FunComplexity$new(pred, epsilon = 0.05, max_feat_cost = 10)
+pred.rpart = iml::Predictor$new(mod, dat1)
+fc.rpart = FunComplexity$new(pred.rpart, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
+FeatureEffects$new(pred.rpart)$plot(nrow = 1)
+
 p5  = plot(fc.rpart$approx_models$V1)
 p6  = plot(fc.rpart$approx_models$V2)
 p7  = plot(fc.rpart$approx_models$V3)
 p8  = plot(fc.rpart$approx_models$V4)
 
 gridExtra::grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, nrow = 2)
-
 @
 
 

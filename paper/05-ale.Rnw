@@ -28,7 +28,10 @@ $P_j$ is the distribution of the j-the feature.
 
 
 The estimation of main ALE relies on discretizing the feature into intervals, e.g. by quantiles.
-This partition of the feature space is denoted by: $\left{N_j(k) = \left(z_{k-1},z_{k,j}'right]:k=1,\ldots,K\right}$
+This partition of the feature space is denoted by:
+
+$$N_j(k) = \left(z_\{k-1\},z_\{k,j\}\right], k=1,\ldots,K$$
+
 K is the number of intervals.
 Usually $z_{k,j}$ chosen as the $k/K$ quantile of empirical distriubtion of the j-th feature.
 $z_{0,j}$ just bellow smallest observation, $z_{K,j}$ as the largest observation.
@@ -44,7 +47,7 @@ Yields fundamentally different decomposition of $f(x)$, which is better for visu
 
 ALE decomposition has orthogonality like properties.
 
-Let $S \subseteq \{1,\ldots,p\}$ and $S' \subseteq \{1,\ldots,p}$
+Let $S \subseteq \{1,\ldots,p\}$ and $S' \subseteq \{1,\ldots,p\}$
 
 ALE effects for S and S' are
 

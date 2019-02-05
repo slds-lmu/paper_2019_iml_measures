@@ -64,11 +64,18 @@ hue = gg_color_hue(2)
 ## knitr highlighting black and white
 # opts_knit$set( out.format="latex" )
 # knit_theme$set("print")
-opts_chunk$set(size = "small", highlight = FALSE, fig.path = "knit-fig/", cache = TRUE)
+opts_chunk$set(size = "small",
+               highlight = FALSE,
+               fig.path = "knit-fig/",
+               cache = TRUE,
+               fig.width = 16,
+               fig.height = 10,
+               dev = "CairoJPEG")
 
 ## ggplot black and white
 theme_set(ggplot2::theme_bw() +
     ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
       strip.background = ggplot2::element_rect(fill = "white",
         colour = "white")))
+
 @

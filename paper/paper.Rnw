@@ -64,39 +64,39 @@ But don't measure with pearson correlation but maybe use notion of "predictabili
 \item Benchmarking methods that claim to be interpretable
 \end{itemize}
 
-<<01-intro, child = "01-intro.Rnw", cache = FALSE>>=
+<<01-intro, child = "01-intro.Rnw">>=
 @
 
-<<02-motivation, child = "02-motivation.Rnw", cache = FALSE>>=
+<<02-motivation, child = "02-motivation.Rnw">>=
 @
 
-<<03-related-work, child = "03-related-work.Rnw", cache = FALSE>>=
+<<03-related-work, child = "03-related-work.Rnw">>=
 @
 
-<<04-decomposition, child = "04-decomposition.Rnw", cache = FALSE>>=
+<<04-decomposition, child = "04-decomposition.Rnw">>=
 @
 
-<<05-ale, child = "05-ale.Rnw", cache = FALSE>>=
-@
-
-
-<<measures, child = "measures.Rnw", cache = FALSE>>=
+<<05-ale, child = "05-ale.Rnw">>=
 @
 
 
-<<06-measure-interaction, child = "06-measure-interaction.Rnw", cache = FALSE>>=
+<<measures, child = "measures.Rnw">>=
 @
 
-<<07-measure-curve-complexity, child = "07-measure-curve-complexity.Rnw", cache = FALSE>>=
+
+<<06-measure-interaction, child = "06-measure-interaction.Rnw">>=
 @
 
-<<08-application-compare, child = "08-application-compare.Rnw", cache = FALSE>>=
+<<07-measure-curve-complexity, child = "07-measure-curve-complexity.Rnw">>=
 @
 
-<<09-application-multiobj, child = "09-application-multiobj.Rnw", cache = FALSE>>=
+<<08-application-compare, child = "08-application-compare.Rnw">>=
 @
 
-<<10-discussion, child = "10-discussion.Rnw", cache = FALSE>>=
+<<09-application-multiobj, child = "09-application-multiobj.Rnw">>=
+@
+
+<<10-discussion, child = "10-discussion.Rnw">>=
 @
 
 %

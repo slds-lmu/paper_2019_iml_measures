@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\subsection{Measure ALE First Order Approximiation}
+\subsection{Measure ALE First Order Approximiation (Interaction)}
 \label{sec:interaction}
 
 Based on the ALE decomposition, we can define an additive model that is composed of the first-order effects:
@@ -21,17 +21,16 @@ The $R^2$-measure is a special case of the PRL using the squared loss:
 
 $$R^2 = 1 - \frac{SSE}{SST}$$
 
-$$SSE = \sum_{i=1}^n (f(x_i) - f_{1st,ALE}(x_i))^2$$
+$$SSE = \sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2$$
 
-$$SST = \sum_{i=1}^n (f(x_i) -  \frac{1}{n}\sum_{i=1}^n f(x_i))^2$$
+where $f_{1st,ALE}(x) = \sum_{j=1}^p f_{j,ALE}(x_j)$
+
+$$SST = \sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2$$
 
 Using the R-squared measure, has the interpretation of the variance, so we use this further on and for the examples.
 When a model is optimized with a different loss, it might make sense to measure the PRL also with another loss to quantify how appropriate an approximation with a first order ALE model is.
 
-<<>>=
-knitr::include_graphics(file.path(image_dir, "ale_fanova.png"))
-@
-
+TODO: image of higher order interactions??
 
 
 Things that did not work:

@@ -37,7 +37,7 @@ set.seed(42)
 wine = read.csv("./data/winequalityN.csv")
 wine = na.omit(wine)
 
-WINE_SAMPLE = sample(1:nrow(wine), size = 1000)
+WINE_SAMPLE = sample(1:nrow(wine), size = 300)
 wine = wine[WINE_SAMPLE, ]
 
 task = makeRegrTask(data = wine, target = "quality")
@@ -133,7 +133,7 @@ fn = function(x){
   pred = Predictor$new(mod, task.dat[subset_index,], y = task$task.desc$target)
   imeasure = FunComplexity$new(pred)
   c(round(perf, 2),
-    round(imeasure$complexity_total, 2),
+    round(imeasure$complexity_wavg2, 2),
     round(1 - imeasure$var_explained, 2))
 }
 

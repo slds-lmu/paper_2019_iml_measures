@@ -14,7 +14,8 @@ Depends: OpenML,
          data.table,
          dplyr,
          ggplot2,
-         GenSA
+         GenSA,
+         gridExtra
 Imports: checkmate,
          mlrMBO,
          rpart

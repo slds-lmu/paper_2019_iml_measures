@@ -31,7 +31,6 @@ train_test_i = sample(1:nrow(wine_orig), size = 5000)
 validation_i = setdiff(1:nrow(wine_orig), train_test_i)
 wine = wine_orig[train_test_i, ]
 
-
 # Benchmark both random forest and linear model
 lrn.ranger = makeLearner("regr.ranger")
 lrn.lm = makeLearner("regr.lm")
@@ -49,6 +48,9 @@ tsk = makeRegrTask(data = wine, target = "quality")
 mod = train(lrn.ranger, tsk)
 pred_rf = iml::Predictor$new(mod, getTaskData(tsk))
 fc_rf = FunComplexity$new(pred_rf, epsilon = 0.05, max_feat_cost = 10)
+
+fc_rf$relevant_features
+fc_rf$plot(fc_rf$relevant_features)
 @
 
 
@@ -56,10 +58,10 @@ fc_rf = FunComplexity$new(pred_rf, epsilon = 0.05, max_feat_cost = 10)
 Now we compare it in terms of interpretability
 
 <<bike-data-analyze, depends = "wine-data">>=
-plot(fc_rf, nrow = 2, rug = FALSE)
-
-fc_rf$var_explained
-fc_rf$complexity_total
+plot(fc_rf, nrow = 2)
+fc_rf$shap_var
+fc_rf$complexity_wtotal
+fc_rf$complexity_wtotal2
 
 plot(fc_rf$approx_models$citric.acid)
 
@@ -67,9 +69,11 @@ plot(fc_rf$approx_models$citric.acid)
 mod = train(lrn.lm, tsk)
 pred_lm = iml::Predictor$new(mod, getTaskData(tsk))
 fc_lm = FunComplexity$new(pred_lm, epsilon = 0.05, max_feat_cost = 10)
-fc_lm$var_explained
-fc_lm$complexity_total
-plot(fc_lm, nrow = 2, rug = FALSE)
+fc_lm$shap_var
+fc_lm$complexity_wtotal
+fc_lm$complexity_wtotal2
+
+plot(fc_lm, nrow = 2)
 @
 
 
@@ -79,12 +83,15 @@ Extract simpler model and compare performance
 newdata = wine_orig[validation_i,]
 predictions = fc_rf$predict(newdata)
 predictions_approx = fc_rf$predict_approx(newdata)
-dd = data.frame(y = newdata$quality, prediction = predictions, predictions_approx = predictions_approx)
+predictions_approx_sparse = fc_rf$predict_approx(newdata, features = fc_rf$relevant_features)
+
+dd = data.frame(y = newdata$quality, prediction = predictions, predictions_approx = predictions_approx, predictions_approx_sparse = predictions_approx_sparse)
 
 # remove some rows due to missing values because of extrapolation
 dd = na.omit(dd)
 measureMAE(dd$y, dd$prediction)
 measureMAE(dd$y, dd$predictions_approx)
+measureMAE(dd$y, dd$predictions_approx_sparse)
 measureMAE(newdata$quality, pred_lm$predict(newdata)[[1]])
 @
 

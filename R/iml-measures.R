@@ -1,7 +1,6 @@
 # TODO
 # Write tests
 # Add some comments
-# Scale complexity plots onto same y-axis
 
 # TODO when paper is done
 # Document FunComplexity
@@ -11,18 +10,24 @@ FunComplexity = R6::R6Class(
   "FunComplexity",
   inherit = iml::FeatureEffects,
   public = list(
+    # user defined max. segments approx error
     epsilon = NULL,
+    eps2 = NULL,
+    relevant_features = NULL,
     # How well the main effects model approximates total model
     r2 = NULL,
     base_feat_cost = NULL,
     max_feat_cost = NULL,
     complexity_total = NULL,
     complexity_wtotal = NULL,
+    complexity_wtotal2 = NULL,
     complexity_wavg = NULL,
+    complexity_wavg2 = NULL,
     complexity_avg = NULL,
     approx_models = NULL,
+    ia_shap = NULL,
     initialize = function(predictor, grid.size = 50, parallel = FALSE,
-      epsilon = 0.05, base_feat_cost = 0, max_feat_cost = 10) {
+      epsilon = 0.05, base_feat_cost = 0, max_feat_cost = 10, eps2 = 0.05) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
         stop("Please set class in Predictor")
       }
@@ -34,6 +39,7 @@ FunComplexity = R6::R6Class(
       super$initialize(predictor, features = predictor$data$feature.names,
         method = "ale", grid.size = grid.size, center.at = NULL,
         parallel = parallel)
+      self$eps2 = eps2
       self$compute(epsilon)
     },
     predict = function(dat) {
@@ -96,34 +102,87 @@ FunComplexity = R6::R6Class(
       # Compute Shapley weights based on r2
       dat = self$predictor$data$get.x()
       mean_pred = mean(self$predictor$predict(dat)[[1]])
-      SSM = ssq(self$predict_approx(dat) - mean_pred)
+      SSM = ssq(self$predict(data.frame(dat)) - mean_pred)
 
-      shapleyv = shapley(self$approx_models, dat, mean_pred, 100)
+      shapleyv = shapley(self, dat, mean_pred,m = 10000, sst = SSM)
       shapleyv = shapleyv / sum(shapleyv)
-      for(i in 1:length(shapleyv)) self$approx_models[[i]]$shapley_var = shapleyv[i]
+
+      self$ia_shap = shapleyv[length(shapleyv)]
+      # keep only for features
+      shapleyv = shapleyv[1:(length(shapleyv) - 1)]
+      # percent_var = shapleyv
+      # names(percent_var) = self$features
+      # percent_var = cumsum(sort(percent_var, decreasing = FALSE))
+      # self$relevant_features =  names(percent_var)[percent_var > self$eps2]
+
+      for(i in seq_along(shapleyv)) self$approx_models[[i]]$shapley_var = shapleyv[i]
       self$complexity_wtotal = 1 + sum(length(self$features) * shapleyv * unlist(lapply(self$approx_models, function(x) x$n_coefs)))
       self$complexity_wavg = weighted.mean(unlist(lapply(self$approx_models, function(x) x$n_coefs)), w = shapleyv)
+      self$complexity_wavg2 = weighted.mean(unlist(lapply(self$approx_models, function(x) x$n_coefs)), w = unlist(lapply(self$approx_models, function(x) x$var)))
+      self$complexity_wtotal2 = 1 + length(self$features) * self$complexity_wavg2
+
+    },
+    generatePlot = function(features = NULL, ncols = NULL, nrows = NULL, fixed_y = TRUE, ...) {
+      assert_character(features, null.ok = TRUE)
+      if(length(features) > 0) {
+        assert_true(all(features %in% self$features))
+      } else {
+        features = self$features
+      }
+
+      # Compute size of gtable
+      layout = get_layout(length(features), nrows, ncols)
+
+      # Based on layout, infer which figures will be left and or bottom
+      del_ylab_index = setdiff(1:length(features), 1:min(layout$nrows, length(features)))
+
+
+      if(fixed_y) {
+        res = unlist(lapply(features, function(fname){
+          cname = ifelse(self$method == "ale", ".ale", ".y.hat")
+          values = self$effects[[fname]]$results[cname]
+          c(min(values), max(values))
+        }))
+        ylim = c(min(res), max(res))
+      } else {
+        ylim = c(NA, NA)
+      }
+      plts = lapply(features, function(fname) {
+        gg = self$approx_models[[fname]]$plot(..., ylim = ylim) +
+          theme(axis.title.y=element_blank())
+        ggplotGrob(gg)
+      })
+
+      y_axis_label = self$effects[[1]]$.__enclos_env__$private$y_axis_label
+      # Fill gtable with graphics
+      ml = marrangeGrob(grobs = plts, nrow = layout$nrows, ncol = layout$ncols,
+        top = NULL, left = y_axis_label)
+      # For graphics not on left side, remove y-axis names and x-axis names
+      # return grid
+      ml
     }
+
   )
 )
 
 # TODO: upweight the sampled rows by subtracting the 0 and 1 rows weights from global weight
-shapley = function(approx_models, dat, mean_pred, m) {
-  p = length(approx_models)
-
-  ales = data.frame(lapply(approx_models, function(mod) {
-    mod$predict(dat)
+shapley = function(effects, dat, mean_pred, m, sst) {
+  p = length(effects$effects)
+  ales = data.frame(lapply(effects$effects, function(mod) {
+    mod$predict(data.frame(dat))
   }))
+  # The Interation Effects
+  ales = cbind(ales, data.frame(IA = effects$predictor$predict(dat) - effects$predict(data.frame(dat))))
   # Each column is an ALE feature, each row an observation
   model = function(newdata) {
     res = apply(newdata, 1, function(x) {
-      ssq(rowSums(ales[,which(x==1), drop = FALSE]))
+      1 - ssq(rowSums(ales[,which(x==1), drop = FALSE]))/sst
     })
     res
   }
-  perms = matrix(sample(c(1,0), size = p * n, replace = TRUE), nrow = n)
-  perms = rbind(rep(0, times = p), rep(1, times = p), perms)
-  shaps = lapply(1:p, function(feature) {
+  perms = matrix(sample(c(1,0), size = (p + 1) * m, replace = TRUE), nrow = m)
+  perms = rbind(rep(0, times = p+1), rep(1, times = p+1), perms)
+  shaps = lapply(1:(p+1), function(feature) {
     # create 1,0 matrix from perm with j
     pperms = perms
     pperms[,feature] = 0
@@ -135,9 +194,11 @@ shapley = function(approx_models, dat, mean_pred, m) {
     diffs = model(pperms2) - model(pperms)
     # compute shapley weighting for differences
     S = rowSums(pperms)
-    w = 1/choose(p-1,S)
-    # return
-    weighted.mean(diffs, w  =w)
+    # weights for #feature=1 and #feature=p
+    mean1 = mean(diffs[1:2])
+    mean2 = weighted.mean(diffs[3:length(diffs)],
+                          w = 1/p * 1/choose(p-1,S[3:length(diffs)]))
+    weighted.mean(c(mean1,mean2), w = c(2/p, 1-2/p))
   })
   unlist(shaps)
 }
@@ -236,7 +297,7 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
         upper = rep(max(df$ale), times = n_breaks)
         init_breaks = quantile(df$ale, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
         opt_gensa  = GenSA(par = init_breaks, step_fn, lower, upper, dat = df,
-          control = list(maxit = 100, threshold.stop = self$epsilon), self$SST)
+          control = list(maxit = 100), self$SST)
         pars = opt_gensa$par
         if(opt_gensa$value <= self$epsilon)  break()
       }
@@ -250,10 +311,9 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
       dat = self$ale$predictor$data$get.x()
       dat = unique(data.frame(x = dat[[self$feature]], y = private$approx_values))
       max_string = ifelse(self$max_complex, "+", "")
-      self$ale$plot() + geom_point(aes(x = x, y = y), data = dat, color = "red", size = 2) +
-        scale_y_continuous(limits = ylim) +
-        ggtitle(sprintf("C: %i%s, e: %.3f, R2: %.2f", self$n_coefs, max_string, self$epsilon,
-          self$r2))
+      self$ale$plot(ylim = ylim) + geom_point(aes(x = x, y = y), data = dat, color = "red", size = 2) +
+        ggtitle(sprintf("C: %i%s, e: %.3f, R2: %.3f, Sh: %.3f", self$n_coefs, max_string, self$epsilon,
+          self$r2, self$shapley_var))
     }
   )
 )
@@ -330,7 +390,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         upper = rep(max(x), times = n_breaks)
         init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
         opt_gensa = GenSA(par = init_breaks, segment_fn, lower, upper, ale = self$ale,
-          control = list(maxit = 100, threshold.stop = self$epsilon), self$SST,
+          control = list(maxit = 100), self$SST,
           x = x, ale_prediction = private$ale_values)
         pars = opt_gensa$par
         if(opt_gensa$value <= self$epsilon)  break()
@@ -351,11 +411,11 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       intervals = cut(x, breaks = self$breaks)
       dat = data.frame(x = x, y = y, interval = intervals)
       max_string = ifelse(self$max_complex, "+", "")
-      p = self$ale$plot() + geom_line(aes(x = x, y = y, group = interval), color = "red",
+      p = self$ale$plot(ylim = ylim) +
+        geom_line(aes(x = x, y = y, group = interval), color = "red",
         data = dat, lty = 2) +
-        scale_y_continuous(limits = ylim) +
-        ggtitle(sprintf("C: %i%s, e: %.3f, R2: %.3f", self$n_coefs, max_string, self$epsilon,
-          self$r2))
+        ggtitle(sprintf("C: %i%s, e: %.3f, R2: %.3f, Sh: %.3f", self$n_coefs, max_string, self$epsilon,
+          self$r2, self$shapley_var))
       if(!is.null(self$breaks)) p = p + geom_vline(data = data.frame(breaks = self$breaks), aes(xintercept = self$breaks))
       p
 
@@ -389,4 +449,22 @@ get_r2 = function(seg.predictions, ale.values) {
   SSE / SST
 }
 
+get_layout = function(n_features, nrows = NULL, ncols = NULL) {
+  assert_integerish(n_features, lower = 1, null.ok = FALSE, any.missing = FALSE)
+  assert_integerish(ncols, lower = 1, null.ok = TRUE, len = 1, any.missing = FALSE)
+  assert_integerish(nrows, lower = 1, null.ok = TRUE, len = 1, all.missing = FALSE)
 
+  # Get the size of the gtable
+  if(is.null(nrows) & is.null(ncols)) {
+    ncols = 3
+    nrows = ceiling(n_features/ ncols)
+  } else {
+    if(is.null(nrows)) {
+      nrows = ceiling(n_features / ncols)
+    }
+    if(is.null(ncols)) {
+      ncols = ceiling(n_features / nrows)
+    }
+  }
+  list("nrows" = nrows, "ncols" = ncols)
+}

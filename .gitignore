@@ -11,3 +11,5 @@
 *.gz
 *.bbl
 paper/cache
+paper/knit-fig/
+cache

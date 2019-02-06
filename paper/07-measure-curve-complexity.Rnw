@@ -72,19 +72,26 @@ and
 
 $$ e \sim N(0,125)$$
 <<fun-complex>>=
-n = 3000
+n = 300
 grid.size = 40
 dat1 = mlbench::mlbench.friedman2(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
 
 dat1$V1 = cut(dat1$V1, breaks = 100 * c(0, 0.2, 0.4, 0.6, 0.8, 1), include.lowest = TRUE)
+dat1$V2 = -dat1$V2
 tsk = makeRegrTask(data = dat1, target = "y")
 lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
 fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
-FeatureEffects$new(pred.ksvm, grid.size = grid.size)$plot(nrow = 1)
+#FeatureEffects$new(pred.ksvm, grid.size = grid.size)$plot(nrow = 1)
+plot(fc, nrow = 1)
 
+# Introduce second epsilon
+fc$plot(fc$relevant_features)
+
+fc$complexity_wtotal
+fc$complexity_wtotal2
 @
 
 
@@ -124,11 +131,7 @@ gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 
 <<depends = "fun-complex">>=
 fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
-p1  = plot(fc.ksvm$approx_models$V1)
-p2  = plot(fc.ksvm$approx_models$V2)
-p3  = plot(fc.ksvm$approx_models$V3)
-p4  = plot(fc.ksvm$approx_models$V4)
-
+p1 = plot(fc.ksvm, nrow = 1)
 
 lrn = makeLearner("regr.rpart")
 #lrn = makeLearner("regr.kknn")
@@ -136,14 +139,10 @@ lrn = makeLearner("regr.rpart")
 mod = train(lrn, tsk)
 pred.rpart = iml::Predictor$new(mod, dat1)
 fc.rpart = FunComplexity$new(pred.rpart, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
-FeatureEffects$new(pred.rpart)$plot(nrow = 1)
 
-p5  = plot(fc.rpart$approx_models$V1)
-p6  = plot(fc.rpart$approx_models$V2)
-p7  = plot(fc.rpart$approx_models$V3)
-p8  = plot(fc.rpart$approx_models$V4)
+p2 = plot(fc.rpart, nrow = 1)
 
-gridExtra::grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, nrow = 2)
+gridExtra::grid.arrange(p1, p2, row = 2)
 @
 
 

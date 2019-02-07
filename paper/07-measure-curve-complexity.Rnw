@@ -83,7 +83,7 @@ tsk = makeRegrTask(data = dat1, target = "y")
 lrn = makeLearner("regr.ksvm")
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c = 10, grid.size = grid.size)
 #FeatureEffects$new(pred.ksvm, grid.size = grid.size)$plot(nrow = 1)
 plot(fc, nrow = 1)
 

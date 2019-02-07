@@ -109,7 +109,7 @@ fn = function(x){
   pred = Predictor$new(mod, task.dat[subset_index,], y = task$task.desc$target)
   imeasure = FunComplexity$new(pred)
   c(round(perf, 2),
-    round(imeasure$complexity_wavg2, 2),
+    round(imeasure$c_wmean, 2),
     round(1 - imeasure$r2, 2),
     imeasure$n_features)
 }

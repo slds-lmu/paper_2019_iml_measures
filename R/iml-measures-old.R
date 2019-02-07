@@ -383,3 +383,45 @@ sobol2 = function(pred, n){
 }
 
 
+
+
+# TODO: upweight the sampled rows by subtracting the 0 and 1 rows weights from global weight
+shapley = function(effects, dat, mean_pred, m, sst) {
+  p = length(effects$effects)
+  ales = data.frame(lapply(effects$effects, function(mod) {
+    mod$predict(data.frame(dat))
+  }))
+  # The Interation Effects
+  ales = cbind(ales, data.frame(IA = effects$predictor$predict(dat) - effects$predict(data.frame(dat))))
+  # Each column is an ALE feature, each row an observation
+  model = function(newdata) {
+    res = apply(newdata, 1, function(x) {
+      1 - ssq(rowSums(ales[,which(x==1), drop = FALSE]))/sst
+    })
+    res
+  }
+  perms = matrix(sample(c(1,0), size = (p + 1) * m, replace = TRUE), nrow = m)
+  perms = rbind(rep(0, times = p+1), rep(1, times = p+1), perms)
+  shaps = lapply(1:(p+1), function(feature) {
+    # create 1,0 matrix from perm with j
+    pperms = perms
+    pperms[,feature] = 0
+    pperms = unique(pperms)
+    pperms2 = pperms
+    pperms2[,feature] = 1
+    # create second matrix from wihtout j
+    # get model() and difference
+    diffs = model(pperms2) - model(pperms)
+    # compute shapley weighting for differences
+    S = rowSums(pperms)
+    # weights for #feature=1 and #feature=p
+    mean1 = mean(diffs[1:2])
+    mean2 = weighted.mean(diffs[3:length(diffs)],
+      w = 1/p * 1/choose(p-1,S[3:length(diffs)]))
+    weighted.mean(c(mean1,mean2), w = c(2/p, 1-2/p))
+  })
+  unlist(shaps)
+}
+
+
+

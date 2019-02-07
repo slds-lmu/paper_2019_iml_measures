@@ -80,7 +80,7 @@ dat1 = data.frame(cbind(dat1$x, y = dat1$y))
 dat1$V1 = cut(dat1$V1, breaks = 100 * c(0, 0.2, 0.4, 0.6, 0.8, 1), include.lowest = TRUE)
 dat1$V2 = -dat1$V2
 tsk = makeRegrTask(data = dat1, target = "y")
-lrn = makeLearner("regr.ranger")
+lrn = makeLearner("regr.ksvm")
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
 fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
@@ -92,6 +92,8 @@ fc$plot(fc$relevant_features)
 
 fc$complexity_wtotal
 fc$complexity_wtotal2
+fc$complexity_wavg2
+
 @
 
 

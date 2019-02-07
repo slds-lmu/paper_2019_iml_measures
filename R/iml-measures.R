@@ -26,6 +26,7 @@ FunComplexity = R6::R6Class(
     complexity_avg = NULL,
     approx_models = NULL,
     ia_shap = NULL,
+    n_features = NULL,
     initialize = function(predictor, grid.size = 50, parallel = FALSE,
       epsilon = 0.05, base_feat_cost = 0, max_feat_cost = 10, eps2 = 0.05) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
@@ -63,6 +64,7 @@ FunComplexity = R6::R6Class(
       self$epsilon = epsilon
       private$measure_var()
       private$measure_non_linearities()
+      self$n_features = sum(unlist(lapply(self$approx_models, function(x) x$feature_used)))
     },
     plot_complexity = function(feature) {
       self$approx_models[[feature]]$plot()
@@ -107,6 +109,7 @@ FunComplexity = R6::R6Class(
       shapleyv = shapley(self, dat, mean_pred,m = 10000, sst = SSM)
       shapleyv = shapleyv / sum(shapleyv)
 
+      self$is_shap = var(full) - var()
       self$ia_shap = shapleyv[length(shapleyv)]
       # keep only for features
       shapleyv = shapleyv[1:(length(shapleyv) - 1)]
@@ -131,7 +134,7 @@ FunComplexity = R6::R6Class(
       }
 
       # Compute size of gtable
-      layout = get_layout(length(features), nrows, ncols)
+      layout = iml:::get_layout(length(features), nrows, ncols)
 
       # Based on layout, infer which figures will be left and or bottom
       del_ylab_index = setdiff(1:length(features), 1:min(layout$nrows, length(features)))
@@ -223,6 +226,7 @@ AleApprox = R6::R6Class("AleApprox",
     var = NULL,
     shapley_var = NULL,
     max_complex = FALSE,
+    feature_used = TRUE,
     initialize = function(ale, epsilon, max_breaks){
       assert_class(ale, "FeatureEffect")
       assert_numeric(epsilon, lower = 0, upper = 1, len = 1, any.missing = FALSE)
@@ -239,7 +243,7 @@ AleApprox = R6::R6Class("AleApprox",
   ),
   private = list(
     is_null_ale = function() {
-      if(all(self$ale$results$.ale == 0)) {
+      if(!feature_used(self$ale$predictor, self$feature)) {
         self$r2 = 1
         self$n_coefs = 0
         self$transform = function(X)  data.frame()
@@ -247,6 +251,7 @@ AleApprox = R6::R6Class("AleApprox",
           times = ifelse(is.data.frame(X), nrow(X), length(X))
           rep(0, times = times)
         }
+        self$feature_used = FALSE
         private$approx_values = rep(0, times = self$ale$predictor$data$n.rows)
         self$max_complex = FALSE
         TRUE
@@ -449,22 +454,17 @@ get_r2 = function(seg.predictions, ale.values) {
   SSE / SST
 }
 
-get_layout = function(n_features, nrows = NULL, ncols = NULL) {
-  assert_integerish(n_features, lower = 1, null.ok = FALSE, any.missing = FALSE)
-  assert_integerish(ncols, lower = 1, null.ok = TRUE, len = 1, any.missing = FALSE)
-  assert_integerish(nrows, lower = 1, null.ok = TRUE, len = 1, all.missing = FALSE)
 
-  # Get the size of the gtable
-  if(is.null(nrows) & is.null(ncols)) {
-    ncols = 3
-    nrows = ceiling(n_features/ ncols)
-  } else {
-    if(is.null(nrows)) {
-      nrows = ceiling(n_features / ncols)
-    }
-    if(is.null(ncols)) {
-      ncols = ceiling(n_features / nrows)
-    }
+feature_used = function(pred, feature, M = 3, sample_size = 100){
+  dat = pred$data$get.x()
+  for (m in 1:M) {
+    # permute feature
+    dat2 = dat[sample(1:nrow(dat), size = sample_size)]
+    prediction1 = pred$predict(dat2)
+    fvalues = sample(dat2[,..feature][[1]])
+    dat2 = dat2[, (feature) := fvalues]
+    prediction2 = pred$predict(dat2)
+    if(any((prediction1 - prediction2) != 0)) return(TRUE)
   }
-  list("nrows" = nrows, "ncols" = ncols)
+  FALSE
 }

@@ -20,7 +20,7 @@ tasks = tasks[tasks$number.of.instances < 10000, ]
 tasks = tasks[tasks$number.of.instances > 200, ]
 tasks = tasks[!is.na(tasks$task.id), ]
 
-i = 6
+i = 8
 
 
 task = getOMLTask(task.id = tasks$task.id[i])
@@ -32,43 +32,18 @@ print(dim(task.dat))
 
 
 
-devtools::load_all()
-set.seed(42)
-wine = read.csv("./data/winequalityN.csv")
-wine = na.omit(wine)
-
-WINE_SAMPLE = sample(1:nrow(wine), size = 300)
-wine = wine[WINE_SAMPLE, ]
-
-task = makeRegrTask(data = wine, target = "quality")
-task.dat = getTaskData(task)
-summary(task.dat)
-print(dim(task.dat))
-
-
-# #
-# n = 300
-# dat = data.frame(mlbench::mlbench.friedman3(n))
+# devtools::load_all()
+# set.seed(42)
+# wine = read.csv("./data/winequalityN.csv")
+# wine = na.omit(wine)
 #
-# task = makeRegrTask(data = dat, target = "y")
-# task.dat = dat
+# WINE_SAMPLE = sample(1:nrow(wine), size = 300)
+# wine = wine[WINE_SAMPLE, ]
 #
-# lrn1 = makeLearner("regr.rpart")
-# mod1 = train(lrn1, task)
-# pred1 = Predictor$new(mod1, task.dat)
-# fc1 = FunComplexity$new(pred1)
-#
-# fc1$complexity_total
-# fc1$complexity_total
-# fc1$complexity_total
-# fc1$var_explained
-# fc1$plot_complexity("x.1")
-#
-# FeatureEffects$new(pred1)$plot()
-#
-# f4 = FeatureEffect$new(pred1, "SEX")
-# table(f4$predict(task.dat), task.dat$SEX)
-
+# task = makeRegrTask(data = wine, target = "quality")
+# task.dat = getTaskData(task)
+# summary(task.dat)
+# print(dim(task.dat))
 
 base.learners.classif = list(
   makeLearner("classif.ksvm", predict.type = "prob"),
@@ -120,6 +95,7 @@ if(TASK_TYPE == "classif") {
 
 
 sample.size = min(nrow(task.dat), 300)
+sample.size = nrow(task.dat)
 subset_index = sample(1:nrow(task.dat), size = sample.size)
 
 fn = function(x){
@@ -134,12 +110,13 @@ fn = function(x){
   imeasure = FunComplexity$new(pred)
   c(round(perf, 2),
     round(imeasure$complexity_wavg2, 2),
-    round(1 - imeasure$var_explained, 2))
+    round(1 - imeasure$r2, 2),
+    imeasure$n_features)
 }
 
-obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = ps, n.objectives = 3, has.simple.signature = FALSE)
+obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = ps, n.objectives = 4, has.simple.signature = FALSE)
 
-ctrl = makeMBOControl(n.objectives = 3L)
+ctrl = makeMBOControl(n.objectives = 4L)
 ctrl = setMBOControlInfill(ctrl, crit = crit.cb)
 ctrl = setMBOControlMultiObj(ctrl, method = "parego")
 
@@ -153,6 +130,8 @@ mbo.iml = mbo(fun = obj.fun, design = design, learner = mbo.lrn, control = ctrl)
 
 pareto.set = rbindlist(lapply(mbo.iml$pareto.set, data.frame))
 best.models = cbind(round(mbo.iml$pareto.front, 2), pareto.set)
+is_duplicated = duplicated(best.models[,1:5])
+best.models = best.models[!is_duplicated,]
 best.models %>%
   arrange(y_1)
 
@@ -188,3 +167,60 @@ ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
   geom_label(aes(label = selected.learner)) +
   scale_x_continuous("Interpretability") +
   scale_y_continuous("Accuracy")
+
+
+
+# TODO: Also keep original measures
+# Scale measures to [0,1]
+best.models$y_1 = 1 - (best.models$y_1 - min(best.models$y_1)) / (max(best.models$y_1) - min(best.models$y_1))
+best.models$y_2 = (best.models$y_2 - min(best.models$y_2)) / (max(best.models$y_2) - min(best.models$y_1))
+# y_3 already scaled between 0 and 1
+best.models$y_3 = (best.models$y_3 - min(best.models$y_3)) / (max(best.models$y_3) - min(best.models$y_3))
+best.models$y_4 = best.models$y_4 / sum(task$task.desc$n.feat)
+
+measure_names = c("Performance", "Complexity", "Interaction", "#Features")
+colnames(best.models)[1:4] = measure_names
+plot.dat = melt(best.models, measure.vars = measure_names)
+
+param_cols = setdiff(colnames(best.models), c(measure_names, "selected.learner"))
+
+
+plot.dat$lrn_descr = apply(plot.dat, 1, function(row) {
+  lrn_name = row['selected.learner']
+  params = row[param_cols]
+  params = params[!is.na(params)]
+  names(params) = gsub(sprintf("%s.", lrn_name), "", names(params), fixed = TRUE)
+  param_string = sprintf("%s:%s", names(params), params)
+  param_string = paste(param_string, collapse = ",")
+  sprintf("%s (%s)", lrn_name, param_string)
+})
+
+ggplot(plot.dat) +
+  geom_col(aes(x = variable, y = value, color = selected.learner)) +
+  facet_wrap("lrn_descr") +
+  coord_flip()
+
+
+max.plot.dat = plot.dat
+max.plot.dat$value = 1
+
+ggplot(mapping = aes(x = variable, y = lrn_descr, size = value)) +
+  geom_point(data = max.plot.dat, shape = 1) +
+  geom_point(data = plot.dat) +
+  scale_size_continuous(range = c(0,10), guide = "none") +
+  scale_y_discrete("")
+
+## Extract parameters and refit best solutions
+
+pareto_index = 1
+
+pp = mbo.iml$pareto.set[[pareto_index]]
+pp = pp[!is.na(pp)]
+lrn = setHyperPars(lrn, par.vals = pp)
+mod = train(lrn, task)
+pred = Predictor$new(mod, task.dat)
+fc = FunComplexity$new(pred)
+
+plot(fc)
+
+

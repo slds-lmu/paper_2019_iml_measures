@@ -50,13 +50,14 @@
 % please place your own definitions here and don't use \def but
 % \newcommand{}{}
 
-<<packages, echo=FALSE, results='hide', message=FALSE>>=
+<<packages, echo=FALSE, results='hide', message=FALSE, cache = FALSE>>=
 library("knitr")
 devtools::load_all()
 
 # Make sure we are at root
 library(here)
 
+DEBUG_MODE  = FALSE
 
 # supress prints from mlr
 configureMlr(show.info = FALSE)
@@ -74,10 +75,11 @@ hue = gg_color_hue(2)
 opts_chunk$set(size = "small",
                highlight = FALSE,
                fig.path = "knit-fig/",
-               cache = TRUE,
-               echo = FALSE,
+               cache = !DEBUG_MODE,
+               echo = DEBUG_MODE,
                fig.width = 16,
                fig.height = 10,
+               warning = DEBUG_MODE,
                dev = "CairoJPEG")
 
 ## ggplot black and white

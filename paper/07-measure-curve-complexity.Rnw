@@ -167,6 +167,6 @@ For cheap cost, because we might already have ALE plots.
 \item We can use variance to sort ALE plots to show the ones where more is happening first.
 \item We can compute Average Marginal Effects from the approximation and report those
 \item We can sort ALE plots by complexity c and show the ones with similar complexity ("first row shows the plots with linear relationships, second with complexity of two, ...")
-\item With the feature_used approach we can omit computation of ALE plots of features that are not used.
+\item With the feature.used approach we can omit computation of ALE plots of features that are not used.
 \item We can report the 1st-order fit measure along with the plots to assess how much they are responsible for the total prediction.
 \end{itemize}

@@ -16,6 +16,8 @@ based on Pareto dominance or lexicographic optimization""
 
 
 <<mo-data>>=
+configureMlr(show.info = FALSE)
+
 devtools::load_all()
 set.seed(42)
 

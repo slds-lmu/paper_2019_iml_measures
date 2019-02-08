@@ -32,7 +32,7 @@
 One of the biggest disadvantages of machine learnings is the lack of interpretability.
 Scientists proposed intrinsically interpretable models such as decision trees and post-hoc interpretation methods such as partial dependence plots as solutions.
 Interpretable models limit their users to a certain model class and often have a lower accuracy.
-Post-hoc methods are applied after the model has been optimized for performance and can help to better understand the model, but the relationships modelled can be complex and have interactions.
+Post-hoc methods are applied after the model has been optimized for performance and can help to better understand the model, but the relationships modelled can be complex, include many features and many interactions.
 
 We propose model-agnostic measures of interpretability for machine learning models.
 These measures can be used to compare interpretability for different hyperparameter configurations and across different model classes.
@@ -48,7 +48,6 @@ We optimize model hyperparameters across different types of models for predictiv
 \item Improve computational speed by using density function instead of data for computing R2 for complexity approximation.
 \item Brainstorm: How to combine interpretability measure into one measure?
 \item Find out why  generateDesign could only produce 138 points instead of 1000?
-\item Add number of features measure to FunComplexity
 \item Cite a few examples where interpretability is measured with human experiments
 \end{itemize}
 
@@ -58,7 +57,6 @@ We optimize model hyperparameters across different types of models for predictiv
 \item Add table for how post-hoc methods scale with number of features. rows: methods, cols: scalings, like O() of comp, size of output scaling with p, fidelity.methods: featureimp, pdp, ale, lime, shapley, shap, 2way interaction, ice
 \item Show negative correlation between LIME R squared and both of the interpretability measures.
 \item Soft monotonicity constraints can be incorporated into the model as well with my complexity measure framework
-\item Another great measurement would be the correlation between the features that are used in the model.
 The less correlated, the better the interpretation methods work.
 But don't measure with pearson correlation but maybe use notion of "predictability"/dependence
 \item Benchmarking methods that claim to be interpretable
@@ -67,22 +65,14 @@ But don't measure with pearson correlation but maybe use notion of "predictabili
 <<01-intro, child = "01-intro.Rnw">>=
 @
 
-<<02-motivation, child = "02-motivation.Rnw">>=
-@
-
 <<03-related-work, child = "03-related-work.Rnw">>=
 @
-
-<<04-decomposition, child = "04-decomposition.Rnw">>=
-@
-
-<<05-ale, child = "05-ale.Rnw">>=
-@
-
 
 <<measures, child = "measures.Rnw">>=
 @
 
+<<05-n-features, child = "05-n-features.Rnw">>=
+@
 
 <<06-measure-interaction, child = "06-measure-interaction.Rnw">>=
 @

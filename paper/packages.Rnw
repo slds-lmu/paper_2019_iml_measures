@@ -54,6 +54,13 @@
 library("knitr")
 devtools::load_all()
 
+# Make sure we are at root
+library(here)
+
+
+# supress prints from mlr
+configureMlr(show.info = FALSE)
+
 # define color
 gg_color_hue = function(n) {
   hues = seq(15, 375, length = n + 1)
@@ -68,6 +75,7 @@ opts_chunk$set(size = "small",
                highlight = FALSE,
                fig.path = "knit-fig/",
                cache = TRUE,
+               echo = FALSE,
                fig.width = 16,
                fig.height = 10,
                dev = "CairoJPEG")

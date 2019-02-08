@@ -12,11 +12,13 @@ Recipe:
 \begin{itemize}
 \item Estimated first order ALE
 \item Approximate with segmented linear regression
-\item Complexity of approximation = Number of weights needed in linear regression model ($m_j$)
+\item $c_j$ = Number of weights needed in linear regression model ($m_j$)
 \item For numerical: Number of linear segments - 1 (Because of intercept)
 \item For categorical: Number of sets - 1 (Because of intercept)
+\item $c_j = min(c_{max}, c_j)$
+\item $V_j = \frac{1}{n}\sum_{i=1}^n \hat{f}^{ALE}_j(x^{(i)})$
 \end{itemize}
-\item Sum up all complexity measures $c_j$: $c = 1 + \sum_{j=1}^p c_j$. The 1 is for global intercept.
+\item $c$ is weighted mean: $c = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jc_j$.
 \end{enumerate}
 
 
@@ -49,9 +51,7 @@ Given a fixed number $K$ of intervals $I_k$ defined by K-1 break points $z_k$:
 
 $$x^{(i)} \in I_k: z_{k-1} \leq f_{j,ALE}(x^{(i)}) < z_{k}$$
 where  $z_0 = min(f_{j,ALE}(x^{(i)})) i=1,\ldots,n$ and $z_k = max(f_{j,ALE}(x^{(i)})) i=1,\ldots,n$
-
 $$\argmin{z_1,\ldots,z_{K-1}} \sum_{k=1}{K}\sum_{i: x^{(i)} \in I_k} (f_{j,ALE}(x^{(i)}) - c)^2$$
-
 where $c = \frac{1}{n}\sum_{i: x^{(i)} \in I_k} f_{j,ALE}(x^{(i)})$ is the mean  ALE in that interval.
 
 
@@ -86,27 +86,24 @@ pred.ksvm = iml::Predictor$new(mod, dat1)
 fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c = 10, grid.size = grid.size)
 #FeatureEffects$new(pred.ksvm, grid.size = grid.size)$plot(nrow = 1)
 plot(fc, nrow = 1)
-
+fc$approx_models$V2$plot()
 # Introduce second epsilon
 fc$plot(fc$relevant_features)
 
-fc$complexity_wtotal
-fc$complexity_wtotal2
-fc$complexity_wavg2
-
+fc$c_wmean
 @
 
 
 Best step and best piece-wise linear models for $epsilon = 0.05$
 
 Categorical feature
-<<depends = "fun-complex">>=
+<<dependson = "fun-complex">>=
 plot(fc$approx_models$V1)
 @
 
 
 Numerical feature
-<<depends = "fun-complex">>=
+<<dependson = "fun-complex">>=
 plot(fc$approx_models$V4)
 @
 
@@ -114,16 +111,16 @@ plot(fc$approx_models$V4)
 
 The effect of different values for $epsilon$, here on the piece-wise linear model:
 <<depends = "fun-complex">>=
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost  = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c  = 10, grid.size = grid.size)
 p1 = plot(fc$approx_models$V4)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_feat_cost = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_c = 10, grid.size = grid.size)
 p2 = plot(fc$approx_models$V4)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c = 10, grid.size = grid.size)
 p3 = plot(fc$approx_models$V1)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_feat_cost = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_c = 10, grid.size = grid.size)
 p4 = plot(fc$approx_models$V1)
 
 gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
@@ -132,7 +129,7 @@ gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 
 
 <<depends = "fun-complex">>=
-fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
+fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c = 10, grid.size = grid.size)
 p1 = plot(fc.ksvm, nrow = 1)
 
 lrn = makeLearner("regr.rpart")
@@ -140,7 +137,7 @@ lrn = makeLearner("regr.rpart")
 
 mod = train(lrn, tsk)
 pred.rpart = iml::Predictor$new(mod, dat1)
-fc.rpart = FunComplexity$new(pred.rpart, epsilon = 0.05, max_feat_cost = 10, grid.size = grid.size)
+fc.rpart = FunComplexity$new(pred.rpart, epsilon = 0.05, max_c = 10, grid.size = grid.size)
 
 p2 = plot(fc.rpart, nrow = 1)
 
@@ -154,3 +151,22 @@ Things that did not work out:
 \item Version for tree split approx
 \end{itemize}
 
+
+Alternatives that can also be measured with this approach:
+\begin{itemize}
+\item complexity can be computed differently with this ALE plot approximation. e.g. without weighting
+\item Is linear yes or no, in a soft version so that we allow a bit zick-zack
+\item Is monotone yes or no
+\end{itemize}
+
+
+This measure also enhances ALE plots even when not used to measure model.
+For cheap cost, because we might already have ALE plots.
+
+\begin{itemize}
+\item We can use variance to sort ALE plots to show the ones where more is happening first.
+\item We can compute Average Marginal Effects from the approximation and report those
+\item We can sort ALE plots by complexity c and show the ones with similar complexity ("first row shows the plots with linear relationships, second with complexity of two, ...")
+\item With the feature_used approach we can omit computation of ALE plots of features that are not used.
+\item We can report the 1st-order fit measure along with the plots to assess how much they are responsible for the total prediction.
+\end{itemize}

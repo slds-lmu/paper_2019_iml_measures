@@ -1,0 +1,103 @@
+\Sexpr{set_parent('paper.Rnw')}
+\subsection{Number of Features}
+\label{sec:interaction}
+
+Desiderata was model-agnostic measures.
+
+Many models always use all features.
+e.g. linear model always uses all features.
+
+For other models we have easy ways to extract it:
+For tree we can extract the features used in the splits
+for sparse linear model the weights that are non-zero.
+
+For ensembles and pipelines it is more complex.
+e.g. stacking of multiple sparse models. in theory have to go through all models and see what features were used and take  union.
+
+Also we might not have access to the model itself, only via API.
+Then we can't extract the model-specific number of features.
+
+
+We propose a heuristic approach to determine how many features were used, which is based on permutation of features.
+Has a bit similarity to feature importance.
+
+Take sample from data, measure predictions.
+to see whether feature $x_j$ was used for the predictions, shuffle feature $x_j$ in the sample and get predictions from model.
+If prediction was changed, the feature is used and we count it to the number of features used in the model.
+
+We repeat a couple of times to reduce false negative rate.
+False positive rate is zero, because when method says that feature is used, then it is used for sure in model (assuming that the model is deterministic).
+
+
+
+We draw M instances from the data and for each randomly draw K permutations.
+
+The algorithm for computing if feature j was used:
+
+\begin{enumerate}
+\item Set number of sampled instance M and number of shuffle K, dataset d
+\item for $i=1,\ldots, M$:
+\begin{enumerate}
+\item Draw M instances from dataset D
+\item Change for each instance the value of feature $x_j$ by randomly sampled value from dist: New instances is $x^*$
+\item Compute $\hat{f}(x^{(i)*}) - \hat{f}(x^{(i)})$ for each instance i
+\item If any difference bigger than zero return TRUE
+\end{enumerate}
+\item If all difference were zero, return false
+\end{enumerate}
+
+
+
+Let $z_j$ indicate whether at least one maninpulation of feature j would lead to a change in prediction:
+
+$$ z_j = \begin{cases}1 & \exists x, d \Rightarrow \hat{f}(x) - \hat{f}(x + d_j) \neq 0 \\0 & else\\\end{cases}$$
+
+where $d_j$ is a vector with zeroes that's only different from zero for feauture j.
+
+Let $\hat{z}_j$be our guess of $z_j$.
+
+We know that the false positive rate is zero for deterministic prediction functions:
+
+$$\mathbb{P}(\hat{z}_j = 1 | z_j = 0) = 0$$
+
+false negative rate depends on the model and data distribution.
+
+We have the following:
+
+Let $p_j$ be the probability that for a randomly sampled instance from the data  we can find a change in feature $x_j$ that would lead to a change in the prediction.
+For linear models, this is always 1.
+Only in case of interactions will this value be less than zero.
+
+Let $r_{j}^{(i)}$ be the probability that for a given feature $x_j$ and an instance i for which we can find a value to change the prediction, that by randomly choosing a value (according to the marginal distribution of the feature) the prediction will not change.
+For linear models this probability is zero, because even the slightest change in a feature value will lead to a change in prediction.
+For a feature in a decision tree, with a split at the median of feature values $x_j$, the probability $r_j^{(i)}$ is 0.5, because we have a 50\% change to sample a feature value from the same interval.
+For a categorical feature with two categories it's the probability of staying within the same category, which is the same as the frequency of that category.
+
+
+Then the probability of false negative is:
+
+\begin{eqnarray*}
+\mathbb{P}(\hat{z}_j = 0 | z_j = 1) &= \prod_{m=1}^M \left(\underbrace{1-p_j}_{\text{instance unchangeable by j}}  + \underbrace{p_j  \prod_{k=1}^K r_j^{(i)}}_{repeatedly unlucky} \right) \\
+&\underbrace{=}_{r_{j}^{(i)} = r_j} \left(1 - p_j + p_j (r_j)^K\right)^M
+\end{eqnarray*}
+
+
+A few examples:
+
+M always 100, K always 10.
+
+Linear model without interactions: $p_j=1$ and $r_j^{(i)} = r_j = 0$
+$$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (1 - 1 + 0^10)^100 = 0$$
+
+Let's say only 1 percent of instances is affected by a change in a feature, and for those the probability that a change in the feature wil change the prediction is also 2 percent.
+E.g. only features with a certain category level are affected, which only 1 percent of instances have.
+There is an interaction effect with a second categorical feature, but only when a certain level combination comes, which has a probability of 2 percent to happen.
+If $p_j=0.01$ and $r_j=0.02$, then
+
+$$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01 * 0.01^10)^100 = 0.3660323$$
+
+IN this case limited by number of instances sampled.
+If we increase to 500, the probability drops to  0.006570483.
+
+
+

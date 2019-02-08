@@ -3,6 +3,8 @@
 \label{sec:related}
 
 
+\subsection{Measure Interpretability}
+
 Multicrit often looks at complexity: Examples
 But nowhere are explicit, model-agnostic interpretability measures used
 AIC, BIC is a tradeoff measure between accuracy and interpretability
@@ -24,3 +26,150 @@ investigated independently. Furthermore, many papers rely on intuition in the
 use of interpretability, which leads to a focus on "white-boxes" (decision trees,
 decision rules, etc.) and a lack of consideration of "black-boxes" (SVM, neu-
 ral networks, etc.). \citep{bibal2016interpretability} say we have to
+
+
+
+
+
+\subsection{Functional Decomposition}
+\label{sec:decomposition}
+
+We can decompose the model prediction function $f(x)$ into orthogonal parts. %\citet{Efron1981} \citet{Chastaing2017}, :
+Let f be the model prediction function that maps from features to the prediction, $f(x): X \rightarrow \mathbb{R}$ where x is a p-dimenionsal feature vector: $x = (x_1, \ldots, x_p)$.
+
+\begin{eqnarray*} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S) \\
+\end{eqnarray*}
+
+The decomposition contains a constant mean plus the feature first order effects, second order effects up to the p-th order effect.
+The notation of the j-th order effect can be simplified by using a multi-index notation: $S \subset \{1,\ldots,p\}$.
+
+We need further constraints to get a unique decomposition.
+For example, Hooker \citep{hooker2004discovering} and \citep{hooker2007generalized}
+He defined centering, orthogonality and variance decomposition as desirable properties.
+One approach: functional Anova decomposition by Hooker \citep{hooker2004discovering} and \citep{hooker2007generalized}
+The adopt the approach by Stone \citep{stone1994use} to approximate the function with weighted integrals and function orthogonality constraints.
+Results in hierarchically orthogonal components (in decomposition)under the correlation inner product.
+This means that higher order effects are uncorrelated with any lower-order effects that are subsets of the higher order effect: $f_{j,ANOVA}$ and $f_{S,ANOVA}$ are uncorrelated when $j\subset S$.
+Any other combination of j and S are not in general uncorrelated.
+
+
+We will use the Accumulated Local Effects \citep{apley2016visualizingapley2016visualizing} (ALE) decomposition explained later in the paper.
+They show that the f(x) can be decomposed with ALE components:
+
+A fitted supervised machine learning model $f$ can be decomposed as:
+$f(x) = \sum_{S\subseteq P} f_{S,ALE}(x_S)$
+where $f_{S,ALE}$ represents the $|S|$-order effect of feature(s) $x_S$ on $f$.
+
+\citep{apley2016visualizingapley2016visualizing} show that this decomposition is unique, meaning that for any decomposition that fulfills the "pseudo-orthogonality" property, the only solution is the ALE component.
+
+
+Let $H_S(f_S)$ be a function that maps a function to its ALE function with features S.
+
+"Pseudo-orthogonality": $H_j(f_j) = f_j$ and $H_u(f_j) = 0$ for each $j \subseteq D$ and $u \subseteq D$ with $u \neq j$.
+
+In words, pseudo-orthogonality is:
+The S-ALE of an S-ALE function is again S-ALE and the S-ALE function of u-ALE is 0 when S and u are not equal.
+
+ALE defines the components in such a way that they are "pseudo-orthogonal", which is not true orthogonality, but a similar concept.
+They claim that true orthogonality is not desirable.
+For example if $f(x) = x_1 + x_2$ and $X_1$ and $X_2$ are correlated, then fANOVA decomposition will not give the correct main effects $f_1(x_1)$ and $f_2(x_2)$, but ALE components will decompose it in such a way.
+
+For fANOVA approach this would be.
+We assume that expected value of $x_1$ and $x_2$ is 0:
+\begin{eqnarray*}
+f_{1,fANOVA}(x_1) =& \mathbb{E}(f(x)|X_1=x_1) - E_X(f(x)) \\
+                  =& \mathbb{E}(X_1| X_1=x_1) + \mathbb{E}(X_2|X_1 = x_1) - (\mathbb{E}(X_1) + \mathbb{E}(X_2)) \\
+                  =& x_1 +  \mathbb{E}(X_2|X_1 = x_1)  \\
+                  \neq & x_1
+\end{eqnarray*}
+
+ALE plots are easier to compute, because the can be computed sequentially (each main effect, then each 2nd-order and so on), do not require to estimate the data distribution as Hookers approach.
+fANOVA has to be computed all at once, involving a complex system of equations.
+
+
+
+
+\subsection{Accumulated Local Effects}
+\label{sec:ale}
+
+
+We use the ALE decomposition \citep{apley2016visualizing} for decomposing the prediction function $f(x)$ into its lower order effects.
+The reasons are the superior computational efficiency and the more sytematic way to compute the decomposition.
+
+Uncentered ALE main effects are defined as:
+$$\tilde{f}_{j,ALE}(x_j) = \int_{z_{0,j}}^{x_j}\int P_{-j|j}(x_{-j}|z_j)f^j(z_j, x_{-j})dx_{-j}dz_j$$
+
+where $f^j$ is the partial derivative of $f(x)$ with respect to $x_j$, defined as:
+$$f^j = \frac{\delta f(x_j, x_{-j})}{\delta x_j}$$
+
+j is the index of the feature for which to compute the main effect.
+$x_{-j}$ deontes the subset of the p features that excludes feature j.
+Let $z_0 = (z_{0,1}, z_{0,2}, \ldots, z_{0,d})$ be the approximate lower bounds for each element of the features X.
+
+
+The AL effects are centered so that the expected ALE value is zero:
+\begin{eqnarray*}
+f_{j,ALE}(x_j) = & \tilde{f}_{j,ALE}(x_j) - \mathbb{E}_{X_j}(\tilde{f}_{j,ALE}(X_j)) \\
+               = & \tilde{f}_{j,ALE}(x_j) - \int P_j(z_j)\tilde{f}_{j,ALE}(z_j)dz_j \\
+\end{eqnarray*}
+
+$X_j$ refers to the j-the feature as a random variable.
+$P_j$ is the distribution of the j-the feature.
+
+
+The estimation of main ALE relies on discretizing the feature into intervals, e.g. by quantiles.
+This partition of the feature space is denoted by:
+
+$$N_j(k) = \left(z_\{k-1\},z_\{k,j\}\right], k=1,\ldots,K$$
+
+K is the number of intervals.
+Usually $z_{k,j}$ chosen as the $k/K$ quantile of empirical distriubtion of the j-th feature.
+$z_{0,j}$ just bellow smallest observation, $z_{K,j}$ as the largest observation.
+
+TODO: Add figure with two features??
+TODO: Maybe shorten explanation of ALE effects here??
+
+Works also if f is not differentiable because estimation uses interval based approach.
+We only need the main effects, so we refrain from showing how higher-order effects are defined and to be estimated here.
+
+Yields fundamentally different decomposition of $f(x)$, which is better for visualization of effects than Hooker decomp \citep{hooker2007generalized}.
+
+
+ALE decomposition has orthogonality like properties.
+
+Let $S \subseteq \{1,\ldots,p\}$ and $S' \subseteq \{1,\ldots,p\}$
+
+ALE effects for S and S' are
+
+
+
+why all with ALE? -> Works also with correlated inputs
+
+$$f(x) =  \sum_{j=1}^d f_{j,ALE}(x_j) + \sum_{J \subseteq \{1,\ldots,p\}, |J| \geq 2} f_{J,ALE}(x_J) $$
+
+
+The ALE decomposition can be estimated via:
+
+Uncentered:
+$$\hat{\tilde{f}}_{j,ALE}(x)=\sum_{k=1}^{k_j(x)}\frac{1}{n_j(k)}\sum_{i:x_{j}^{(i)}\in{}N_j(k)}\left[f(z_{k,j},x^{(i)}_{\setminus{}j})-f(z_{k-1,j},x^{(i)}_{\setminus{}j})\right]$$
+
+
+Centered:
+$$\hat{f}_{j,ALE}(x)=\hat{\tilde{f}}_{j,ALE}(x)-\frac{1}{n}\sum_{i=1}^{n}\hat{\tilde{f}}_{j,ALE}(x^{(i)}_{j})$$
+
+Use fanova decomposition, but with ALE.
+While the decomoosition of variance does not work with correlated features (1st order correlated with higher order) it should be still ok to just describe the SSE I get when using first order ALE model.
+
+Making no assumptions, but simply describe how much residuals are left after modeling with first order ALE.
+
+Why not functional Anova a la hooker? computationally ineffective and his decomposition properties not needed. Also good software with ALE.
+
+% Properties of ALE decomposition
+
+
+% Comparison to PDP
+An alternative to Accumulated Local Effects as a feature effect visualization tool is the partial dependence plot. TODO: \citep{friedman2001greedy}
+The partial dependence plot suffers from extrapolation into areas without data, which the ALE plots solve.
+
+
+

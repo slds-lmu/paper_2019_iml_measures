@@ -36,7 +36,7 @@ FunComplexity = R6::R6Class(
         parallel = parallel)
       private$X = data.frame(self$predictor$data$get.x())
       private$mean_pred = mean(self$predictor$predict(private$X)[[1]])
-      private$measure_var()
+      private$measure_r2_1st_ale()
       private$measure_non_linearities()
       self$n_features = sum(unlist(lapply(self$approx_models, function(x) x$feature_used)))
     },
@@ -69,7 +69,7 @@ FunComplexity = R6::R6Class(
     SSE = NULL,
     # The mean prediction of the black box predictor
     mean_pred = NULL,
-    measure_var = function(){
+    measure_r2_1st_ale = function(){
       if(is.null(private$multiClass) || !private$multiClass) {
         predictions = self$predictor$predict(private$X)[[1]]
         ale_predictions = self$predict(private$X)
@@ -115,15 +115,17 @@ FunComplexity = R6::R6Class(
       if(fixed_y) {
         res = unlist(lapply(features, function(fname){
           cname = ifelse(self$method == "ale", ".ale", ".y.hat")
-          values = self$effects[[fname]]$results[cname]
+          values = self$effects[[fname]]$results[cname][[1]]
+          values = c(values, self$approx_models[[fname]]$approx_values)
           c(min(values), max(values))
         }))
         ylim = c(min(res), max(res))
       } else {
         ylim = c(NA, NA)
       }
+      maxv = max(unlist(lapply(self$approx_models, function(x) x$var)))
       plts = lapply(features, function(fname) {
-        gg = self$approx_models[[fname]]$plot(..., ylim = ylim) +
+        gg = self$approx_models[[fname]]$plot(..., ylim = ylim, maxv = maxv) +
           theme(axis.title.y=element_blank())
         ggplotGrob(gg)
       })
@@ -160,6 +162,7 @@ AleApprox = R6::R6Class("AleApprox",
     shapley_var = NULL,
     max_complex = FALSE,
     feature_used = TRUE,
+    approx_values = NULL,
     initialize = function(ale, epsilon, max_breaks){
       assert_class(ale, "FeatureEffect")
       assert_numeric(epsilon, lower = 0, upper = 1, len = 1, any.missing = FALSE)
@@ -171,10 +174,15 @@ AleApprox = R6::R6Class("AleApprox",
       private$x = self$ale$predictor$data$get.x()[,self$feature, with=FALSE][[1]]
       private$ale_values = self$ale$predict(private$x)
       self$SST_ale = ssq(private$ale_values)
+      # Variance of the ALE plot weighted by data density
       self$var = self$SST_ale / length(private$x)
+      madx = mad(private$ale_values)
+      #self$var = madx
     }
   ),
   private = list(
+    x = NULL,
+    ale_values = NULL,
     is_null_ale = function() {
       if(!feature_used(self$ale$predictor, self$feature)) {
         self$r2 = 1
@@ -184,16 +192,13 @@ AleApprox = R6::R6Class("AleApprox",
           rep(0, times = times)
         }
         self$feature_used = FALSE
-        private$approx_values = rep(0, times = self$ale$predictor$data$n.rows)
+        self$approx_values = rep(0, times = self$ale$predictor$data$n.rows)
         self$max_complex = FALSE
         TRUE
       } else {
         FALSE
       }
-    },
-    x = NULL,
-    ale_values = NULL,
-    approx_values = NULL
+    }
   )
 )
 
@@ -207,12 +212,12 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
       super$initialize(ale, epsilon, max_breaks = max_c)
       if(!private$is_null_ale()) {
         self$approximate()
-        self$n_coefs = length(unique(self$tab$lvl)) - 1
+        self$n_coefs = ifelse(self$max_complex, max_c, length(unique(self$tab$lvl)) - 1)
         self$predict = function(dat){
           merge(dat, self$tab, by.x = self$feature, by.y = "x", sort = FALSE)[["pred_approx"]]
         }
-        private$approx_values = self$predict(self$ale$predictor$data$get.x())
-        SSE = ssq(private$approx_values -  private$ale_values)
+        self$approx_values = self$predict(self$ale$predictor$data$get.x())
+        SSE = ssq(self$approx_values -  private$ale_values)
         self$r2 = 1 - SSE / self$SST_ale
       }
     },
@@ -237,13 +242,14 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
       df_pred = df[,.(pred_approx = weighted.mean(ale, w = n)),by = lvl]
       self$tab = merge(df, df_pred, by.x = "lvl", by.y = "lvl")
     },
-    plot = function(ylim = c(NA,NA)) {
+    plot = function(ylim = c(NA,NA), maxv = NULL) {
+      assert_numeric(maxv, null.ok=TRUE)
       dat = self$ale$predictor$data$get.x()
-      dat = unique(data.frame(x = dat[[self$feature]], y = private$approx_values))
+      dat = unique(data.frame(x = dat[[self$feature]], y = self$approx_values))
       max_string = ifelse(self$max_complex, "+", "")
+      varv = ifelse(is.null(maxv), self$var, self$var/maxv)
       self$ale$plot(ylim = ylim) + geom_point(aes(x = x, y = y), data = dat, color = "red", size = 2) +
-        ggtitle(sprintf("C: %i%s, e: %.3f, R2: %.3f, Sh: %.3f", self$n_coefs, max_string, self$epsilon,
-          self$r2, self$shapley_var))
+        ggtitle(sprintf("C: %i%s, R2: %.3f, V: %.3f", self$n_coefs, max_string, self$r2, varv))
     }
   )
 )
@@ -270,7 +276,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       if(!private$is_null_ale()) {
         self$approximate()
         # Don't count the intercept
-        self$n_coefs = length(coef(self$model)) - 1
+        self$n_coefs = ifelse(self$max_complex, max_c, length(coef(self$model)) - 1)
         self$predict = function(dat) {
           if(is.data.frame(dat)) {
             x = dat[[self$feature]]
@@ -281,8 +287,8 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
           dat = data.frame(x = x, interval = x_interval)
           predict(self$model, newdata = dat)
         }
-        private$approx_values = self$predict(self$ale$predictor$data$get.x())
-        SSE = ssq(private$approx_values -  private$ale_values)
+        self$approx_values = self$predict(self$ale$predictor$data$get.x())
+        SSE = ssq(self$approx_values -  private$ale_values)
         self$r2 = 1 - SSE / self$SST_ale
       }
     },
@@ -293,7 +299,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       SSE = ssq(private$ale_values - predict(mod))
       if(self$SST_ale == 0 || (SSE/self$SST_ale) < self$epsilon) {
         self$r2 = get_r2(predict(mod), private$ale_values)
-        private$approx_values = predict(mod)
+        self$approx_values = predict(mod)
         self$model = mod
         return()
       }
@@ -304,6 +310,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         opt_gensa = GenSA(par = init_breaks, segment_fn, lower, upper, ale = self$ale,
           control = list(maxit = 100), self$SST_ale,
           x = x, ale_prediction = private$ale_values)
+
         pars = opt_gensa$par
         if(opt_gensa$value <= self$epsilon)  break()
       }
@@ -313,21 +320,22 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
       dat = data.frame(x = x, interval = x_interval, ale = private$ale_values)
       self$model = lm(ale ~ x * interval, data = dat)
-      private$approx_values = predict(mod)
-      self$r2 = get_r2(private$approx_values, private$ale_values)
+      self$approx_values = predict(mod)
+      self$r2 = get_r2(self$approx_values, private$ale_values)
     },
-    plot = function(ylim = c(NA, NA)) {
+    plot = function(ylim = c(NA, NA), maxv = NULL) {
+      assert_numeric(maxv, null.ok=TRUE)
       fdat = self$ale$predictor$data$get.x()[[self$feature]]
       x = seq(from = min(fdat), to = max(fdat), length.out = 200)
       y = self$predict(x)
       intervals = cut(x, breaks = self$breaks)
       dat = data.frame(x = x, y = y, interval = intervals)
       max_string = ifelse(self$max_complex, "+", "")
+      varv = ifelse(is.null(maxv), self$var, self$var/maxv)
       p = self$ale$plot(ylim = ylim) +
         geom_line(aes(x = x, y = y, group = interval), color = "red",
           data = dat, lty = 2) +
-        ggtitle(sprintf("C: %i%s, e: %.3f, R2: %.3f, Sh: %.3f", self$n_coefs, max_string, self$epsilon,
-          self$r2, self$shapley_var))
+        ggtitle(sprintf("C: %i%s, R2: %.3f, V: %.3f", self$n_coefs, max_string,self$r2, varv))
       if(!is.null(self$breaks)) p = p + geom_vline(data = data.frame(breaks = self$breaks), aes(xintercept = self$breaks))
       p
 

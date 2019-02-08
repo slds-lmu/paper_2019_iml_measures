@@ -16,90 +16,74 @@ Available on Github the source code for examples.
 
 Modeled with Random Forest \citep{Breiman2001}
 
-
-
 We compare random forest with linear model in terms of performance
-TODO: Tune models inside
 
-
-<<wine-data, cache = TRUE>>=
-wine_orig = read.csv("./data/winequalityN.csv")
+<<wine-data>>=
+wine_orig = read.csv(here("./data/winequalityN.csv"))
 wine_orig = na.omit(wine_orig)
 
-set.seed(42)
-train_test_i = sample(1:nrow(wine_orig), size = 5000)
-validation_i = setdiff(1:nrow(wine_orig), train_test_i)
-wine = wine_orig[train_test_i, ]
 
-# Benchmark both random forest and linear model
-lrn.ranger = makeLearner("regr.ranger")
-lrn.lm = makeLearner("regr.lm")
-lrn.gamboost = makeLearner("regr.gamboost")
-rdesc = cv5
-lrns = list(lrn.ranger, lrn.lm, lrn.gamboost)
-tsk = makeRegrTask(data = wine, target = "quality")
-bmr = benchmark(lrns, tsk, rdesc, measures = list(mae))
-bmr_tab = getBMRAggrPerformances(bmr, as.df = TRUE)
-
-xtable::xtable(bmr_tab)
-
-
-tsk = makeRegrTask(data = wine, target = "quality")
-mod = train(lrn.ranger, tsk)
-pred_rf = iml::Predictor$new(mod, getTaskData(tsk))
-fc_rf = FunComplexity$new(pred_rf, epsilon = 0.05, max_feat_cost = 10)
-
-fc_rf$relevant_features
-fc_rf$plot(fc_rf$relevant_features)
+wine_orig = wine_orig[wine_orig$type == "white",]
+wine_orig$type = NULL
+# set.seed(42)
+# train_test_i = sample(1:nrow(wine_orig), size = round(0.7 * nrow(wine_orig)))
+# validation_i = setdiff(1:nrow(wine_orig), train_test_i)
+# wine = wine_orig[train_test_i, ]
+wine = wine_orig
+print(head(wine))
 @
 
+<<wine-tune, dependson="wine-data", results = "asis">>=
+# Benchmark both xgboost and linear model
+ctrl = makeTuneControlGrid()
+ps_xgboost = makeParamSet(
+  makeIntegerParam("nrounds", lower = 1, upper = 500)
+)
+lrn_xgboost = makeTuneWrapper("regr.xgboost", resampling = cv3,
+  measures = list(mae), par.set = ps_xgboost, control = ctrl)
+ps_ctree = makeParamSet(
+  makeIntegerParam("maxdepth", lower = 1, upper = 10)
+)
+lrn_tree = makeTuneWrapper("regr.ctree", resampling = cv3,
+  measures = list(mae), par.set = ps_ctree, control = ctrl)
+lrn_fl = makeLearner("regr.featureless")
+
+rdesc = cv5
+lrns = list(lrn_xgboost, lrn_tree, lrn_fl)
+tsk = makeRegrTask(data = wine, target = "quality")
+bmr = benchmark(lrns, tsk, rdesc, measures = list(mae), show.info = FALSE)
+bmr_tab = getBMRAggrPerformances(bmr, as.df = TRUE)
+
+baseline_mae = mean(abs(wine$quality - median(wine$quality)))
+
+xtable::xtable(bmr_tab)
+@
 
 
 Now we compare it in terms of interpretability
 
-<<bike-data-analyze, depends = "wine-data">>=
-plot(fc_rf, nrow = 2)
-fc_rf$shap_var
-fc_rf$complexity_wtotal
-fc_rf$complexity_wtotal2
-
-plot(fc_rf$approx_models$citric.acid)
-
-
-mod = train(lrn.lm, tsk)
-pred_lm = iml::Predictor$new(mod, getTaskData(tsk))
-fc_lm = FunComplexity$new(pred_lm, epsilon = 0.05, max_feat_cost = 10)
-fc_lm$shap_var
-fc_lm$complexity_wtotal
-fc_lm$complexity_wtotal2
-
-plot(fc_lm, nrow = 2)
+<<wine-xgboost, dependson = "wine-tune">>=
+mod = train(lrn_xgboost, tsk)
+pred_rf = Predictor$new(mod, getTaskData(tsk))
+fc_xg = FunComplexity$new(pred_rf, epsilon = 0.05, max_c = 10)
+plot(fc_xg, nrow = 2)
+fc_xg$r2
+fc_xg$c_wmean
 @
 
+The xgboost model is rather complex, as visible in the plots in \ref{fig:wine-xgboost}.
+Average weighted complexity is \Sexpr{fc_xg$c_wmean} and the $R^2$ of the first order ALE approximation is only \Sexpr{fc_xg$r2}, which means that a lot of interactions are modeled.
+Of the available \Sexpr{sum(tsk$task.desc$n.feat)} features, \Sexpr{fc_xg$n_features} were used.
 
-Extract simpler model and compare performance
 
-<<bike-data-analyze2, cache = TRUE>>=
-newdata = wine_orig[validation_i,]
-predictions = fc_rf$predict(newdata)
-predictions_approx = fc_rf$predict_approx(newdata)
-predictions_approx_sparse = fc_rf$predict_approx(newdata, features = fc_rf$relevant_features)
-
-dd = data.frame(y = newdata$quality, prediction = predictions, predictions_approx = predictions_approx, predictions_approx_sparse = predictions_approx_sparse)
-
-# remove some rows due to missing values because of extrapolation
-dd = na.omit(dd)
-measureMAE(dd$y, dd$prediction)
-measureMAE(dd$y, dd$predictions_approx)
-measureMAE(dd$y, dd$predictions_approx_sparse)
-measureMAE(newdata$quality, pred_lm$predict(newdata)[[1]])
+<<wine-tree, dependson = "wine-tune">>=
+mod_tree = train(lrn_tree, tsk)
+pred_tree = Predictor$new(mod_tree, getTaskData(tsk))
+fc_tree = FunComplexity$new(pred_tree, epsilon = 0.05, max_c = 10)
+plot(fc_tree, nrow = 2)
 @
 
-<<bike-data-analyze3, cache = TRUE>>=
-library(mboost)
-gmod = gamboost(quality ~ ., data = wine)
-measureMAE(newdata$quality, predict(gmod, newdata))
-@
+The xgboost model is rather complex, as visible in the plots in \ref{fig:wine-xgboost}.
+Average weighted complexity is \Sexpr{fc_tree$c_wmean} and the $R^2$ of the first order ALE approximation is only \Sexpr{fc_tree$r2}, which means that a lot of interactions are modeled.
 
-
-Performance on par with lm
+Of the available \Sexpr{sum(tsk$task.desc$n.feat)} features, \Sexpr{fc_tree$n_features} were used.

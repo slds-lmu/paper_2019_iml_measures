@@ -6,35 +6,36 @@ We propose a measure that, for each of the main effects, approximates the ALE cu
 
 Recipe:
 
+
+\begin{algorithm}
+\caption{Estimate ALE curve complexity}\label{algo:ale-complexity}
 \begin{enumerate}
-\item Input: Model f, PRL-bound $\epsilon$, upper bound complexity $c_{max}$
-\item For all features $x_1,\ldots,x_p$:
+\item Input: Model $\fh$, PRL-bound $\epsilon$, complexity limit $c_{max}$
+\item Output: Weighted average complexity $C$
+\item For all features $\xj, j \in \pset$, do:
+\begin{enumerate}
+\item Estimate ALE $\falej$
+\item If $\falej(x_j) = 0$ for all $x$, stop and return $\galej(x) = 0$
+\item If $\xj$ numeric: Estimate $\galej(\xj) = \hat{\beta_0} + \hat{\beta}\xj$ with $\argmin_{\beta} \sum_{i=1}^n \left(\falej(\xij) - (\beta_0 + \beta_j\xij)\right)^2$.
+If $PRL(\falej, \galej, L) < \epsilon$, return $C = 1$.
+\item For $k \in \{1,\ldots,max_{seg}\}$:
 \begin{itemize}
-\item Estimated first order ALE
-\item Approximate with segmented linear regression
+\item If feature $x_j$ is categorical, order categories $cat_{l}^j, l \in \{1,\ldots,L_j\} $by increasing $f_{j, ALE}(x)$.
+\item Minimize SSE for given break points in x (for numerical) or in $f_{j, ALE}(x)$ for categorical
+\item For numerical we fit linear models in each segment, for categorical just the mean of the levels in a segment.
+\item If $R^2 < 1-\epsilon$, stop and return.
+\end{itemize}
 \item $c_j$ = Number of weights needed in linear regression model ($m_j$)
 \item For numerical: Number of linear segments - 1 (Because of intercept)
 \item For categorical: Number of sets - 1 (Because of intercept)
 \item $c_j = min(c_{max}, c_j)$
 \item $V_j = \frac{1}{n}\sum_{i=1}^n \hat{f}^{ALE}_j(x^{(i)})$
-\end{itemize}
+\end{enumerate}
 \item $c$ is weighted mean: $c = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jc_j$.
 \end{enumerate}
+\end{algorithm}
 
 
-Algorithm for computing best approximation:
-\begin{enumerate}
-\item Input: ALE function $f_{j,ALE}$, feature $x_j$, max. number of segments $max_{seg}$, Allowed error $\epsilon$
-\item Output: Approximiation model $g_{j}$
-\item If $f_{j,ALE}(x) = 0$ for any x, stop and return $g_j(x)=0$
-\item For $k \in 1,\ldots,max_{seg}$:
-\begin{itemize}
-\item If feature $x_j$ is categorical, order by increasing $f_{j, ALE}(x)$ per level.
-\item Minimize SSE for given break points in x (for numerical) or in $f_{j, ALE}(x)$ for categorical
-\item For numerical we fit linear models in each segment, for categorical just the mean of the levels in a segment.
-\item If $R^2 < 1-\epsilon$, stop and return.
-\end{itemize}
-\end{enumerate}
 
 
 Optimization problem for numerical features:

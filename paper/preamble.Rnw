@@ -64,6 +64,16 @@
 \newcommand{\todoBH}[1]{\mycomment[BH]{#1}}
 
 
+% Paper specific math
+\newcommand{\xij}{x_{j}^{(i)}}                                         % i-th instance, j-th feature
+%  ALE decomposition
+\newcommand{\fzero}{\fh_0}                                              % f_0 for ALE decomp
+\newcommand{\falej}{\fh_{j,ALE}}                                        % ALE function for feature j
+\newcommand{\fale}{\fh_{ALE1st}}
+
+% ALE approximation
+\newcommand{\galej}{g_{j,ALE}^{\epsilon}}                               % Approximation of j-th ALE curve
+
 <<packages, echo=FALSE, results='hide', message=FALSE, cache = FALSE>>=
 library("knitr")
 devtools::load_all()

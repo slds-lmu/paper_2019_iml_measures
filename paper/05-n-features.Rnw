@@ -34,17 +34,22 @@ We draw M instances from the data and for each randomly draw K permutations.
 
 The algorithm for computing if feature j was used:
 
+
+
+\begin{algorithm}
+\caption{Estimate whether feature was used}\label{algo:nfeat}
 \begin{enumerate}
-\item Set number of sampled instance M and number of shuffle K, dataset d
-\item for $i=1,\ldots, M$:
+\item Choose number of sampled instance $M$ and number of shuffle $K$, dataset $\D$
+\item For $k=1,\ldots,K$:
 \begin{enumerate}
-\item Draw M instances from dataset D
-\item Change for each instance the value of feature $x_j$ by randomly sampled value from dist: New instances is $x^*$
-\item Compute $\hat{f}(x^{(i)*}) - \hat{f}(x^{(i)})$ for each instance i
-\item If any difference bigger than zero return TRUE
+\item Draw M instances from dataset D: $(x^{*^{(1)}},\ldots,x^{*^{(M)}})$
+\item For each instance, randomly select feature value $\xj$ from $\xjvec$
+\item Compute $d_j^{(i)} = \fh(x^{*^{(i)}}) - \fh(x_{-j}^{*^{(i)}}, x_j)$ for each $i \in \{1,\ldots,M\}$
+\item If any $d_j^{(i)} > 0$, feature was used by model. Break.
 \end{enumerate}
 \item If all difference were zero, return false
 \end{enumerate}
+\end{algorithm}
 
 
 

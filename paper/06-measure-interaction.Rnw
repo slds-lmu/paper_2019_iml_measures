@@ -13,7 +13,7 @@ We use the Proportional Reduction in Expected Loss as measure for how well the f
 
 With some adaptions based on \citep{cooil1994reliability}, we define PRL as:
 
-$$PRL(f, f_{ALE}, L, f_0) = 1 - \frac{\mathbb{E}(L(f, f_ALE))}{\mathbb{E}(L(f, c))}$$
+$$PRL(\fh, \fale, L) = 1 - \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}$$
 
 Where $c$ is a constant that optimizes the loss function $L$, which is the mean for the L2 loss, and the median for the L1 loss for example.
 
@@ -23,7 +23,7 @@ $$R^2 = 1 - \frac{SSE}{SST}$$
 
 $$SSE = \sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2$$
 
-where $f_{1st,ALE}(x) = \sum_{j=1}^p f_{j,ALE}(x_j)$
+where $\fh_{1st,ALE}(x) = \sum_{j=1}^p f_{j,ALE}(x_j)$
 
 $$SST = \sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2$$
 
@@ -38,3 +38,78 @@ Things that did not work:
 \item Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}. Based on first-order indices
 Too much variance, doesn't handle interactions well. Not as nice as ALE decomp, because ALE decomp gives us first-order model approximation.
 \end{itemize}
+
+
+
+
+\begin{algorithm}
+\caption{Estimate PRL of ALE main effects model}\label{algo:ale1st}
+\begin{enumerate}
+\item Given: model $\fh$, dataset $\D$, loss function $L$
+\item Estimate $\falej$ for all features $j\in\{1,\ldots,p\}$
+\item Estimate $\fzero = \sum_{i=1}^n \fh(\xi)$
+\item Define: $\fale(x) = \fzero + \sum_{j=1}^p \falej(x)$
+\item Calculate $PRL(L, \fh, \fale)$
+\end{enumerate}
+\end{algorithm}
+
+
+
+\begin{algorithm}
+\caption{Estimate Interpretability}\label{algo:global}
+\begin{enumerate}
+\item Goal: C, NF, IA
+\item Given: Model $\fh$, dataset $\D$
+\item For each feature
+\begin{enumerate}
+\item Estimate whether feature was used.
+\item Estimate ALE
+\item Approximate ALE
+\item Measure approximation complexity
+\end{enumerate}
+\item $N = \sum$
+\item $C = \sum$
+\item $IA = A - B$
+\end{enumerate}
+\end{algorithm}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

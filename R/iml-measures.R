@@ -23,7 +23,7 @@ FunComplexity = R6::R6Class(
     # The approximation models of the ALE plots
     approx_models = NULL,
     initialize = function(predictor, grid.size = 50, parallel = FALSE,
-      epsilon = 0.05, max_c = 10) {
+      epsilon = 0.05, max_c = 10, reorder = FALSE) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
         stop("Please set class in Predictor")
       }
@@ -207,11 +207,11 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
   public = list(
     # Table holding the level/new_level info
     tab = NULL,
-    initialize = function(ale, epsilon, max_c) {
+    initialize = function(ale, epsilon, max_c, reorder = TRUE) {
       assert_true(ale$feature.type == "categorical")
       super$initialize(ale, epsilon, max_breaks = max_c)
       if(!private$is_null_ale()) {
-        self$approximate()
+        self$approximate(reorder = reorder)
         self$n_coefs = ifelse(self$max_complex, max_c, length(unique(self$tab$lvl)) - 1)
         self$predict = function(dat){
           merge(dat, self$tab, by.x = self$feature, by.y = "x", sort = FALSE)[["pred_approx"]]
@@ -221,7 +221,7 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
         self$r2 = 1 - SSE / self$SST_ale
       }
     },
-    approximate = function(){
+    approximate = function(reorder){
       x = private$x
       # Create table with x, ale, n
       df = data.table(ale =  private$ale_values, x = x)

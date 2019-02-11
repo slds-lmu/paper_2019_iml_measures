@@ -7,11 +7,9 @@
 % \journalname{myjournal}
 %
 
-<<packages, child = "packages.Rnw", cache=FALSE>>=
+<<packages, child = "preamble.Rnw", cache=FALSE>>=
 @
 
-<<common, child = "common.Rnw", cache = FALSE>>=
-@
 
 \begin{document}
 

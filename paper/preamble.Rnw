@@ -10,7 +10,7 @@
 \usepackage{xcolor}
 \usepackage{graphicx}
 \usepackage{xargs}
-%\usepackage[utf8]{inputenc}
+\usepackage[utf8]{inputenc}
 %\usepackage[T1]{fontenc}
 \usepackage{booktabs}
 \usepackage{todonotes}
@@ -49,6 +49,20 @@
 %
 % please place your own definitions here and don't use \def but
 % \newcommand{}{}
+
+\input{./latex-math/basic-ml.tex}
+\input{./latex-math/basic-math.tex}
+
+\newcounter{mycomment}
+\newcommand{\mycomment}[2][]{%
+    % initials of the author (optional) + note in the margin
+    \refstepcounter{mycomment}%
+    {%
+    \todo[color={red!100!green!33},size=\small]{%
+        \textbf{Comment [\uppercase{#1}\themycomment]:}~#2}%
+    }}
+\newcommand{\todoBH}[1]{\mycomment[BH]{#1}}
+
 
 <<packages, echo=FALSE, results='hide', message=FALSE, cache = FALSE>>=
 library("knitr")

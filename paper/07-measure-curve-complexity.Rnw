@@ -145,6 +145,7 @@ gridExtra::grid.arrange(p1, p2, row = 2)
 @
 
 
+
 Things that did not work out:
 \begin{itemize}
 \item Version for cubic splines approx

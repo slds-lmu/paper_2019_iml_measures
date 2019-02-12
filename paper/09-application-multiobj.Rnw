@@ -30,6 +30,9 @@ devtools::load_all()
 set.seed(42)
 
 TASK_TYPE = "regr"
+MAX_C  = 10
+EPSILON = 0.05
+GRID.SIZE = 50
 
 tasks = listOMLTasks()
 if(TASK_TYPE == "regr") {
@@ -45,7 +48,6 @@ tasks = tasks[tasks$number.of.features > 4, ]
 tasks = tasks[tasks$number.of.instances < 10000, ]
 tasks = tasks[tasks$number.of.instances > 200, ]
 tasks = tasks[!is.na(tasks$task.id), ]
-
 i = 8
 
 
@@ -55,18 +57,20 @@ task = task$mlr.task
 task.dat = getTaskData(task)
 summary(task.dat)
 print(dim(task.dat))
-# devtools::load_all()
-# set.seed(42)
-# wine = read.csv("./data/winequalityN.csv")
-# wine = na.omit(wine)
-#
-# WINE_SAMPLE = sample(1:nrow(wine), size = 300)
-# wine = wine[WINE_SAMPLE, ]
-#
-# task = makeRegrTask(data = wine, target = "quality")
-# task.dat = getTaskData(task)
-# summary(task.dat)
-# print(dim(task.dat))
+devtools::load_all()
+set.seed(42)
+wine = read.csv("./data/winequalityN.csv")
+wine = na.omit(wine)
+
+WINE_SAMPLE = sample(1:nrow(wine), size = 500)
+WINE_SAMPLE = sample(1:nrow(wine))
+
+wine = wine[WINE_SAMPLE, ]
+
+task = makeRegrTask(data = wine, target = "quality")
+task.dat = getTaskData(task)
+summary(task.dat)
+print(dim(task.dat))
 @
 
 
@@ -133,7 +137,7 @@ fn = function(x){
     measures = list(loss))$aggr
   mod = train(lrn, task)
   pred = Predictor$new(mod, task.dat[subset_index,], y = task$task.desc$target)
-  imeasure = FunComplexity$new(pred)
+  imeasure = FunComplexity$new(pred, max_c = MAX_C, epsilon = EPSILON, grid.size = GRID.SIZE)
   c(round(perf, 2),
     round(imeasure$c_wmean, 2),
     round(1 - imeasure$r2, 2),
@@ -153,71 +157,40 @@ design = generateDesign(n = 20L, par.set = ps, fun = lhs::randomLHS)
 
 mbo.iml = mbo(fun = obj.fun, design = design, learner = mbo.lrn, control = ctrl)
 pareto.set = rbindlist(lapply(mbo.iml$pareto.set, data.frame))
-best.models = cbind(round(mbo.iml$pareto.front, 2), pareto.set)
+best.models = data.frame(cbind(round(mbo.iml$pareto.front, 2), pareto.set))
+measure_names = c("y_1", "y_2", "y_3", "y_4")
+
+# Some duplicates, because sometimes paramter changes, but all criteria remain the same.
+# Only keep one of those solutions
+dups = duplicated(best.models[,c("selected.learner", measure_names)])
+best.models = best.models[!dups,]
+
+# TODO: select based on params which duplicated to keep
+#       e.g. rpart with lowest max.depth
+
+# sometimes xgboost uses no features if alpha too small
+best.models = best.models[best.models$y_4 > 0,]
 @
 
-TODO: Show visualization of results
-TODO: Show FunComplexity of model with best performance
-TODO: Pick one other interesting model and show FunComplexity
+<<mo-results-rename, dependson="mo-setup", eval=FALSE>>=
+best.models.print = best.models
+measure_names = c("y_1", "y_2", "y_3", "y_4")
+colnames(best.models.print) = gsub("regr.", "", colnames(best.models.print), fixed = TRUE)
+colnames(best.models.print) = gsub("mod.", "", colnames(best.models.print), fixed = TRUE)
+param_cols = setdiff(colnames(best.models.print), c(measure_names, "selected.learner"))
+numeric_params = sapply(best.models.print[,param_cols], function(x) is.numeric(x))
+numeric_params = names(numeric_params[which(numeric_params)])
+best.models.print = data.frame(best.models.print)
+best.models.print[,numeric_params] = round(best.models.print[,numeric_params], 2)
 
 
-<<mo-results, dependson="mo-setup", eval=FALSE>>=
-is_duplicated = duplicated(best.models[,1:5])
-best.models = best.models[!is_duplicated,]
-best.models %>%
-  arrange(y_1)
+best.models.print$xgboost.alpha[best.models.print$xgboost.booster == "gbtree"] = NA
+best.models.print$xgboost.max_depth[best.models.print$xgboost.booster == "gblinear"] = NA
+best.models.print$selected.learner = gsub("regr.", "", best.models.print$selected.learner, fixed = TRUE)
+best.models.print$selected.learner = gsub("xgboost.mod", "xgboost", best.models.print$selected.learner, fixed  = TRUE)
 
-
-best.models %>%
-  arrange(y_2)
-
-
-best.models$overall_complexity = best.models$y_2 * (1 + best.models$y_3)
-best.models$interpretability  = 1 - (best.models$overall_complexity / max(best.models$overall_complexity))
-
-y = task.dat[task$task.desc$target][[1]]
-mae_0 = measureMAE(truth = y, response = mean(y))
-mae_0 = 0.5
-ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
-  x = interpretability)) + geom_point() +
-  geom_label(aes(label = selected.learner, fill = y_3)) +
-  scale_x_continuous("Interpretability") +
-  scale_y_continuous("Accuracy")
-
-
-ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
-  x = 1 - y_3)) + geom_point() +
-  geom_label(aes(label = selected.learner)) +
-  scale_x_continuous("Interpretability") +
-  scale_y_continuous("Accuracy")
-
-
-
-
-ggplot(best.models, aes(y = (mae_0 - y_1)/( mae_0 - min(y_1)),
-  x = (max(y_2) - y_2) / max(y_2) * (1 - y_3))) + geom_point() +
-  geom_label(aes(label = selected.learner)) +
-  scale_x_continuous("Interpretability") +
-  scale_y_continuous("Accuracy")
-
-
-
-# TODO: Also keep original measures
-# Scale measures to [0,1]
-best.models$y_1 = 1 - (best.models$y_1 - min(best.models$y_1)) / (max(best.models$y_1) - min(best.models$y_1))
-best.models$y_2 = (best.models$y_2 - min(best.models$y_2)) / (max(best.models$y_2) - min(best.models$y_1))
-# y_3 already scaled between 0 and 1
-best.models$y_3 = (best.models$y_3 - min(best.models$y_3)) / (max(best.models$y_3) - min(best.models$y_3))
-best.models$y_4 = best.models$y_4 / sum(task$task.desc$n.feat)
-
-measure_names = c("Performance", "Complexity", "Interaction", "#Features")
-colnames(best.models)[1:4] = measure_names
-plot.dat = melt(best.models, measure.vars = measure_names)
-
-param_cols = setdiff(colnames(best.models), c(measure_names, "selected.learner"))
-
-
-plot.dat$lrn_descr = apply(plot.dat, 1, function(row) {
+# Shorter description of learner
+best.models.print$descr = apply(best.models.print, 1, function(row) {
   lrn_name = row['selected.learner']
   params = row[param_cols]
   params = params[!is.na(params)]
@@ -226,40 +199,119 @@ plot.dat$lrn_descr = apply(plot.dat, 1, function(row) {
   param_string = paste(param_string, collapse = ",")
   sprintf("%s (%s)", lrn_name, param_string)
 })
+xtable::xtable(best.models.print[c("descr", measure_names)])
 
+@
+
+
+
+
+We visualize the pareto front, but instead of the loss minimization we show the following metrics:
+
+All metrics are scaled to the interval of $[0,1]$, the higher the better (better performing or better interpretability)
+
+\begin{itemize}
+\item Performance as PRL, where we set constant baseline as supremum and the best model as supremum$
+\item Sparsity as $1 - \frac{n.features}{p}$
+\item Addditivity as $R^2$ of first order model
+\item Simplicty as $C_{max} - C + 1$
+\end{itemie}
+
+<<plot-best-mbo>>=
+baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
+best_performance = min(best.models.print$y_1)
+best.models.print$performance = (best.models.print$y_1 - baseline_performance) / (best_performance - baseline_performance)
+
+
+best.models.print$sparsity  = 1 - best.models.print$y_4/ sum(task$task.desc$n.feat)
+best.models.print$additivity  = 1 - best.models.print$y_3 / max(best.models.print$y_3)
+best.models.print$simplicity  = 1 - ((best.models.print$y_2 - 1 ) / (max(best.models.print$y_2) - 1))
+
+measure_names = c("performance", "sparsity", "additivity", "simplicity")
+plot.dat = melt(best.models.print, measure.vars = measure_names)
+
+#param_cols = setdiff(colnames(best.models), c(measure_names, "selected.learner"))
+
+plot.dat = unique(plot.dat)
 ggplot(plot.dat) +
-  geom_col(aes(x = variable, y = value, color = selected.learner)) +
-  facet_wrap("lrn_descr") +
+  geom_col(aes(x = variable, y = value)) +
+  facet_wrap("descr") +
   coord_flip()
 
-
-max.plot.dat = plot.dat
-max.plot.dat$value = 1
-
-ggplot(mapping = aes(x = variable, y = lrn_descr, size = value)) +
-  geom_point(data = max.plot.dat, shape = 1) +
-  geom_point(data = plot.dat) +
+nudge_y = -0.25
+# TODO: change to colorblind friendly colors
+ggplot(mapping = aes(y = variable, x = descr, color = value)) +
+  #geom_point(data = max.plot.dat, shape = 1) +
+  geom_point(data = plot.dat, size = 15) +
   scale_size_continuous(range = c(0,10), guide = "none") +
-  scale_y_discrete("")
+  scale_x_discrete("") +
+  scale_color_gradient2(midpoint = 0.5, mid = "orange", high = "green") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_label(data = plot.dat[plot.dat$variable == "simplicity",],
+    aes(label = sprintf("C:%.2f", y_2)), nudge_y = nudge_y, color = "black") +
+  geom_label(data = plot.dat[plot.dat$variable == "additivity",],
+    aes(label = sprintf("IA:%.2f", y_3)), nudge_y = nudge_y, color = "black") +
+    geom_label(data = plot.dat[plot.dat$variable == "sparsity",],
+    aes(label = sprintf("P:%.0f", y_4)), nudge_y = nudge_y, color = "black") +
+  geom_label(data = plot.dat[plot.dat$variable == "performance",],
+    aes(label = sprintf("MAE:%.3f", y_1)), nudge_y = nudge_y, color = "black")
+@
 
+
+TODO: Recreate Accuracy x Interpretability graphic, but three times with differen x-axis (sparsity, additivity, simplicity)
+
+Recreation of accuracy x interpretability graphic
+
+Basically inverted paretor front in two dimsenions
+<<perf-interpret-tradeoff>>=
+ggplot(best.models.print) +
+  geom_point(aes(y = performance, x = additivity))
+
+ggplot(best.models.print) +
+  geom_point(aes(y = performance, x = sparsity))
+
+ggplot(best.models.print) +
+  geom_point(aes(y = performance, x = simplicity))
+
+
+ggplot(best.models.print) +
+  geom_point(aes(y = performance, x = simplicity * additivity * sparsity))
+
+ggplot(best.models.print) +
+  geom_point(aes(y = performance, x = simplicity + additivity + sparsity))
+@
+
+
+TODO: Show FunComplexity of model with best performance
+
+TODO: Pick one other interesting model and show FunComplexity
+
+
+<<mo-best-performance, dependson="mo-setup", eval=FALSE>>=
 ## Extract parameters and refit best solutions
+best_index = which(mbo.iml$pareto.front[,"y_1"] == min(mbo.iml$pareto.front[,"y_1"]))
+pp = mbo.iml$pareto.set[[best_index]]
+pp = pp[!is.na(pp)]
+lrn = setHyperPars(lrn, par.vals = pp)
+mod = train(lrn, task)
+pred = Predictor$new(mod, task.dat)
+fc = FunComplexity$new(pred)
+plot(fc, nrow = 2)
+@
 
-pareto_index = 1
 
+
+<<mo-interesting-solution, dependson="mo-setup", eval=FALSE>>=
+## Extract parameters and refit best solutions
+pareto_index = 3
 pp = mbo.iml$pareto.set[[pareto_index]]
 pp = pp[!is.na(pp)]
 lrn = setHyperPars(lrn, par.vals = pp)
 mod = train(lrn, task)
 pred = Predictor$new(mod, task.dat)
 fc = FunComplexity$new(pred)
-
-plot(fc)
-
-
-
+plot(fc, nrow = 1)
 @
-
-
 
 
 
@@ -298,7 +350,7 @@ where max.components is the maximal complexity a feature can get based on user i
 Mathematically writing down objectives
 
 Short mbo summary and setup.
- Tune across many learners (xgboost, svm, lm, rpart, ...)
+Tune across many learners (xgboost, svm, lm, rpart, ...)
 Many datasets
 Show Pareto Front for some datasets.
 

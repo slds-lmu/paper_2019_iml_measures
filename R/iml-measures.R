@@ -98,13 +98,18 @@ FunComplexity = R6::R6Class(
       am_coefs = unlist(lapply(self$approx_models, function(x) x$n_coefs))
       am_weights = unlist(lapply(self$approx_models, function(x) x$var))
       self$c_wmean = weighted.mean(am_coefs, w = am_weights)
+      if(all(am_coefs == 0)) self$c_wmean = 0
     },
-    generatePlot = function(features = NULL, ncols = NULL, nrows = NULL, fixed_y = TRUE, ...) {
+    generatePlot = function(features = NULL, ncols = NULL, nrows = NULL, fixed_y = TRUE, del_zero=TRUE,...) {
       assert_character(features, null.ok = TRUE)
       if(length(features) > 0) {
         assert_true(all(features %in% self$features))
       } else {
         features = self$features
+      }
+
+      if(del_zero){
+        features = features[sapply(self$approx_models, function(x) x$feature_used)]
       }
 
       # Compute size of gtable
@@ -132,7 +137,7 @@ FunComplexity = R6::R6Class(
       y_axis_label = self$effects[[1]]$.__enclos_env__$private$y_axis_label
       # Fill gtable with graphics
       ml = marrangeGrob(grobs = plts, nrow = layout$nrows, ncol = layout$ncols,
-        top = NULL, left = y_axis_label)
+        left = y_axis_label, top = sprintf("ALE main effects, R squared %.2f", self$r2))
       ml
     }
   )

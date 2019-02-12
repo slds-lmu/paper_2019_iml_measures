@@ -166,6 +166,9 @@ Why not functional Anova a la hooker? computationally ineffective and his decomp
 
 % Properties of ALE decomposition
 
+% Categorical features
+Categorical features require an ordering of the categories so that accumulated local effects can be estimated.
+Any ordering of the categories will yield a valid ALE, but the interpretation differs, because category effects are interpreted in terms of changes to the neighbouring categories.
 
 % Comparison to PDP
 An alternative to Accumulated Local Effects as a feature effect visualization tool is the partial dependence plot. TODO: \citep{friedman2001greedy}

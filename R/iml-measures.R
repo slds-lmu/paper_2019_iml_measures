@@ -23,7 +23,7 @@ FunComplexity = R6::R6Class(
     # The approximation models of the ALE plots
     approx_models = NULL,
     initialize = function(predictor, grid.size = 50, parallel = FALSE,
-      epsilon = 0.05, max_c = 10, reorder = FALSE) {
+      epsilon = 0.05, max_c = 10) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
         stop("Please set class in Predictor")
       }
@@ -176,8 +176,6 @@ AleApprox = R6::R6Class("AleApprox",
       self$SST_ale = ssq(private$ale_values)
       # Variance of the ALE plot weighted by data density
       self$var = self$SST_ale / length(private$x)
-      madx = mad(private$ale_values)
-      #self$var = madx
     }
   ),
   private = list(
@@ -207,11 +205,11 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
   public = list(
     # Table holding the level/new_level info
     tab = NULL,
-    initialize = function(ale, epsilon, max_c, reorder = TRUE) {
+    initialize = function(ale, epsilon, max_c) {
       assert_true(ale$feature.type == "categorical")
       super$initialize(ale, epsilon, max_breaks = max_c)
       if(!private$is_null_ale()) {
-        self$approximate(reorder = reorder)
+        self$approximate()
         self$n_coefs = ifelse(self$max_complex, max_c, length(unique(self$tab$lvl)) - 1)
         self$predict = function(dat){
           merge(dat, self$tab, by.x = self$feature, by.y = "x", sort = FALSE)[["pred_approx"]]
@@ -221,16 +219,23 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
         self$r2 = 1 - SSE / self$SST_ale
       }
     },
-    approximate = function(reorder){
+    approximate = function(){
       x = private$x
       # Create table with x, ale, n
       df = data.table(ale =  private$ale_values, x = x)
       df = df[,.(n = .N), by = list(ale, x)]
-      max_breaks = min(self$max_breaks, length(unique(df$ale)))
+      df$x = factor(df$x, self$ale$results[,self$feature])
+      df = df[order(df$x),]
+      max_breaks = min(self$max_breaks, nlevels(x) - 1)
       for(n_breaks in 1:max_breaks) {
-        lower = rep(min(df$ale), times = n_breaks)
-        upper = rep(max(df$ale), times = n_breaks)
-        init_breaks = quantile(df$ale, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
+        lower = rep(1, times = n_breaks) - 0.00001
+        upper = rep(nlevels(x), times = n_breaks) + 0.000001
+        # currently ordered factor break optimization handled on continuous scale
+        init_breaks = seq(from = 0, to = nlevels(x), length.out = n_breaks+2)[2:(n_breaks+1)]
+       if(n_breaks == nlevels(x)) {
+          pars = init_breaks
+          break()
+        }
         opt_gensa  = GenSA(par = init_breaks, step_fn, lower, upper, dat = df,
           control = list(maxit = 100), self$SST_ale)
         pars = opt_gensa$par
@@ -238,7 +243,8 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
       }
       if(opt_gensa$value > self$epsilon)  self$max_complex = TRUE
       # Create table for predictions
-      df$lvl = cut(df$ale, breaks = c(min(df$ale), pars, max(df$ale)), include.lowest = TRUE)
+      breaks = unique(round(pars, 0))
+      df$lvl = cut(1:nrow(df), c(0, breaks, nrow(df)))
       df_pred = df[,.(pred_approx = weighted.mean(ale, w = n)),by = lvl]
       self$tab = merge(df, df_pred, by.x = "lvl", by.y = "lvl")
     },
@@ -255,8 +261,8 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
 )
 
 step_fn = function(par, dat, SST){
-  breaks = unique(c(min(dat$ale), par, max(dat$ale)))
-  dat$lvl = cut(dat$ale, breaks = breaks, include.lowest = TRUE)
+  breaks = unique(round(par, 0))
+  dat$lvl = cut(1:nrow(dat), unique(c(0, breaks, nrow(dat))))
   dat2 = dat[,.(ale_mean = weighted.mean(ale, w = n), n = sum(n)),by = lvl]
   # ALE plots have mean zero
   SSM = sum((dat2$ale_mean)^2 * dat2$n)
@@ -310,7 +316,6 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         opt_gensa = GenSA(par = init_breaks, segment_fn, lower, upper, ale = self$ale,
           control = list(maxit = 100), self$SST_ale,
           x = x, ale_prediction = private$ale_values)
-
         pars = opt_gensa$par
         if(opt_gensa$value <= self$epsilon)  break()
       }
@@ -338,9 +343,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         ggtitle(sprintf("C: %i%s, R2: %.3f, V: %.3f", self$n_coefs, max_string,self$r2, varv))
       if(!is.null(self$breaks)) p = p + geom_vline(data = data.frame(breaks = self$breaks), aes(xintercept = self$breaks))
       p
-
     }
-
   )
 )
 

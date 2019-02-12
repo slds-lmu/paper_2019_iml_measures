@@ -11,6 +11,7 @@ The individual ALE components $f_{j,ALE}$ can be estimated as described in ALE s
 
 We use the Proportional Reduction in Expected Loss as measure for how well the first-order model predictions approximates $f(x)$.
 
+
 With some adaptions based on \citep{cooil1994reliability}, we define PRL as:
 
 $$PRL(\fh, \fale, L) = 1 - \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}$$

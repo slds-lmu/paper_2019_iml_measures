@@ -2,6 +2,7 @@
 \section{Application: Multi-objective optimization}
 \label{sec:app2}
 
+TODO: Cite MBO paper
 
 "Note also that it is very hard to define a priori which model
 size would be considered “too large” to be analyzed by a user.
@@ -13,6 +14,13 @@ based on Pareto dominance or lexicographic optimization""
 \citep{freitas2014comprehensible}
 
 
+In the following example we use dataset XXX with XXX rows, XXX categorial feautures and XXX numerical features to predict XXX.
+We train XXX different models.
+The setup is the following:
+
+- Nested resampling
+- Multi-objective: Performance measured as XXX, number of features used, C and IA.
+- we use MBO with following setting: XXX
 
 
 <<mo-data>>=

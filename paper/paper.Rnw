@@ -47,6 +47,8 @@ We optimize model hyperparameters across different types of models for predictiv
 \item Brainstorm: How to combine interpretability measure into one measure?
 \item Find out why  generateDesign could only produce 138 points instead of 1000?
 \item Cite a few examples where interpretability is measured with human experiments
+\item Formally define: Sparsity, Additivity, Performance, Simplicity (only possible if you have mutliple models)
+\item Call $R^2$ approximation of first order model "Fidelity"?
 \end{itemize}
 
 \section{Ideas}
@@ -58,6 +60,7 @@ We optimize model hyperparameters across different types of models for predictiv
 The less correlated, the better the interpretation methods work.
 But don't measure with pearson correlation but maybe use notion of "predictability"/dependence
 \item Benchmarking methods that claim to be interpretable
+\item Show for a few ML methods how parameters map to the measures.
 \end{itemize}
 
 <<01-intro, child = "01-intro.Rnw">>=

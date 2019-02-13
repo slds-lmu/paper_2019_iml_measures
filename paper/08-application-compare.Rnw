@@ -18,43 +18,35 @@ Modeled with Random Forest \citep{Breiman2001}
 
 We compare random forest with linear model in terms of performance
 
-<<wine-data>>=
-wine_orig = read.csv(here("./data/winequalityN.csv"))
-wine_orig = na.omit(wine_orig)
-
-
-wine_orig = wine_orig[wine_orig$type == "white",]
-wine_orig$type = NULL
-# set.seed(42)
-# train_test_i = sample(1:nrow(wine_orig), size = round(0.7 * nrow(wine_orig)))
-# validation_i = setdiff(1:nrow(wine_orig), train_test_i)
-# wine = wine_orig[train_test_i, ]
-wine = wine_orig
-print(head(wine))
+<<adult-data>>=
+adult <- read.table('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data',
+                    sep = ',', fill = F, strip.white = T)
+colnames(adult) <- c('age', 'workclass', 'fnlwgt', 'educatoin',
+                     'educatoin_num', 'marital_status', 'occupation', 'relationship', 'race', 'sex',
+                     'capital_gain', 'capital_loss', 'hours_per_week', 'native_country', 'income')
+tsk = makeClassifTask(data = adult, target = "income")
 @
 
-<<wine-tune, dependson="wine-data", results = "asis">>=
+<<adult-tune, dependson="adult-data", results = "asis">>=
 # Benchmark both xgboost and linear model
-ctrl = makeTuneControlGrid()
-ps_xgboost = makeParamSet(
-  makeIntegerParam("nrounds", lower = 1, upper = 500)
+ctrl = makeTuneControlRandom(maxit = 10)
+ps_ranger = makeParamSet(
+  makeIntegerParam("num.trees", lower = 100, upper = 500),
+  makeIntegerParam("mtry", lower = 1, upper = sum(tsk$task.desc$n.feat))
 )
-lrn_xgboost = makeTuneWrapper("regr.xgboost", resampling = cv3,
-  measures = list(mae), par.set = ps_xgboost, control = ctrl)
+lrn_ranger = makeTuneWrapper("classif.ranger", resampling = cv3,
+  measures = list(acc), par.set = ps_ranger, control = ctrl)
 ps_ctree = makeParamSet(
   makeIntegerParam("maxdepth", lower = 1, upper = 10)
 )
-lrn_tree = makeTuneWrapper("regr.ctree", resampling = cv3,
+lrn_tree = makeTuneWrapper("classif.ctree", resampling = cv3,
   measures = list(mae), par.set = ps_ctree, control = ctrl)
-lrn_fl = makeLearner("regr.featureless")
+lrn_fl = makeLearner("classif.featureless")
 
 rdesc = cv5
-lrns = list(lrn_xgboost, lrn_tree, lrn_fl)
-tsk = makeRegrTask(data = wine, target = "quality")
-bmr = benchmark(lrns, tsk, rdesc, measures = list(mae), show.info = FALSE)
+lrns = list(lrn_ranger, lrn_tree, lrn_fl)
+bmr = benchmark(lrns, tsk, rdesc, measures = list(acc), show.info = FALSE)
 bmr_tab = getBMRAggrPerformances(bmr, as.df = TRUE)
-
-baseline_mae = mean(abs(wine$quality - median(wine$quality)))
 
 xtable::xtable(bmr_tab)
 @
@@ -62,21 +54,19 @@ xtable::xtable(bmr_tab)
 
 Now we compare it in terms of interpretability
 
-<<wine-xgboost, dependson = "wine-tune">>=
-mod = train(lrn_xgboost, tsk)
+<<adult-ranger, dependson = "adult-tune">>=
+mod = train(lrn_ranger, tsk)
 pred_rf = Predictor$new(mod, getTaskData(tsk))
 fc_xg = FunComplexity$new(pred_rf, epsilon = 0.05, max_c = 10)
 plot(fc_xg, nrow = 2)
-fc_xg$r2
-fc_xg$c_wmean
 @
 
-The xgboost model is rather complex, as visible in the plots in \ref{fig:wine-xgboost}.
+The ranger model is rather complex, as visible in the plots in \ref{fig:wine-xgboost}.
 Average weighted complexity is \Sexpr{fc_xg$c_wmean} and the $R^2$ of the first order ALE approximation is only \Sexpr{fc_xg$r2}, which means that a lot of interactions are modeled.
 Of the available \Sexpr{sum(tsk$task.desc$n.feat)} features, \Sexpr{fc_xg$n_features} were used.
 
 
-<<wine-tree, dependson = "wine-tune">>=
+<<adult-tree, dependson = "adult-tune">>=
 mod_tree = train(lrn_tree, tsk)
 pred_tree = Predictor$new(mod_tree, getTaskData(tsk))
 fc_tree = FunComplexity$new(pred_tree, epsilon = 0.05, max_c = 10)

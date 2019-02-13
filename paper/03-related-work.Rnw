@@ -5,12 +5,24 @@
 
 \subsection{Measure Interpretability}
 
+Lack of definition of interpretability of a model.
+Lack of model-agnostic measures of interpretability, which are needed to compare different model choices.
+
+There are a few approaches to quantify interpretability.
+
 Multicrit often looks at complexity: Examples
 But nowhere are explicit, model-agnostic interpretability measures used
 AIC, BIC is a tradeoff measure between accuracy and interpretability
+AIC, BIC combine performance and number of parameters, but only for linear models.
+TODO: cite AIC
+TODO: cite BIC
 
 Other approach, but only for decision tree and logistic regression: "Measuring Interpretability for Different Types
 of Machine Learning Models" by Qing Zhou 1 , Fenglu Liao 1 , Chao Mou 1(and) , and Ping Wang 2
+
+Model-specific interpretability measurements:
+Sparsity will be measured as the
+number of leaves in a decision tree or as the number of rules in a rule list (TODO: CITE SBRL)
 
 TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. My critique: Always needs some baseline which might not exist. For example discovering new knowledge. Also, target model is fixed, can't decide accuracy interpretability tradeoff.  sparsity is not rewarded.
 \citep{dhurandhar2017tip}
@@ -31,7 +43,7 @@ ral networks, etc.). \citep{bibal2016interpretability} say we have to
 
 
 
-\subsection{Functional Decomposition}
+\subsection{Functional Decomposition of Model into effects}
 \label{sec:decomposition}
 
 We can decompose the model prediction function $f(x)$ into orthogonal parts. %\citet{Efron1981} \citet{Chastaing2017}, :

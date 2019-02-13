@@ -24,8 +24,6 @@ The setup is the following:
 
 
 <<mo-data>>=
-configureMlr(show.info = FALSE)
-
 devtools::load_all()
 set.seed(42)
 
@@ -33,33 +31,7 @@ TASK_TYPE = "regr"
 MAX_C  = 10
 EPSILON = 0.05
 GRID.SIZE = 50
-
-tasks = listOMLTasks()
-if(TASK_TYPE == "regr") {
-  tasks = tasks[grepl("Supervised Regression", tasks$task.type), ]
-} else {
-  tasks = tasks[grepl("Supervised Classification", tasks$task.type), ]
-  tasks = tasks[tasks$number.of.classes  == 2, ]
-}
-tasks = tasks[tasks$number.of.instances.with.missing.values == 0, ]
-tasks = tasks[tasks$number.of.symbolic.features > 0, ]
-tasks = tasks[tasks$number.of.features < 150, ]
-tasks = tasks[tasks$number.of.features > 4, ]
-tasks = tasks[tasks$number.of.instances < 10000, ]
-tasks = tasks[tasks$number.of.instances > 200, ]
-tasks = tasks[!is.na(tasks$task.id), ]
-i = 8
-
-
-task = getOMLTask(task.id = tasks$task.id[i])
-task = convertOMLTaskToMlr(task)
-task = task$mlr.task
-task.dat = getTaskData(task)
-summary(task.dat)
-print(dim(task.dat))
-devtools::load_all()
-set.seed(42)
-wine = read.csv("./data/winequalityN.csv")
+wine = read.csv(here("./data/winequalityN.csv"))
 wine = na.omit(wine)
 
 WINE_SAMPLE = sample(1:nrow(wine), size = 500)
@@ -172,7 +144,7 @@ best.models = best.models[!dups,]
 best.models = best.models[best.models$y_4 > 0,]
 @
 
-<<mo-results-rename, dependson="mo-setup", eval=FALSE>>=
+<<mo-results-rename, dependson="mo-run">>=
 best.models.print = best.models
 measure_names = c("y_1", "y_2", "y_3", "y_4")
 colnames(best.models.print) = gsub("regr.", "", colnames(best.models.print), fixed = TRUE)
@@ -211,13 +183,13 @@ We visualize the pareto front, but instead of the loss minimization we show the 
 All metrics are scaled to the interval of $[0,1]$, the higher the better (better performing or better interpretability)
 
 \begin{itemize}
-\item Performance as PRL, where we set constant baseline as supremum and the best model as supremum$
+\item Performance as PRL, where we set constant baseline as supremum and the best model as supremum
 \item Sparsity as $1 - \frac{n.features}{p}$
 \item Addditivity as $R^2$ of first order model
 \item Simplicty as $C_{max} - C + 1$
-\end{itemie}
+\end{itemize}
 
-<<plot-best-mbo>>=
+<<plot-best-mbo, dependson="mo-results-rename">>=
 baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
 best_performance = min(best.models.print$y_1)
 best.models.print$performance = (best.models.print$y_1 - baseline_performance) / (best_performance - baseline_performance)
@@ -233,14 +205,15 @@ plot.dat = melt(best.models.print, measure.vars = measure_names)
 #param_cols = setdiff(colnames(best.models), c(measure_names, "selected.learner"))
 
 plot.dat = unique(plot.dat)
-ggplot(plot.dat) +
+p = ggplot(plot.dat) +
   geom_col(aes(x = variable, y = value)) +
   facet_wrap("descr") +
   coord_flip()
+print(p)
 
 nudge_y = -0.25
 # TODO: change to colorblind friendly colors
-ggplot(mapping = aes(y = variable, x = descr, color = value)) +
+p  = ggplot(mapping = aes(y = variable, x = descr, color = value)) +
   #geom_point(data = max.plot.dat, shape = 1) +
   geom_point(data = plot.dat, size = 15) +
   scale_size_continuous(range = c(0,10), guide = "none") +
@@ -255,6 +228,7 @@ ggplot(mapping = aes(y = variable, x = descr, color = value)) +
     aes(label = sprintf("P:%.0f", y_4)), nudge_y = nudge_y, color = "black") +
   geom_label(data = plot.dat[plot.dat$variable == "performance",],
     aes(label = sprintf("MAE:%.3f", y_1)), nudge_y = nudge_y, color = "black")
+print(p)
 @
 
 
@@ -263,7 +237,7 @@ TODO: Recreate Accuracy x Interpretability graphic, but three times with differe
 Recreation of accuracy x interpretability graphic
 
 Basically inverted paretor front in two dimsenions
-<<perf-interpret-tradeoff>>=
+<<perf-interpret-tradeoff, dependson="mo-results-rename">>=
 ggplot(best.models.print) +
   geom_point(aes(y = performance, x = additivity))
 
@@ -287,7 +261,7 @@ TODO: Show FunComplexity of model with best performance
 TODO: Pick one other interesting model and show FunComplexity
 
 
-<<mo-best-performance, dependson="mo-setup", eval=FALSE>>=
+<<mo-best-performance, dependson="mo-run">>=
 ## Extract parameters and refit best solutions
 best_index = which(mbo.iml$pareto.front[,"y_1"] == min(mbo.iml$pareto.front[,"y_1"]))
 pp = mbo.iml$pareto.set[[best_index]]
@@ -301,7 +275,7 @@ plot(fc, nrow = 2)
 
 
 
-<<mo-interesting-solution, dependson="mo-setup", eval=FALSE>>=
+<<mo-interesting-solution, dependson="mo-run">>=
 ## Extract parameters and refit best solutions
 pareto_index = 3
 pp = mbo.iml$pareto.set[[pareto_index]]

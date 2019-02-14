@@ -178,3 +178,50 @@ For cheap cost, because we might already have ALE plots.
 \item With the feature.used approach we can omit computation of ALE plots of features that are not used.
 \item We can report the 1st-order fit measure along with the plots to assess how much they are responsible for the total prediction.
 \end{itemize}
+
+
+
+\subsubsection{LIME unreliable when C high}
+
+Quick Idea: Maybe LIME models match the ALE curves roughly?
+
+
+Show that $R^2$ of LIME suffers with increasing in C.
+
+GAmboost for friedman2 with increasing m.
+
+
+<<>>=
+set.seed(123)
+n = 300
+dat = mlbench::mlbench.friedman3(n, sd = 0.3)
+datx = data.frame(cbind(dat$x, "y" = dat$y))
+task = makeRegrTask(data  = datx, target = "y")
+
+for(pn in c(-1,0,1, 2, 3)) {
+  lrn = makeLearner("regr.earth", penalty  = pn)
+  mod = train(lrn, task)
+  pred = Predictor$new(mod, datx, class = 1)
+  fc = FunComplexity$new(pred, grid.size = 100)
+  c = fc$c_wmean
+  print(c)
+  print(fc$r2)
+  fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
+  print(plot(fe))
+
+  # TODO: Fit LIME models
+
+}
+
+@
+
+\subsubsection{Correlation between GAM degrees of freedom and C??}
+
+
+
+
+
+
+
+
+

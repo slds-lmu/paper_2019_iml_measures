@@ -106,3 +106,7 @@ If we increase to 500, the probability drops to  0.006570483.
 
 
 
+The n.features measure directly tells us how well we can interpret a model, regardless of whether it's an intrinsically interpretable model (linear regression model) or a black box model analyzed with post-hoc models (xgboost and feature importance).
+If n.features is 5, this means that to understand the model, we have to look at 5 coefficients in  a linear model or a list of 5 feature importances for the xgboost model.
+If n.features is 5000, the number of numbers scales linearly.
+

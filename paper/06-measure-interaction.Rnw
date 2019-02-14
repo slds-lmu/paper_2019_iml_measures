@@ -75,42 +75,65 @@ Too much variance, doesn't handle interactions well. Not as nice as ALE decomp, 
 \end{algorithm}
 
 
+If Interaction is 0, we can fully represent how the model works by showing the 1D-ALE plots.
 
 
 
 
 
+\subsubsection{PDP unreliable with high IA}
+
+For one toy task and different learner/hyperparameters (that increase IA) show that PDP hide infos.
+PDP hides infos means that centered ICE curves vary.
+Show with plot.
+
+Using PDP here because, unlike ALE, they have a pendant for individual observations:ICE curves, which visualize heterogeneity of feature effects.
+
+Friedman 2
+
+Comparing kknn with k = XXX, gamboost and random forest.
+
+<<PDP-unreliable, fig.cap="Comparing PDP+ICE for models with different IA measure. The higher IA, the less reliable the PDP information. ICE shows high variance of feature effects. Here x3 is shown, x1 x2 and x4 look similar.">>=
+set.seed(123)
+n = 100
+dat = mlbench::mlbench.friedman2(n, sd = 0.3)
+datx = data.frame(cbind(dat$x, "y" = dat$y))
+task = makeRegrTask(data  = datx, target = "y")
+
+y_limit = c(-200, 1200)
+feature = "V2"
+
+lrn = makeLearner("regr.gamboost")
+mod = train(lrn, task)
+pred = Predictor$new(mod, datx, class = 1)
+fc = FunComplexity$new(pred, grid.size = 100)
+r2_gamboost = 1 - fc$r2
+fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
+p_gamboost = plot(fe$effects[[feature]], ylim = y_limit) +
+  ggtitle(sprintf("gamboost, IA=%.2f", r2_gamboost))
 
 
+lrn = makeLearner("regr.ranger")
+mod = train(lrn, task)
+pred = Predictor$new(mod, datx)
+fc = FunComplexity$new(pred, grid.size = 100)
+r2_ksvm = 1- fc$r2
+fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
+p_ksvm = plot(fe$effects[[feature]], ylim = y_limit) +
+    ggtitle(sprintf("ranger (random forest), IA=%.2f", r2_ksvm))
 
 
+lrn = makeLearner("regr.kknn", k = 3)
+mod = train(lrn, task)
+pred = Predictor$new(mod, datx, class = 1)
+fc = FunComplexity$new(pred, grid.size = 100)
+r2_kknn = 1- fc$r2
+fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
+p_kknn = plot(fe$effects[[feature]], ylim = y_limit) +
+    ggtitle(sprintf("kknn, IA=%.2f", r2_kknn))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+grid.arrange(p_gamboost, p_ksvm, p_kknn, nrow = 1)
+@
 
 
 

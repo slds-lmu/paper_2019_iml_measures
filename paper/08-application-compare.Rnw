@@ -9,7 +9,6 @@ This example shows the following;
 \end{itemize}
 
 
-Data from OpenML? \citep{Casalicchio2017}
 
 All examples with mlr \citep{JMLR:v17:15-066} in R \citep{r2016}.
 Available on Github the source code for examples.
@@ -19,8 +18,15 @@ Modeled with Random Forest \citep{Breiman2001}
 We compare random forest with linear model in terms of performance
 
 <<adult-data>>=
+SAMPLE = TRUE
+
 adult <- read.table('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data',
                     sep = ',', fill = F, strip.white = T)
+if(SAMPLE) {
+  adult = adult[sample(1:nrow(adult), size = 1000),]
+  print("ADULT DATA WAS SAMPLED")
+}
+
 colnames(adult) <- c('age', 'workclass', 'fnlwgt', 'educatoin',
                      'educatoin_num', 'marital_status', 'occupation', 'relationship', 'race', 'sex',
                      'capital_gain', 'capital_loss', 'hours_per_week', 'native_country', 'income')
@@ -34,13 +40,13 @@ ps_ranger = makeParamSet(
   makeIntegerParam("num.trees", lower = 100, upper = 500),
   makeIntegerParam("mtry", lower = 1, upper = sum(tsk$task.desc$n.feat))
 )
-lrn_ranger = makeTuneWrapper("classif.ranger", resampling = cv3,
+lrn_ranger = makeTuneWrapper(makeLearner("classif.ranger", predict.type = "prob"), resampling = cv3,
   measures = list(acc), par.set = ps_ranger, control = ctrl)
 ps_ctree = makeParamSet(
   makeIntegerParam("maxdepth", lower = 1, upper = 10)
 )
-lrn_tree = makeTuneWrapper("classif.ctree", resampling = cv3,
-  measures = list(mae), par.set = ps_ctree, control = ctrl)
+lrn_tree = makeTuneWrapper(makeLearner("classif.ctree", predict.type = "prob"), resampling = cv3,
+  measures = list(mmce), par.set = ps_ctree, control = ctrl)
 lrn_fl = makeLearner("classif.featureless")
 
 rdesc = cv5
@@ -56,7 +62,7 @@ Now we compare it in terms of interpretability
 
 <<adult-ranger, dependson = "adult-tune">>=
 mod = train(lrn_ranger, tsk)
-pred_rf = Predictor$new(mod, getTaskData(tsk))
+pred_rf = Predictor$new(mod, getTaskData(tsk),class = 1)
 fc_xg = FunComplexity$new(pred_rf, epsilon = 0.05, max_c = 10)
 plot(fc_xg, nrow = 2)
 @
@@ -68,12 +74,17 @@ Of the available \Sexpr{sum(tsk$task.desc$n.feat)} features, \Sexpr{fc_xg$n_feat
 
 <<adult-tree, dependson = "adult-tune">>=
 mod_tree = train(lrn_tree, tsk)
-pred_tree = Predictor$new(mod_tree, getTaskData(tsk))
+pred_tree = Predictor$new(mod_tree, getTaskData(tsk), class  = 1 )
 fc_tree = FunComplexity$new(pred_tree, epsilon = 0.05, max_c = 10)
 plot(fc_tree, nrow = 2)
+fc_tree$c_wmean
+fc_tree$n_features
+fc_tree$r2
 @
 
 The xgboost model is rather complex, as visible in the plots in \ref{fig:wine-xgboost}.
 Average weighted complexity is \Sexpr{fc_tree$c_wmean} and the $R^2$ of the first order ALE approximation is only \Sexpr{fc_tree$r2}, which means that a lot of interactions are modeled.
 
 Of the available \Sexpr{sum(tsk$task.desc$n.feat)} features, \Sexpr{fc_tree$n_features} were used.
+
+

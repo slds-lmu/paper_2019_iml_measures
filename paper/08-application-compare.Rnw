@@ -2,6 +2,21 @@
 \section{Application: Compare interpretability of two models}
 \label{sec:app1}
 
+
+Idea: We only compare tree based methods or also rule-based methods.
+Goal: Show that these tools are useful even if linear models are not our goal. Also that it can be used to compare trees.
+RIPPER, CART, SBRL, OneR, ctree
+
+
+Datasets:
+
+Biodegradability
+https://www.openml.org/d/1494
+
+Wind and Solar energy based on wheather
+https://github.com/hugorcf/Renewable-energy-weather/blob/master/renewable.ipynb
+
+
 This example shows the following;
 \begin{itemize}
 \item Measures in action

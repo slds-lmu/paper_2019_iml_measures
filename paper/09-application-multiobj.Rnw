@@ -18,6 +18,8 @@ In the following example we use dataset XXX with XXX rows, XXX categorial feautu
 We train XXX different models.
 The setup is the following:
 
+
+TODO: Improve description of setup with mbo, optimization objectives, ...
 - Nested resampling
 - Multi-objective: Performance measured as XXX, number of features used, C and IA.
 - we use MBO with following setting: XXX
@@ -27,7 +29,6 @@ The setup is the following:
 devtools::load_all()
 set.seed(42)
 
-TASK_TYPE = "regr"
 MAX_C  = 10
 EPSILON = 0.05
 GRID.SIZE = 50
@@ -41,59 +42,49 @@ wine = wine[WINE_SAMPLE, ]
 
 task = makeRegrTask(data = wine, target = "quality")
 task.dat = getTaskData(task)
-summary(task.dat)
-print(dim(task.dat))
 @
 
 
 <<mo-run, dependson="mo-data">>=
-base.learners.classif = list(
-  makeLearner("classif.ksvm", predict.type = "prob"),
-  makeLearner("classif.rpart", predict.type = "prob"),
-  makeLearner("classif.gamboost", predict.type = "prob"),
-  makeLearner("classif.kknn", predict.type = "prob"),
-  makeLearner("classif.naiveBayes", predict.type = "prob")
-)
-
 base.learners.regr = list(
   makeLearner("regr.ksvm"),
+  makeLearner("regr.kknn"),
+  makeLearner("regr.glmnet"),
   makeLearner("regr.xgboost.mod"),
   makeLearner("regr.rpart"),
-  makeLearner("regr.gamboost")
+  makeLearner("regr.lm")
 )
 
 lrn.regr = makeModelMultiplexer(base.learners.regr)
-lrn.classif = makeModelMultiplexer(base.learners.classif)
 
 ps.regr = makeModelMultiplexerParamSet(lrn.regr,
-  makeNumericParam("C", lower = 0, upper = 100),
-  makeIntegerParam ("max_depth" , lower = 1, upper = 6, requires = quote(booster == "gbtree")),
-  makeIntegerParam ("maxdepth" , lower = 1, upper = 10),
-  makeDiscreteParam("booster", values = c("gbtree", "gblinear")),
-  makeNumericParam("alpha", lower = 0, upper = 100, requires = quote(booster == "gblinear")),
-  makeIntegerParam("nrounds", lower = 1, upper = 1000),
-  makeIntegerParam("mstop", lower = 1, upper = 1000)
+  regr.ksvm = makeParamSet(
+    makeNumericParam("C", lower = 0, upper = 100),
+    makeDiscreteParam("kernel", values = c("rbfdot", "vanilladot", "polydot"))
+  ),
+  regr.kknn = makeParamSet(
+    makeIntegerParam("k", lower = 1, upper = 10),
+    makeIntegerParam("distance", lower = 1, upper = 2)
+
+  ),
+  regr.xgboost.mod = makeParamSet(
+    makeIntegerParam ("max_depth" , lower = 1, upper = 10),
+    makeIntegerParam("nrounds", lower = 1, upper = 1000)
+  ),
+  regr.glmnet = makeParamSet(
+    makeNumericParam("alpha", lower = 0, upper = 1)
+  ),
+  regr.rpart = makeParamSet(
+    makeIntegerParam ("maxdepth" , lower = 1, upper = 6, requires = quote(booster == "gbtree"))
+  )
 )
 
-ps.classif = makeModelMultiplexerParamSet(lrn.classif,
-  makeNumericParam("C", lower = 0, upper = 100),
-  makeIntegerParam ("maxdepth" , lower = 1, upper = 10),
-  makeIntegerParam("mstop", lower = 1, upper = 1000),
-  makeIntegerParam("k", lower = 1, upper = 10),
-  makeNumericParam("laplace", lower = 0, upper = 1)
-)
 
 rin = makeResampleInstance(cv2 , task)
 
-if(TASK_TYPE == "classif") {
-  lrn = lrn.classif
-  loss = auc
-  ps = ps.classif
-} else {
-  lrn = lrn.regr
-  loss = mae
-  ps = ps.regr
-}
+lrn = lrn.regr
+loss = mae
+ps = ps.regr
 
 
 sample.size = min(nrow(task.dat), 300)
@@ -108,6 +99,7 @@ fn = function(x){
     task = task , resampling = rin ,
     measures = list(loss))$aggr
   mod = train(lrn, task)
+  cat(".")
   pred = Predictor$new(mod, task.dat[subset_index,], y = task$task.desc$target)
   imeasure = FunComplexity$new(pred, max_c = MAX_C, epsilon = EPSILON, grid.size = GRID.SIZE)
   c(round(perf, 2),
@@ -224,7 +216,7 @@ p  = ggplot(mapping = aes(y = variable, x = descr, color = value)) +
     aes(label = sprintf("C:%.2f", y_2)), nudge_y = nudge_y, color = "black") +
   geom_label(data = plot.dat[plot.dat$variable == "additivity",],
     aes(label = sprintf("IA:%.2f", y_3)), nudge_y = nudge_y, color = "black") +
-    geom_label(data = plot.dat[plot.dat$variable == "sparsity",],
+  geom_label(data = plot.dat[plot.dat$variable == "sparsity",],
     aes(label = sprintf("P:%.0f", y_4)), nudge_y = nudge_y, color = "black") +
   geom_label(data = plot.dat[plot.dat$variable == "performance",],
     aes(label = sprintf("MAE:%.3f", y_1)), nudge_y = nudge_y, color = "black")
@@ -277,7 +269,7 @@ plot(fc, nrow = 2)
 
 <<mo-interesting-solution, dependson="mo-run">>=
 ## Extract parameters and refit best solutions
-pareto_index = 3
+pareto_index = 8
 pp = mbo.iml$pareto.set[[pareto_index]]
 pp = pp[!is.na(pp)]
 lrn = setHyperPars(lrn, par.vals = pp)
@@ -286,49 +278,6 @@ pred = Predictor$new(mod, task.dat)
 fc = FunComplexity$new(pred)
 plot(fc, nrow = 1)
 @
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-TODO:
-
-- Re-Create the interpretability vs accuracy figure
-To get interpretability to one dimension:
-We have 100 percent variance of y.
-x percent is explained by interations
-1 - x percent is explained by 1st order model.
-first order complexity is C.
-we claim that the average complexity of higher-order is the same as 1st order and simply project the functional complexity to the rest:
-$overall.complexity = c  + c \cdot x  = c times (1 + x)$
-and to flip direction and scale to 0 and 1 (only when multiple models are tested):
-$interpretability = 1 - overall_c / max(overall_c)$
-
-theoretically maximal complexity:
-$max.components \cdot n_features \cdot (1 + c)$
-where max.components is the maximal complexity a feature can get based on user input and n.features the number of features.
-
-Mathematically writing down objectives
-
-Short mbo summary and setup.
-Tune across many learners (xgboost, svm, lm, rpart, ...)
-Many datasets
-Show Pareto Front for some datasets.
-
-Aggregated results per learner (maybe do mbo per learner) and recreate accuracy / interpretability figures
 
 
 

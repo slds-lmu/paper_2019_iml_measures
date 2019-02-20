@@ -10,6 +10,7 @@ $f_0$ is estimated using $f_0 = \frac{1}{n}\sum_{i=1}^n x_i$
 The individual ALE components $f_{j,ALE}$ can be estimated as described in ALE section.
 
 We use the Proportional Reduction in Expected Loss as measure for how well the first-order model predictions approximates $f(x)$.
+When interaction is small, we have an additive model.
 
 
 With some adaptions based on \citep{cooil1994reliability}, we define PRL as:

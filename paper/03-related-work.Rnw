@@ -5,42 +5,61 @@
 
 \subsection{Measure Interpretability}
 
-Lack of definition of interpretability of a model.
-Lack of model-agnostic measures of interpretability, which are needed to compare different model choices.
+% Intepretability hard to define, many say application-specific
+Interpretability is not well defined \citep{Lipton2016}.
+So we can't measure it really.
+\citep{rudin2018please} says "Interpretability is a domain-specific notion [Freitas, 2014, Kodratoff, 1994, Huysmans et al., 2011,
+Rüping, 2006], so there cannot be an all-purpose definition.".
+\citep{kodratoff1994comprehensibility} "Comprehensibility is a badly defined concept, presently non measurable."
+In the literature, there is no clear-cut distinction between the interpretability measure of models and representations. The two research questions "what is an interpretable model?" and "what is an interpretable representation?" need to be investigated independently. Furthermore, many papers rely on intuition in the use of interpretability, which leads to a focus on "white-boxes" (decision trees, decision rules, etc.) and a lack of consideration of "black-boxes" (SVM, neural networks, etc.). \citep{bibal2016interpretability}
+This paper is concerned with model interpretability.
 
-There are a few approaches to quantify interpretability.
 
-Multicrit often looks at complexity: Examples
-But nowhere are explicit, model-agnostic interpretability measures used
+% Concepts for interpretability
+There are a few concepts of interpretability.
+Other suggested measures of interpretability is to constrain model form:
+Monotonicity constraints: CITE.
+Causality.CITE.
+Additivity. CITE.
+Sparsity. CITE.
+Linearity. CITE.
+
+% Some directly measurable (e.g. sparsity)
+
+% Model-specific or class-specific measures of interpretability
+For decision trees often the depth or number of nodes \citep{huysmans2011empirical} is reported as measure for interpretability.
+\citep{huysmans2011empirical} compared interpretability of decision trees, tables, ...
+Found that models with less depth worked better in their study.
+But more concerned with representation of models, not with a number of interpretability that can be attached to a model.
+SBRL: Sparsity will be measured as the number of leaves in a decision tree or as the number of rules in a rule list (TODO: CITE SBRL)
+Other approach, but only for decision tree and logistic regression: "Measuring Interpretability for Different Types
+of Machine Learning Models" by Qing Zhou 1 , Fenglu Liao 1 , Chao Mou 1(and) , and Ping Wang 2
 AIC, BIC is a tradeoff measure between accuracy and interpretability
 AIC, BIC combine performance and number of parameters, but only for linear models.
 TODO: cite AIC
 TODO: cite BIC
 
-Other approach, but only for decision tree and logistic regression: "Measuring Interpretability for Different Types
-of Machine Learning Models" by Qing Zhou 1 , Fenglu Liao 1 , Chao Mou 1(and) , and Ping Wang 2
-
-Model-specific interpretability measurements:
-Sparsity will be measured as the
-number of leaves in a decision tree or as the number of rules in a rule list (TODO: CITE SBRL)
-
+% A hard to categorize approach
 TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. My critique: Always needs some baseline which might not exist. For example discovering new knowledge. Also, target model is fixed, can't decide accuracy interpretability tradeoff.  sparsity is not rewarded.
+What if interpretability needed for not yet known purporse? Like future proof for unknown problems.
 \citep{dhurandhar2017tip}
 
 
+% Measruing interpretability through users.
+\citep{friedler2019assessing} measure with users if models are intepretable.
+
+
+% But we need model-agnostic measures for comparison
+Lack of model-agnostic measures of interpretability, which are needed to compare different model choices.
 Towards A rigourous sience ... \citep{doshi2017towards}
 In this framework, we are at function level
 
-In the literature, there is no clear-cut distinction between the interpretability
-measure of models and representations. The two research questions "what is an
-interpretable model?" and "what is an interpretable representation?" need to be
-investigated independently. Furthermore, many papers rely on intuition in the
-use of interpretability, which leads to a focus on "white-boxes" (decision trees,
-decision rules, etc.) and a lack of consideration of "black-boxes" (SVM, neu-
-ral networks, etc.). \citep{bibal2016interpretability} say we have to
 
+% TODO: Continue cleanup here
 
-
+This paper does not look at interpretability from a represntation level, but from the functional complexity of the decomposition.
+Representation is independent from that.
+We would not use ALE plot for the tree, but could still show the tree how you visualize trees, but use interpretability measures to compare with other trees.
 
 
 \subsection{Functional Decomposition of Model into effects}
@@ -97,8 +116,6 @@ f_{1,fANOVA}(x_1) =& \mathbb{E}(f(x)|X_1=x_1) - E_X(f(x)) \\
 
 ALE plots are easier to compute, because the can be computed sequentially (each main effect, then each 2nd-order and so on), do not require to estimate the data distribution as Hookers approach.
 fANOVA has to be computed all at once, involving a complex system of equations.
-
-
 
 
 \subsection{Accumulated Local Effects}

@@ -20,7 +20,7 @@ fc1 = FunComplexity$new(pred1, epsilon = 0.001)
 
 
 test_that("Interaction in linear case", {
-  expect_equal(fc1$var_explained, 1)
+  expect_equal(fc1$r2, 1)
 })
 
 

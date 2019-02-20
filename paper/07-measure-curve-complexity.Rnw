@@ -4,6 +4,8 @@
 
 We propose a measure that, for each of the main effects, approximates the ALE curve with linear segments and adds up the parameters needed if we were to model all those segments in a linear regression model.
 
+When complexity measure is minimized, we get linear effects or binary split.
+
 Recipe:
 
 
@@ -79,7 +81,7 @@ dat1$V2 = cut(dat1$V2, breaks = quantile(dat1$V2, probs = c(0, 0.2, 1)), include
 #dat1$V4 = cut(dat1$V4, breaks = quantile(dat1$V4, probs = c(0, 0.2, 0.4, 0.6, 0.8, 1)), include.lowest = TRUE)
 
 tsk = makeRegrTask(data = dat1, target = "y")
-lrn = makeLearner("regr.ksvm")
+lrn = makeLearner("regr.rpart")
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
 fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c = 10, grid.size = grid.size)
@@ -192,8 +194,9 @@ GAmboost for friedman2 with increasing m.
 
 
 <<>>=
+library("lime")
 set.seed(123)
-n = 300
+n = 500
 dat = mlbench::mlbench.friedman3(n, sd = 0.3)
 datx = data.frame(cbind(dat$x, "y" = dat$y))
 task = makeRegrTask(data  = datx, target = "y")
@@ -207,21 +210,44 @@ for(pn in c(-1,0,1, 2, 3)) {
   print(c)
   print(fc$r2)
   fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-  print(plot(fe))
-
   # TODO: Fit LIME models
-
+  exp = lime(datx, mod)
+  x = explain(datx[1:50,], exp, n_features = 2)
+  print(median(x$model_r2))
 }
 
 @
 
 \subsubsection{Correlation between GAM degrees of freedom and C??}
 
+<<gam-approx>>=
+set.seed(123)
+n = 500
+dat = mlbench::mlbench.friedman3(n, sd = 0.3)
+datx = data.frame(cbind(dat$x, "y" = dat$y))
+task = makeRegrTask(data  = datx, target = "y")
+library("mgcv")
 
 
-
-
-
+gammas = c(0.1, 0.5, 1, 2, 5, 10, 20, 100)
+edf = vector()
+cs = vector()
+epsilons = vector()
+for (eps in c(0.1, 0.05, 0.01, 0.001)) {
+  for(gamma in gammas) {
+    gm = gam(y ~ s(V1) + s(V2) + s(V3) + s(V4), data = datx, gamma = gamma)
+    edf  = c(edf, sum(gm$edf)/4)
+    pred = Predictor$new(gm, datx)
+    fc = FunComplexity$new(pred, epsilon = eps)
+    cs = c(cs, fc$c_wmean)
+    epsilons = c(epsilons, eps)
+  }
+}
+ggplot(data.frame(x = edf, y = cs, e = factor(epsilons))) +
+  geom_line(aes(x=x,y=y, group = e, color = e))  +
+  scale_x_continuous(limits = c(0,NA)) +
+  scale_y_continuous(limits = c(0,NA))
+@
 
 
 

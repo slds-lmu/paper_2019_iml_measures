@@ -4,7 +4,7 @@
 
 
 Steps:
-$$\underbrace{\text{Black box}}_{\text{measure n.features}} \Rightarrow \text{Decomposition} \underbrace{\Rightarrow}_{\text{measure fit}} \underbrace{\text{Simple Model / Reduced decomposition}}
+$$\underbrace{\text{Black box}}_{\text{measure n.features}} \Rightarrow \text{Decomposition} \underbrace{\Rightarrow}_{\text{measure fit}} \underbrace{\text{Simple Model / Reduced decomposition}}$$
 
 We propose measures that depend on the model  function (ignoring internal parameter) in combiniation with how we decompose it.
 
@@ -102,7 +102,7 @@ Finally, we define the following three interpretability measures.
 
 All with PRL definition, but loss is defined as complexity.
 
-$$PRL(measure) = \frac{\mathbb{E}_{SUP} - measure}{\mathbb{E}_{SUP} - \mathbb{E}_{INF}}
+$$PRL(measure) = \frac{\mathbb{E}_{SUP} - measure}{\mathbb{E}_{SUP} - \mathbb{E}_{INF}}$$
 
 SUP is lower bound of measure, INF is upper bound of measure.
 There are some natural bounds, e.g. for n.features lower is zero and upper number of feature in data.

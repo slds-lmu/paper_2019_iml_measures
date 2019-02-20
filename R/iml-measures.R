@@ -286,8 +286,10 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       super$initialize(ale, epsilon, max_breaks)
       if(!private$is_null_ale()) {
         self$approximate()
+        # TODO: Create function count_coefs with alpha as param and tests
         # Don't count the intercept
-        self$n_coefs = ifelse(self$max_complex, max_c, length(coef(self$model)) - 1)
+        cfs = summary(self$model)$coefficients[-1,, drop = FALSE]
+        self$n_coefs = ifelse(self$max_complex, max_c, nrow(cfs))
         self$predict = function(dat) {
           if(is.data.frame(dat)) {
             x = dat[[self$feature]]
@@ -329,8 +331,14 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       self$breaks = unique(c(min(x), pars, max(x)))
       x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
       dat = data.frame(x = x, interval = x_interval, ale = private$ale_values)
-      self$model = lm(ale ~ x * interval, data = dat)
-      self$approx_values = predict(mod)
+      # Try step model first
+      model = lm(ale ~ interval, dat = dat)
+      if(get_r2(predict(model), private$ale_values) <= self$epsilon) {
+        self$model = model
+      } else {
+        self$model = lm(ale ~ x * interval, data = dat)
+      }
+      self$approx_values = predict(self$model)
       self$r2 = get_r2(self$approx_values, private$ale_values)
     },
     plot = function(ylim = c(NA, NA), maxv = NULL) {
@@ -359,8 +367,15 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
 segment_fn = function(par, ale, SST, x, ale_prediction){
   x_interval = cut(x, breaks = unique(c(min(x), par, max(x))), include.lowest = TRUE)
   dat = data.table(xv = x, interval = x_interval, alev = ale_prediction)
+  # TODO: First check whether step function would be enough
+  dat2 = dat[,.(ale_mean = mean(alev), n = .N), by = interval]
+  # ALE plots have mean zero
+  SSM = sum((dat2$ale_mean)^2 * dat2$n)
+  r2step = 1 - (SSM/SST)
   res = dat[, .(ssq(.lm.fit(cbind(rep.int(1, times = length(xv)),xv),alev)$residuals)), by = interval]
-  sum(res$V1)/SST
+  r2segment = sum(res$V1)/SST
+  if(r2step < r2segment) print("step was better")
+  return(min(r2step, r2segment))
 }
 
 

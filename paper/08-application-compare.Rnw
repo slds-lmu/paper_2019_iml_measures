@@ -7,6 +7,133 @@ Idea: We only compare tree based methods or also rule-based methods.
 Goal: Show that these tools are useful even if linear models are not our goal. Also that it can be used to compare trees.
 RIPPER, CART, SBRL, OneR, ctree
 
+IDEA: Show shortcomings of other measures like tree depth with a few examples.
+
+
+\subsection{Linear tree}
+Interpretability of tree as depth or number of leaf nodes is not good.
+Measure of complexity is better, since it describes the complexity on the level of the output.
+<<>>=
+set.seed(42)
+library(rpart)
+n = 1000
+dat = data.frame(x = runif(n), x2 = rnorm(n))
+dat$y = 2 * dat$x + rnorm(n, sd = 0.4)
+
+grid.size = 100
+epsilon = 0.05
+
+rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 1))
+pred1 = Predictor$new(rp1, data = dat)
+fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
+p1 = fc1$approx_models$x$plot()
+
+rp2 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
+pred2 = Predictor$new(rp2, data = dat)
+fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
+p2 = fc2$approx_models$x$plot()
+
+rp3 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 5))
+pred3 = Predictor$new(rp3, data = dat)
+fc3 = FunComplexity$new(pred3, grid.size = grid.size, epsilon = epsilon)
+p3 = fc3$approx_models$x$plot()
+
+grid.arrange(p1, p2, p3, nrow = 1)
+@
+
+
+
+\subsection{Interaction: tree vs. logistic regression}
+<<>>=
+library(rpart)
+library(partykit)
+set.seed(42)
+n = 500
+dat = data.frame(x1 = runif(n), x2 = rnorm(n))
+dat$y = ifelse((dat$x1 + dat$x2 + rnorm(n, sd = 0.1))> 0.5, 1, 0)
+
+grid.size = 100
+epsilon = 0.05
+
+rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
+pred1 = Predictor$new(rp1, data = dat)
+fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
+fc1$r2
+plot(fc1)
+plot(as.party(rp1))
+
+rp2 = glm(y ~ ., data = dat, family = "binomial")
+pred2 = Predictor$new(rp2, data = dat, predict.fun = function(model, newdata) predict(model, newdata, type = "response"))
+fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
+fc2$r2
+@
+
+Tree has less interactions with \Sexpr{fc1$r2} of main effect model vs. \Sexpr{fc2$r2} of logistic regression.
+Measures have advantage to operate on the level of outcome.
+Usual interpretation of parameters in logistic regression, which are linear within the non-linear transformation function (logit), hides that logistic regression models interactions.
+The interactions come from the logistic function and saturation.
+When an instance has already 0.995 probability, changing a feature by one unit might increase probability to 0.996, but if probability would be lower, like 0.5, an increase might change it to 0.8.
+
+\subsection{Complexity lm, gam, interactions}
+<<>>=
+library(mgcv)
+library(Metrics)
+set.seed(12)
+n = 200
+
+create_dat = function(n) {
+  dat = data.frame(x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n))
+  dat$y = dat$x1 * dat$x2 + dat$x3^2 + rnorm(n, sd = 0.3)
+  dat
+}
+dat = create_dat(n)
+newdat = create_dat(n)
+
+mod1 = lm(y ~ x1 + x2 + x3, data = dat)
+mod2 = lm(y ~ x1 * x2 + x3, data = dat)
+mod3 = gam(y ~ x1 + s(x2) + s(x3), data = dat)
+mod4 = gam(y ~ s(x1, x2) + s(x3), data = dat)
+
+pred1 = Predictor$new(mod1, dat)
+fc1 = FunComplexity$new(pred1)
+plot(fc1)
+
+
+pred2 = Predictor$new(mod2, dat)
+fc2 = FunComplexity$new(pred2)
+plot(fc2)
+
+
+pred3 = Predictor$new(mod3, dat)
+fc3 = FunComplexity$new(pred3)
+plot(fc3)
+
+
+pred4 = Predictor$new(mod4, dat)
+fc4 = FunComplexity$new(pred4)
+plot(fc4)
+
+
+
+analyze_lin_mod  = function(mod, fc, newdat) {
+  data.frame(
+    c = fc$c_wmean,
+    r2 = fc$r2,
+    df = mod$rank,
+    mae = mae(newdat$y, predict(mod, newdat)))
+}
+
+res = lapply(list(mod1, mod2, mod3, mod4), function(mod) {
+  pred = Predictor$new(mod, dat)
+  fc = FunComplexity$new(pred)
+  analyze_lin_mod(mod, fc, newdat)
+})
+
+xtable::xtable(rbindlist(res))
+
+@
+
+
 
 Datasets:
 
@@ -23,6 +150,11 @@ This example shows the following;
 \item How to extract a model from a complex model
 \end{itemize}
 
+TODO: Show that different splits of the features which lead to more or less levels, does not affect model-specific measures of complexity like the length of the rules.
+But it increases the IA measure.
+Proposed measures are sometimes better, because they look at the effects and not on internal structures.
+Sometimes a more complex structure does not lead to more complex relationships like a very deep tree that only uses one feature to approximate a linear function.
+The deeper it gets, the
 
 
 All examples with mlr \citep{JMLR:v17:15-066} in R \citep{r2016}.
@@ -36,15 +168,15 @@ We compare random forest with linear model in terms of performance
 SAMPLE = TRUE
 
 adult <- read.table('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data',
-                    sep = ',', fill = F, strip.white = T)
+  sep = ',', fill = F, strip.white = T)
 if(SAMPLE) {
   adult = adult[sample(1:nrow(adult), size = 1000),]
   print("ADULT DATA WAS SAMPLED")
 }
 
 colnames(adult) <- c('age', 'workclass', 'fnlwgt', 'educatoin',
-                     'educatoin_num', 'marital_status', 'occupation', 'relationship', 'race', 'sex',
-                     'capital_gain', 'capital_loss', 'hours_per_week', 'native_country', 'income')
+  'educatoin_num', 'marital_status', 'occupation', 'relationship', 'race', 'sex',
+  'capital_gain', 'capital_loss', 'hours_per_week', 'native_country', 'income')
 tsk = makeClassifTask(data = adult, target = "income")
 @
 
@@ -103,3 +235,53 @@ Average weighted complexity is \Sexpr{fc_tree$c_wmean} and the $R^2$ of the firs
 Of the available \Sexpr{sum(tsk$task.desc$n.feat)} features, \Sexpr{fc_tree$n_features} were used.
 
 
+
+
+<<sbrl>>=
+library("sbrl")
+library("arules")
+
+adult2 = as.data.frame(lapply(adult, function(x) {
+  if(is.factor(x) || length(unique(x)) < 5) {
+    as.factor(x)
+  } else {
+    discretize(x, method = "interval", 5)
+    #discretize(x, breaks = max(length(unique(x))-1, 5))
+  }
+}))
+
+get.sbrl.rules = function(x) {
+  res = lapply(1:nrow(x$rs), function(i) {
+    if (i == 1)
+      sprintf("If      %s (rule[%d]) then positive probability = %.8f\n",
+        x$rulenames[x$rs$V1[i]], x$rs$V1[i], x$rs$V2[i])
+    else if (i == nrow(x$rs))
+      sprintf("else  (default rule)  then positive probability = %.8f\n",
+        x$rs$V2[nrow(x$rs)])
+    else sprintf("else if %s (rule[%d]) then positive probability = %.8f\n",
+      x$rulenames[x$rs$V1[i]], x$rs$V1[i], x$rs$V2[i])
+  })
+  data.frame(rules = unlist(res))
+}
+
+
+adult2$label = adult2$income
+adult2 = droplevels.data.frame(adult2)
+rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = ">50K", neg_sign = "<=50K", rule_maxlen = 2)
+pred = Predictor$new(rules, data = adult2, class = 1)
+fc = FunComplexity$new(pred)
+fc$c_wmean
+fc$r2
+rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = ">50K", neg_sign = "<=50K", rule_maxlen = 3)
+pred = Predictor$new(rules, data = adult2, class = 1)
+fc = FunComplexity$new(pred)
+fc2$c_wmean
+fc2$r2
+
+
+rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = ">50K", neg_sign = "<=50K", lambda = )
+pred = Predictor$new(rules, data = adult2, class = 1)
+fc = FunComplexity$new(pred)
+fc2$c_wmean
+fc2$r2
+@

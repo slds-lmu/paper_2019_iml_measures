@@ -13,7 +13,8 @@ FunComplexity = R6::R6Class(
     # user defined max. segments approx error
     epsilon = NULL,
     # The maximum complexity a feature can have
-    max_c = NULL,
+    max_seg_cat = NULL,
+    max_seg_num = NULL,
     # How well the main effects model approximates total model
     r2 = NULL,
     # The mean complexity per ALE plot, weighted by its variance
@@ -23,13 +24,15 @@ FunComplexity = R6::R6Class(
     # The approximation models of the ALE plots
     approx_models = NULL,
     initialize = function(predictor, grid.size = 50, parallel = FALSE,
-      epsilon = 0.05, max_c = 10) {
+      epsilon = 0.05, max_seg_cat = 5, max_seg_num = 5) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
         stop("Please set class in Predictor")
       }
       assert_numeric(epsilon, lower = 0, upper = 1, any.missing = FALSE, len = 1)
-      assert_numeric(max_c, len = 1, any.missing = FALSE, upper = grid.size)
-      self$max_c = max_c
+      assert_numeric(max_seg_cat, len = 1, any.missing = FALSE, upper = grid.size)
+      assert_numeric(max_seg_num, len = 1, any.missing = FALSE, upper = grid.size)
+      self$max_seg_cat = max_seg_cat
+      self$max_seg_num = max_seg_num
       self$epsilon = epsilon
       super$initialize(predictor, features = predictor$data$feature.names,
         method = "ale", grid.size = grid.size, center.at = NULL,
@@ -88,9 +91,9 @@ FunComplexity = R6::R6Class(
       self$approx_models = lapply(self$effects, function(eff) {
         feature_name = eff$feature.name
         if(eff$feature.type == "numerical") {
-          AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_c = self$max_c)
+          AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_num)
         } else {
-          AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_c = self$max_c)
+          AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_cat)
         }
       })
       # Compute Shapley weights based on r2
@@ -210,12 +213,12 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
   public = list(
     # Table holding the level/new_level info
     tab = NULL,
-    initialize = function(ale, epsilon, max_c) {
+    initialize = function(ale, epsilon, max_seg) {
       assert_true(ale$feature.type == "categorical")
-      super$initialize(ale, epsilon, max_breaks = max_c)
+      super$initialize(ale, epsilon, max_breaks = max_seg)
       if(!private$is_null_ale()) {
         self$approximate()
-        self$n_coefs = ifelse(self$max_complex, max_c, length(unique(self$tab$lvl)) - 1)
+        self$n_coefs = ifelse(self$max_complex, max_seg - 1, length(unique(self$tab$lvl)) - 1)
         self$predict = function(dat){
           merge(dat, self$tab, by.x = self$feature, by.y = "x", sort = FALSE)[["pred_approx"]]
         }
@@ -233,20 +236,24 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
       df = df[order(df$x),]
       max_breaks = min(self$max_breaks, nlevels(x) - 1)
       for(n_breaks in 1:max_breaks) {
-        lower = rep(1, times = n_breaks) - 0.00001
-        upper = rep(nlevels(x), times = n_breaks) + 0.000001
-        # currently ordered factor break optimization handled on continuous scale
-        init_breaks = seq(from = 0, to = nlevels(x), length.out = n_breaks+2)[2:(n_breaks+1)]
-       if(n_breaks == nlevels(x)) {
-          pars = init_breaks
+        BREAK_SAMPLE_SIZE = 30
+        # TODO: Brainstorm and test greedy aproach like tree:
+        # keep splits from before and try all additional splits.
+        splits = t(combn(1:(nlevels(x) - 1), n_breaks))
+        if(nrow(splits) > BREAK_SAMPLE_SIZE) splits = splits[sample(1:nrow(splits), BREAK_SAMPLE_SIZE),]
+        ssms = apply(splits, 1, function(splitx) {
+          step_fn(as.numeric(splitx), df, SST = self$SST_ale)
+        })
+        min_ssms = min(ssms)
+        best_split_index = which(ssms == min_ssms)[1]
+        pars = splits[best_split_index,]
+        if(n_breaks == nlevels(x)) {
+          pars = 1:(nlevels(x) - 1)
           break()
         }
-        opt_gensa  = GenSA(par = init_breaks, step_fn, lower, upper, dat = df,
-          control = list(maxit = 100), self$SST_ale)
-        pars = opt_gensa$par
-        if(opt_gensa$value <= self$epsilon)  break()
+        if(min_ssms <= self$epsilon)  break()
       }
-      if(opt_gensa$value > self$epsilon)  self$max_complex = TRUE
+      if(min_ssms > self$epsilon)  self$max_complex = TRUE
       # Create table for predictions
       breaks = unique(round(pars, 0))
       df$lvl = cut(1:nrow(df), c(0, breaks, nrow(df)))
@@ -265,6 +272,8 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
   )
 )
 
+
+
 step_fn = function(par, dat, SST){
   breaks = unique(round(par, 0))
   dat$lvl = cut(1:nrow(dat), unique(c(0, breaks, nrow(dat))))
@@ -280,16 +289,20 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
     # Table holding the level/new_level info
     model = NULL,
     breaks = NULL,
-    initialize = function(ale, epsilon, max_c) {
+    # Table for intervals with intercept and slope
+    segments = NULL,
+    initialize = function(ale, epsilon, max_seg) {
       assert_true(ale$feature.type == "numerical")
-      max_breaks = floor(max_c / 2) - 1
+      assert_numeric(max_seg)
+      # only makes
+      max_breaks = max_seg  - 1
       super$initialize(ale, epsilon, max_breaks)
       if(!private$is_null_ale()) {
         self$approximate()
-        # TODO: Create function count_coefs with alpha as param and tests
+        # TODO: Create function count_coefs w th alpha as param and tests
         # Don't count the intercept
-        cfs = summary(self$model)$coefficients[-1,, drop = FALSE]
-        self$n_coefs = ifelse(self$max_complex, max_c, nrow(cfs))
+        n_coefs = nrow(self$segments) + sum(self$segments$slope != 0) - 1
+        self$n_coefs = min(max_seg * 2, n_coefs)
         self$predict = function(dat) {
           if(is.data.frame(dat)) {
             x = dat[[self$feature]]
@@ -297,8 +310,9 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
             x = dat
           }
           x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
-          dat = data.frame(x = x, interval = x_interval)
-          predict(self$model, newdata = dat)
+          dat = data.table(x, interval = x_interval)
+          mx = merge(dat, self$segments, by.x = "interval", by.y = "interval", sort = FALSE)
+          mx$intercept + mx$slope * mx$x
         }
         self$approx_values = self$predict(self$ale$predictor$data$get.x())
         SSE = ssq(self$approx_values -  private$ale_values)
@@ -313,7 +327,10 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       if(self$SST_ale == 0 || (SSE/self$SST_ale) < self$epsilon) {
         self$r2 = get_r2(predict(mod), private$ale_values)
         self$approx_values = predict(mod)
-        self$model = mod
+        model = mod
+        self$breaks = c(min(x), max(x))
+        x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
+        self$segments = extract_segments(model, self$breaks, levels(x_interval))
         return()
       }
       for(n_breaks in 1:self$max_breaks) {
@@ -328,18 +345,14 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       }
       if(opt_gensa$value > self$epsilon)  self$max_complex = TRUE
       # fit lm with par as cut points
-      self$breaks = unique(c(min(x), pars, max(x)))
+      self$breaks = sort(unique(c(min(x), pars, max(x))))
       x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
       dat = data.frame(x = x, interval = x_interval, ale = private$ale_values)
-      # Try step model first
-      model = lm(ale ~ interval, dat = dat)
-      if(get_r2(predict(model), private$ale_values) <= self$epsilon) {
-        self$model = model
-      } else {
-        self$model = lm(ale ~ x * interval, data = dat)
-      }
-      self$approx_values = predict(self$model)
-      self$r2 = get_r2(self$approx_values, private$ale_values)
+      # TODO: Try step model first
+      model = lm(ale ~ x * interval, data = dat)
+      segments = extract_segments(model, self$breaks, levels(x_interval))
+      self$segments = eliminate_slopes(segments, x, private$ale_values,
+        self$epsilon, self$breaks)
     },
     plot = function(ylim = c(NA, NA), maxv = NULL) {
       assert_numeric(maxv, null.ok=TRUE)
@@ -354,7 +367,10 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         geom_line(aes(x = x, y = y, group = interval), color = "red",
           data = dat, lty = 2) +
         ggtitle(sprintf("C: %i%s, R2: %.3f, V: %.3f", self$n_coefs, max_string,self$r2, varv))
-      if(!is.null(self$breaks)) p = p + geom_vline(data = data.frame(breaks = self$breaks), aes(xintercept = self$breaks))
+      if(length(self$breaks) > 2) {
+        breaks = self$breaks[2:(length(self$breaks) - 1)]
+        p = p + geom_vline(data = data.frame(breaks = self$breaks), aes(xintercept = self$breaks))
+      }
       p
     }
   )
@@ -379,12 +395,40 @@ segment_fn = function(par, ale, SST, x, ale_prediction){
 }
 
 
+eliminate_slopes = function(segments, x, ale_values, epsilon, breaks){
+  if(nrow(segments) == 1) return(segments)
+  # order of slopes by increasing absolute slope
 
+  x_interval = cut(x, breaks = breaks, include.lowest = TRUE)
+  dat = data.frame(x, interval = x_interval)
+
+  pr = function(segs) {
+    mx = merge(data.table(dat), segs, by.x = "interval", by.y = "interval", sort = FALSE)
+    mx$intercept + mx$slope * mx$x
+  }
+
+  slope_order = order(abs(segments$slope))
+  for(i in slope_order) {
+    segments_new = segments
+    segments_new[i, "slope"] = 0
+    new_intercept = mean(ale_values[dat$interval == segments_new$interval[i]])
+    segments_new[i, "intercept"] = new_intercept
+    if(get_r2(pr(segments_new), ale.values = ale_values) < epsilon) {
+      segments = segments_new
+    }
+  }
+  segments
+}
+
+
+# TODO: Test
+# Sum of squares
 ssq = function(x) {
   assert_numeric(x, any.missing = FALSE, min.len = 1)
   sum(x^2)
 }
 
+# TODO: Test
 get_r2 = function(seg.predictions, ale.values) {
   SST = ssq(ale.values)
   if(SST == 0) { return(FALSE)}
@@ -393,6 +437,7 @@ get_r2 = function(seg.predictions, ale.values) {
 }
 
 
+# TODO: Test
 feature_used = function(pred, feature, M = 3, sample_size = 100){
   dat = pred$data$get.x()
   for (m in 1:M) {
@@ -405,4 +450,33 @@ feature_used = function(pred, feature, M = 3, sample_size = 100){
     if(any((prediction1 - prediction2) != 0)) return(TRUE)
   }
   FALSE
+}
+
+# Extract the slope information
+# TODO: Improve by detecting intervals from coef names
+# TODO: Write some tests
+extract_segments = function(model, breaks, intervals, feature.cname = "x") {
+  assert_class(model, "lm")
+  cfs = coef(model)
+  coef_slope = cfs[grep(feature.cname, names(cfs))]
+  coef_intercept = cfs[setdiff(names(cfs), names(coef_slope))]
+  if(length(cfs) == 2) {
+    data.frame(
+      xstart = breaks[1],
+      xend = breaks[2],
+      intercept = coef_intercept,
+      slope = coef_slope,
+      interval = intervals
+    )
+  } else {
+    coef_slope[2:length(coef_slope)] =  coef_slope[1] + coef_slope[2:length(coef_slope)]
+    coef_intercept[2:length(coef_slope)] =  coef_intercept[1] + coef_intercept[2:length(coef_intercept)]
+    data.frame(
+      xstart = breaks[1:(length(breaks) - 1)],
+      xend = breaks[2:length(breaks)],
+      intercept = coef_intercept,
+      slope = coef_slope,
+      interval = intervals
+    )
+  }
 }

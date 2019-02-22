@@ -120,3 +120,8 @@ But not always possible to have 100 percent interaction, so more interesting to 
 \end{itemize}
 
 
+Alternative mesures:
+\begin{itemize}
+\item Monotonicity, which can also be asses through decomposition. Either only looking at main effects, or with ICE plots for all instances.
+\item Average number of anchors?? Should be low for trees and lists, high for linear models.
+\end{itemize}

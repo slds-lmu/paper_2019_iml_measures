@@ -4,7 +4,14 @@
 
 Measure favors sparse linear models without interaction terms.
 
+Measure depend on the model but also on the type of decomposition we choose.
+Therefore we blend representation of model components and model (difference explained by \citep{bibal2016interpretability}).
+By choosing a decomposition with meaningful properties, like pseudo-independence of ALE, we get a meaningful approximation of the model components.
 
+
+In the end, will a user also find models that minimize our notions of complexity more useful?
+As \citep{rudin2018please} argues, this depends on the application and the audience.
+We believe our measures are also useful for user surveys, because these measures can always be computed for the models that are being compared and correlated with user feedback to see what the tradeoff between performance and the different dimensions of complexity are in this particular case.
 
 Problems:
 

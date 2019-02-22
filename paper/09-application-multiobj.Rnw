@@ -29,7 +29,8 @@ TODO: Improve description of setup with mbo, optimization objectives, ...
 devtools::load_all()
 set.seed(42)
 
-MAX_C  = 10
+MAX_SEG_CAT = 9
+MAX_SEG_NUM = 5
 EPSILON = 0.05
 GRID.SIZE = 50
 wine = read.csv(here("./data/winequalityN.csv"))
@@ -83,7 +84,6 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
 rin = makeResampleInstance(cv2 , task)
 
 lrn = lrn.regr
-loss = mae
 ps = ps.regr
 
 
@@ -97,11 +97,11 @@ fn = function(x){
   lrn = setHyperPars(lrn, par.vals = x)
   perf = resample(learner = lrn, show.info = FALSE,
     task = task , resampling = rin ,
-    measures = list(loss))$aggr
+    measures = list(mlr::mae))$aggr
   mod = train(lrn, task)
   cat(".")
   pred = Predictor$new(mod, task.dat[subset_index,], y = task$task.desc$target)
-  imeasure = FunComplexity$new(pred, max_c = MAX_C, epsilon = EPSILON, grid.size = GRID.SIZE)
+  imeasure = FunComplexity$new(pred, max_seg_cat = MAX_SEG_CAT, max_seg_num = MAX_SEG_NUM, epsilon = EPSILON, grid.size = GRID.SIZE)
   c(round(perf, 2),
     round(imeasure$c_wmean, 2),
     round(1 - imeasure$r2, 2),

@@ -8,12 +8,19 @@
 % Intepretability hard to define, many say application-specific
 Interpretability is not well defined \citep{Lipton2016}.
 So we can't measure it really.
-\citep{rudin2018please} says "Interpretability is a domain-specific notion [Freitas, 2014, Kodratoff, 1994, Huysmans et al., 2011,
-Rüping, 2006], so there cannot be an all-purpose definition.".
-\citep{kodratoff1994comprehensibility} "Comprehensibility is a badly defined concept, presently non measurable."
-In the literature, there is no clear-cut distinction between the interpretability measure of models and representations. The two research questions "what is an interpretable model?" and "what is an interpretable representation?" need to be investigated independently. Furthermore, many papers rely on intuition in the use of interpretability, which leads to a focus on "white-boxes" (decision trees, decision rules, etc.) and a lack of consideration of "black-boxes" (SVM, neural networks, etc.). \citep{bibal2016interpretability}
+Also other say that what Interpretability is depends on the domain \citep{rudin2018please, freitas2014comprehensible, huysmans2011empirical,ruping2006learning}.
+They implicitly say that we can't boil down interpretability to one specific model that is best in terms of interpretability for all use cases.
+Also we can't have a single number for interpretability, as \citep{askira1998knowledge} argues.
+Many papers rely on intuition in the use of interpretability, which leads to a focus on "white-boxes" (decision trees, decision rules, etc.) and a lack of consideration of "black-boxes" (SVM, neural networks, etc.). \citep{bibal2016interpretability}
 This paper is concerned with model interpretability.
+We propose multiple measures to accomodate different notions of interpretability.
 
+% Some taxonomy:
+\citep{bibal2016interpretability} distinguish between interprebaility on model level and on representation level.
+This adds to the taxonomy of \citep{doshi2017towards}
+Quantiative measurements of model: Either some heuristic of model (e.g. number of features in Lasso) or user-based surveys \citep{freitas2014comprehensible}.
+Quantiative heuristic measure model.
+User-based surveys measure representation
 
 % Concepts for interpretability
 There are a few concepts of interpretability.
@@ -24,9 +31,19 @@ Additivity. CITE.
 Sparsity. CITE.
 Linearity. CITE.
 
+% Which one should be used?
+\citep{freitas2014comprehensible} says that acceptability and interpretability of a model might not be the same.
+For example a doctor might reject a short decision tree because it is too simplistic.
+According to him, following the medical example of [18], experts can be
+opposed to over-simplistic models.
 % Some directly measurable (e.g. sparsity)
 
 % Model-specific or class-specific measures of interpretability
+Existing measures are usuually only comparable within model classes, but not between model classes.
+E.g. you can compare number of leave nodes for trees with different depths.
+But how do you compare the complexity of a decision tree and an SVM?
+
+Model size is often used as heuristic \citep{ruping2006learning,askira1998knowledge}
 For decision trees often the depth or number of nodes \citep{huysmans2011empirical} is reported as measure for interpretability.
 \citep{huysmans2011empirical} compared interpretability of decision trees, tables, ...
 Found that models with less depth worked better in their study.
@@ -52,7 +69,20 @@ What if interpretability needed for not yet known purporse? Like future proof fo
 % But we need model-agnostic measures for comparison
 Lack of model-agnostic measures of interpretability, which are needed to compare different model choices.
 Towards A rigourous sience ... \citep{doshi2017towards}
-In this framework, we are at function level
+In this framework, we are at function level.
+All of the three measures can be motivated by Occams Razor.
+n.features favors less features used in the model.
+IA favors less interactions.
+C favors main effects that can be approximated with as little linear segments as possible.
+
+% Categorization of our method
+According to \citep{bibal2016interpretability} we can distinguish measures of interpretability for following areas.
+\begin{itemize}
+\item model (specific, general)
+\item representation (specific, general)
+\end{itemize}
+Our method depends on representation and on the model of course.
+So something in between.
 
 
 % TODO: Continue cleanup here

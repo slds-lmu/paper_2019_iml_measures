@@ -79,6 +79,8 @@ Too much variance, doesn't handle interactions well. Not as nice as ALE decomp, 
 If Interaction is 0, we can fully represent how the model works by showing the 1D-ALE plots.
 
 
+IA can be a better measure than to only look at model parameters.
+A decision tree might increase its depth, but interaction might not change or even decrease, because same feature is picked up again, or identical subtrees are fitted.
 
 
 

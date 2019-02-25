@@ -39,6 +39,10 @@ wine = na.omit(wine)
 WINE_SAMPLE = sample(1:nrow(wine), size = 500)
 WINE_SAMPLE = sample(1:nrow(wine))
 
+if(length(WINE_SAMPLE) < nrow(wine)) {
+  warning("Not using all data points")
+}
+
 wine = wine[WINE_SAMPLE, ]
 
 task = makeRegrTask(data = wine, target = "quality")
@@ -243,8 +247,8 @@ ggplot(best.models.print) +
 ggplot(best.models.print) +
   geom_point(aes(y = performance, x = simplicity * additivity * sparsity))
 
-ggplot(best.models.print) +
-  geom_point(aes(y = performance, x = simplicity + additivity + sparsity))
+ggplot(best.models.print,aes(y = performance, x = simplicity + additivity + sparsity)) +
+  geom_label(aes(label = descr))
 @
 
 

@@ -1,59 +1,148 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Interpretability measures}
+\section{Functional complexity}
 \label{sec:measures}
 
 
-Steps:
-$$\underbrace{\text{Black box}}_{\text{measure n.features}} \Rightarrow \text{Decomposition} \underbrace{\Rightarrow}_{\text{measure fit}} \underbrace{\text{Simple Model / Reduced decomposition}}$$
+% =============================================================================
+% General idea in words
+% =============================================================================
+We propose measures that depend on the models prediction function (ignoring internal parameter).
+These measures depend on a meaningful decomposition of the prediction function.
+With a decomposition, we can identify individual parts of the prediction function and quantify there complexity and contribution to the prediction.
 
-We propose measures that depend on the model  function (ignoring internal parameter) in combiniation with how we decompose it.
+
+% =============================================================================
+% Decomposition and Simplification
+% =============================================================================
+We take the formula from (TODO:Ref formula from related-work) and sort the compoenents in the following way to emphasize how we are going to measure the complexity.
+\begin{eqnarray} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S}(x_S)}_{\text{Higher order effects}} \\
+\end{eqnarray}
+
+This way of decomposing the function shows three parts:
+A constant term, the sum of main effects and the sum of all interaction effects (2nd and higher-order feature effects).
 
 
-With a decomposition, we can identify individual parts of the prediction function and quantify there complexity.
-Goal: Measure the complexity of the model via the decomposition
+% =============================================================================
+% 3 Measures based on decomposition (underbrace, list)
+% =============================================================================
+This decomposition allows us to explain a model by plotting all of its main effects and quantifying how well the main effects already approximate the prediction model.
+The main effects can be arbitrarily complex one-dimensional functions.
+We can always visualize them by plotting the feature value against the ALE.
+In a second step we quantify its complexity.
+The second part is tougher to visualize or to grasp, as it contains arbitrary higher order interactions.
 
-We propose the following view of the decomposition:
 
+
+
+% =============================================================================
+% Replace components with ALE
+% =============================================================================
 $$f(x) = \underbrace{f_0}_{mean} + \underbrace{f_{1, ALE}(x_1) + \ldots f_{p, ALE}(x_p)}_\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S, ALE}(x_S)}_{\text{Higher order effects}}$$
 
-Now we have to parts:
-\begin{itemize}
-\item Main effects
-\item 2nd and higher order effects (interactions)
-\end{itemize}
 
-The main effects can be arbitrarily complex one-dimensional functions.
-But we can always visualize them easily with ALE plots.
-And then we can try to quantify how complex those look.
-The second part is tougher to visualize or to grasp, as it contains arbitrary higher order interactions.
-We propose to simply measure how much of the variance of the predictions can be attributed to the whole sum of interactions.
 
-This decomposition allows us to explain a model by plotting all of its main effects and quantifying how much we have (or have not) captured of the variance of the predictions.
+% =============================================================================
+% ALE definition
+% =============================================================================
+% TODO: Add figure with two features??
+% TODO: Maybe shorten explanation of ALE effects here??
 
-We propose two measures to capture both parts of this decomposition:
-
-\begin{itemize}
-\item LinSeg epsilon approximation to quantify the total complexity of the main effects model.
-\item Variance explained by the interactions.
-\end{itemize}
-
-The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
-
-We do the following approximation:
-
+We use the ALE decomposition \citep{apley2016visualizing} for decomposing the prediction function $f(x)$ into its lower order effects.
+Uncentered ALE main effects are defined in the following way.
+$$\tilde{f}_{j,ALE}(x_j) = \int_{z_{0,j}}^{x_j}\int P_{-j|j}(x_{-j}|z_j)f^j(z_j, x_{-j})dx_{-j}dz_j$$
+where $f^j$ is the partial derivative of $f(x)$ with respect to $x_j$, defined as:
+$$f^j = \frac{\delta f(x_j, x_{-j})}{\delta x_j}$$
+j is the index of the feature for which to compute the main effect.
+$x_{-j}$ deontes the subset of the p features that excludes feature j.
+Let $z_0 = (z_{0,1}, z_{0,2}, \ldots, z_{0,d})$ be the approximate lower bounds for each element of the features X.
+The AL effects are centered so that the expected ALE value is zero:
 \begin{eqnarray*}
-f(x)  =& \overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_{jk})}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_{1,\ldots,p})}^\text{p-th order effect}\\
-     =& f_0 + \sum_{j=1}^{p} f_{j}(x_j) + \sum_{S \subseteq \{1,\ldots,p\}} f_{S}(x_S)\\
-     =& \bar{f}(x) + \sum_{j=1}^{p} f_{j,ALE}(x_j)  + IA(x) \\
-     =& \bar{f}(x) + \sum_{j=1}^{p} (\tilde{f}_{j,ALE}(x_j) + \epsilon_{j}(x_j)) + IA(x) \\
+f_{j,ALE}(x_j) = & \tilde{f}_{j,ALE}(x_j) - \mathbb{E}_{X_j}(\tilde{f}_{j,ALE}(X_j)) \\
+               = & \tilde{f}_{j,ALE}(x_j) - \int P_j(z_j)\tilde{f}_{j,ALE}(z_j)dz_j \\
 \end{eqnarray*}
+$X_j$ refers to the j-the feature as a random variable.
+$P_j$ is the distribution of the j-the feature.
+The estimation of main ALE relies on discretizing the feature into intervals, e.g. by quantiles.
+This partition of the feature space is denoted by:
+$$N_j(k) = \left(z_\{k-1\},z_\{k,j\}\right], k=1,\ldots,K$$
+K is the number of intervals.
+Usually $z_{k,j}$ chosen as the $k/K$ quantile of empirical distriubtion of the j-th feature.
+$z_{0,j}$ just bellow smallest observation, $z_{K,j}$ as the largest observation.
+ALE also works when f is not differentiable because the estimation is based on discretization of input.
+We only need the main effects, so we refrain from showing how higher-order effects are defined and to be estimated here.
 
-$\tilde{f}_{j,ALE}(x_j) $ is the approximation of the j-th main effect.\\
-$\epsilon_{j}(x_j)$ is the approximiation error $f_{j,ALE}(x_j) - \tilde{f}_{j,ALE}(x_j)$\\
-$IA(x)$ the interaction terms.\\
+The ALE decomposition can be estimated via:
+
+Uncentered:
+$$\hat{\tilde{f}}_{j,ALE}(x)=\sum_{k=1}^{k_j(x)}\frac{1}{n_j(k)}\sum_{i:x_{j}^{(i)}\in{}N_j(k)}\left[f(z_{k,j},x^{(i)}_{\setminus{}j})-f(z_{k-1,j},x^{(i)}_{\setminus{}j})\right]$$
 
 
-Paper \citep{murdoch2019interpretable} says that desiderata are
+Centered:
+$$\hat{f}_{j,ALE}(x)=\hat{\tilde{f}}_{j,ALE}(x)-\frac{1}{n}\sum_{i=1}^{n}\hat{\tilde{f}}_{j,ALE}(x^{(i)}_{j})$$
+
+% Categorical features
+Categorical features require an ordering of the categories so that accumulated local effects can be estimated.
+Any ordering of the categories will yield a valid ALE, but the interpretation differs, because category effects are interpreted in terms of changes to the neighbouring categories.
+
+
+% =============================================================================
+% Approximation of first order ALE effects
+% =============================================================================
+
+% Maybe only when explaining the complexity measures
+
+
+% =============================================================================
+% Why minimize proposed measures?
+% =============================================================================
+When the three measures are minimized, the following improvements of interpretability will be reached.
+Minimizing the number of features to be used directly improves the sparsity of the model.
+The less features are used, the less plots have to be looked at and the less numbers are needed to describe e.g. the feature importance and so on.
+Minimizing the strength of interactions increases how much of the prediction variance the main effects explain.
+If the interaction measure is zero, the ALE plots will explain all of the models variance.
+Minimizing the complexity of the first order effects ensures that we need less parameters to (approximately) describe the main effects.
+A complexity of 1 means that we only need a single number to describe the relationship.
+
+
+% =============================================================================
+% REmarks
+% =============================================================================
+The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
+All the three measures would also work with any other decomposition like fANOVA or PDP.
+It would even work with nonsensical decomposition, e.g.
+true model for two featuresis $\fh(x) = x_1$, but we decompose as $f_{nonsense}(x) = x_1 + x_2 + Rest$ and we show plots of $x_1$ and $x_2$.
+Complexity measure will not be so meaningful, but n.features would remain the same, and the R squared measure would be better for the first decomposition.
+As such the measures (IA and C) are intertwined between the model and the decomposition we choose, which makes sense.
+Problem with surrogate model: might approximate well, but not perfectly describe the model behaviour.
+e.g. x1, x2 strongly correlated, black box uses only x1.
+surrogate model uses x2.
+then perfect fidelity, but not true effects.
+All three measures would also work with surrogate models, because we can show how big their $R^2$ is for predicting the black box predictions and we can measure the complexity of the surrogate by using it's own C.
+For n.features we have now two options: we could use number of features in black box model or number of features in the surrogate model.
+What if the decomposition is bad?
+Well, for ALE we can show that it's a desirable decomposition.
+But for any other, the $R^2$ will be very bad if the approximation is unfaithful.
+
+
+% -----------------------------------------------------------------------------
+% Material
+% -----------------------------------------------------------------------------
+
+% We do the following approximation:
+%
+% \begin{eqnarray*}
+% f(x)  =& \overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_{jk})}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_{1,\ldots,p})}^\text{p-th order effect}\\
+%      =& f_0 + \sum_{j=1}^{p} f_{j}(x_j) + \sum_{S \subseteq \{1,\ldots,p\}} f_{S}(x_S)\\
+%      =& \bar{f}(x) + \sum_{j=1}^{p} f_{j,ALE}(x_j)  + IA(x) \\
+%      =& \bar{f}(x) + \sum_{j=1}^{p} (\tilde{f}_{j,ALE}(x_j) + \epsilon_{j}(x_j)) + IA(x) \\
+% \end{eqnarray*}
+%
+% $\tilde{f}_{j,ALE}(x_j) $ is the approximation of the j-th main effect.\\
+% $\epsilon_{j}(x_j)$ is the approximiation error $f_{j,ALE}(x_j) - \tilde{f}_{j,ALE}(x_j)$\\
+% $IA(x)$ the interaction terms.\\
+
+
+\citep{murdoch2019interpretable} defines the following desiderata for an interpretability measure:
 \begin{itemize}
 \item Accuracy (of interpretation method), which matches that we look at R squared. Predictive accuracy is measured as usual. Descriptive accuracy is measured with novel measures
 \item Relevancy: Show only relevant information. With our measures we can decide which plots to show. Remove when effect is zero. Also we can measure variance of each of the 1st order components and only show the most relevant ones.
@@ -69,59 +158,3 @@ modularity is achieved by doing a decomposition.
 With interaction measure you can see how much the first order ALE plots of the variance already explain.
 
 
-Desiderata that we define:
-\begin{itemize}
-\item Information should be contained in as few plots as possible.
-\item We prefer marginal relationships between features and prediction that can be explained with few parameters
-\item Plots and summary statistics should show as much information as possible of the black box
-\end{itemize}
-
-
-
-
-All the three measures would also work with any other decomposition like fANOVA or PDP.
-It would even work with nonsensical decomposition, e.g.
-true model for two featuresis $\fh(x) = x_1$, but we decompose as $f_{nonsense}(x) = x_1 + x_2 + Rest$ and we show plots of $x_1$ and $x_2$.
-Complexity measure will not be so meaningful, but n.features would remain the same, and the R squared measure would be better for the first decomposition.
-As such the measures (IA and C) are intertwined between the model and the decomposition we choose, which makes sense.
-Problem with surrogate model: might approximate well, but not perfectly describe the model behaviour.
-e.g. x1, x2 strongly correlated, black box uses only x1.
-surrogate model uses x2.
-then perfect fidelity, but not true effects.
-
-All three measures would also work with surrogate models, because we can show how big their $R^2$ is for predicting the black box predictions and we can measure the complexity of the surrogate by using it's own C.
-For n.features we have now two options: we could use number of features in black box model or number of features in the surrogate model.
-
-What if the decomposition is bad?
-Well, for ALE we can show that it's a desirable decomposition.
-But for any other, the $R^2$ will be very bad if the approximation is unfaithful.
-
-
-
-Finally, we define the following three interpretability measures.
-
-All with PRL definition, but loss is defined as complexity.
-
-$$PRL(measure) = \frac{\mathbb{E}_{SUP} - measure}{\mathbb{E}_{SUP} - \mathbb{E}_{INF}}$$
-
-SUP is lower bound of measure, INF is upper bound of measure.
-There are some natural bounds, e.g. for n.features lower is zero and upper number of feature in data.
-For complexity, natural lower bound is 0, the theoretical upper bound is infinite.
-Since in algorithm XXX we use $C_max$, that's the practical upper bound.
-Even more meaningful would be, given a bunch of models to take as upper bound the highest complexity that was used, so that the upper bound depends on the actual data.
-Same for first order effects:
-Lower bound is zero, upper bound is 1
-But not always possible to have 100 percent interaction, so more interesting to take the model with highest interaction as upper bound.
-
-\begin{itemize}
-\item Sparsity as $1 - \frac{n.features}{p}$
-\item Addditivity as $R^2$ of first order model
-\item Simplicty as $C_{max} - C + 1$
-\end{itemize}
-
-
-Alternative mesures:
-\begin{itemize}
-\item Monotonicity, which can also be asses through decomposition. Either only looking at main effects, or with ICE plots for all instances.
-\item Average number of anchors?? Should be low for trees and lists, high for linear models.
-\end{itemize}

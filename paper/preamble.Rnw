@@ -81,7 +81,7 @@ devtools::load_all()
 # Make sure we are at root
 library(here)
 
-DEBUG_MODE  = FALSE
+DEBUG_MODE  = TRUE
 
 # supress prints from mlr
 configureMlr(show.info = FALSE)

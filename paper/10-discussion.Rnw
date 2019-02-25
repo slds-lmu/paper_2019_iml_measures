@@ -22,6 +22,17 @@ Problems:
 - Short-comings: not tested with humans, but could be adapted and used with the same mult-crit framework.
 
 
+There are many more use cases for the interpretability and complexity measures:
+You can study how a tuning parameter affects interpretability.
+Alternative measures:
+\begin{itemize}
+\item Monotonicity, which can also be asses through decomposition. Either only looking at main effects, or with ICE plots for all instances.
+\item Average number of anchors?? Should be low for trees and lists, high for linear models.
+\end{itemize}
+
+
+Further research:
+
 
 Implemented in iml package \citep{iml2018}
 

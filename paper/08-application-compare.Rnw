@@ -50,16 +50,17 @@ library(partykit)
 set.seed(42)
 n = 500
 dat = data.frame(x1 = runif(n), x2 = rnorm(n))
-dat$y = ifelse((dat$x1 + dat$x2 + rnorm(n, sd = 0.1))> 0.5, 1, 0)
+dat$y = factor(ifelse((dat$x1 + dat$x2 + rnorm(n, sd = 0.07))> 0.5, 1, 0))
 
 grid.size = 100
 epsilon = 0.05
 
 rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
-pred1 = Predictor$new(rp1, data = dat)
+pred1 = Predictor$new(rp1, data = dat, predict.fun = function(model, newdata){predict(model, newdata)[,1]})
 fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
 fc1$r2
 plot(fc1)
+# TODO: Plot without boxplots, but with the barplots
 plot(as.party(rp1))
 
 rp2 = glm(y ~ ., data = dat, family = "binomial")
@@ -167,8 +168,7 @@ We compare random forest with linear model in terms of performance
 <<adult-data>>=
 SAMPLE = TRUE
 
-adult <- read.table('https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data',
-  sep = ',', fill = F, strip.white = T)
+adult = read.csv("./data/adult.data")
 if(SAMPLE) {
   adult = adult[sample(1:nrow(adult), size = 1000),]
   print("ADULT DATA WAS SAMPLED")
@@ -210,7 +210,7 @@ Now we compare it in terms of interpretability
 <<adult-ranger, dependson = "adult-tune">>=
 mod = train(lrn_ranger, tsk)
 pred_rf = Predictor$new(mod, getTaskData(tsk),class = 1)
-fc_xg = FunComplexity$new(pred_rf, epsilon = 0.05, max_c = 10)
+fc_xg = FunComplexity$new(pred_rf, epsilon = 0.05)
 plot(fc_xg, nrow = 2)
 @
 
@@ -222,7 +222,7 @@ Of the available \Sexpr{sum(tsk$task.desc$n.feat)} features, \Sexpr{fc_xg$n_feat
 <<adult-tree, dependson = "adult-tune">>=
 mod_tree = train(lrn_tree, tsk)
 pred_tree = Predictor$new(mod_tree, getTaskData(tsk), class  = 1 )
-fc_tree = FunComplexity$new(pred_tree, epsilon = 0.05, max_c = 10)
+fc_tree = FunComplexity$new(pred_tree, epsilon = 0.05)
 plot(fc_tree, nrow = 2)
 fc_tree$c_wmean
 fc_tree$n_features
@@ -245,7 +245,7 @@ adult2 = as.data.frame(lapply(adult, function(x) {
   if(is.factor(x) || length(unique(x)) < 5) {
     as.factor(x)
   } else {
-    discretize(x, method = "interval", 5)
+    discretize(x, method = "interval", 3)
     #discretize(x, breaks = max(length(unique(x))-1, 5))
   }
 }))
@@ -267,19 +267,19 @@ get.sbrl.rules = function(x) {
 
 adult2$label = adult2$income
 adult2 = droplevels.data.frame(adult2)
-rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = ">50K", neg_sign = "<=50K", rule_maxlen = 2)
+rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = " >50K", neg_sign = " <=50K", rule_maxlen = 2)
 pred = Predictor$new(rules, data = adult2, class = 1)
 fc = FunComplexity$new(pred)
 fc$c_wmean
 fc$r2
-rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = ">50K", neg_sign = "<=50K", rule_maxlen = 3)
+rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = " >50K", neg_sign = " <=50K", rule_maxlen = 3)
 pred = Predictor$new(rules, data = adult2, class = 1)
 fc = FunComplexity$new(pred)
 fc2$c_wmean
 fc2$r2
 
 
-rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = ">50K", neg_sign = "<=50K", lambda = )
+rules = sbrl(adult2[setdiff(colnames(adult2), c("income"))], pos_sign = " >50K", neg_sign = " <=50K", lambda = )
 pred = Predictor$new(rules, data = adult2, class = 1)
 fc = FunComplexity$new(pred)
 fc2$c_wmean

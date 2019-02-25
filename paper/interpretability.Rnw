@@ -1,0 +1,25 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Interpretability}
+\label{sec:measures}
+
+
+Finally, we define the following three interpretability measures.
+
+All with PRL definition, but loss is defined as complexity.
+
+$$PRL(measure) = \frac{\mathbb{E}_{SUP} - measure}{\mathbb{E}_{SUP} - \mathbb{E}_{INF}}$$
+
+SUP is lower bound of measure, INF is upper bound of measure.
+There are some natural bounds, e.g. for n.features lower is zero and upper number of feature in data.
+For complexity, natural lower bound is 0, the theoretical upper bound is infinite.
+Since in algorithm XXX we use $C_max$, that's the practical upper bound.
+Even more meaningful would be, given a bunch of models to take as upper bound the highest complexity that was used, so that the upper bound depends on the actual data.
+Same for first order effects:
+Lower bound is zero, upper bound is 1
+But not always possible to have 100 percent interaction, so more interesting to take the model with highest interaction as upper bound.
+
+\begin{itemize}
+\item Sparsity as $1 - \frac{n.features}{p}$
+\item Addditivity as $R^2$ of first order model
+\item Simplicty as $C_{max} - C + 1$
+\end{itemize}

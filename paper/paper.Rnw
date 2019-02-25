@@ -84,6 +84,9 @@ But don't measure with pearson correlation but maybe use notion of "predictabili
 <<08-application-compare, child = "08-application-compare.Rnw">>=
 @
 
+<<interpretability, child = "interpretability.Rnw">>=
+@
+
 <<09-application-multiobj, child = "09-application-multiobj.Rnw">>=
 @
 

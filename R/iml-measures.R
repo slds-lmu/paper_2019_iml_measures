@@ -240,7 +240,8 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
         # TODO: Brainstorm and test greedy aproach like tree:
         # keep splits from before and try all additional splits.
         splits = t(combn(1:(nlevels(x) - 1), n_breaks))
-        if(nrow(splits) > BREAK_SAMPLE_SIZE) splits = splits[sample(1:nrow(splits), BREAK_SAMPLE_SIZE),]
+
+        if(nrow(splits) > BREAK_SAMPLE_SIZE) splits = splits[sample(1:nrow(splits), BREAK_SAMPLE_SIZE),,drop = FALSE]
         ssms = apply(splits, 1, function(splitx) {
           step_fn(as.numeric(splitx), df, SST = self$SST_ale)
         })
@@ -325,6 +326,8 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       mod = lm(private$ale_values ~ x)
       SSE = ssq(private$ale_values - predict(mod))
       if(self$SST_ale == 0 || (SSE/self$SST_ale) < self$epsilon) {
+        if(any(is.na(predict(mod)))) browser()
+        if(any(is.na(private$ale_values))) browser()
         self$r2 = get_r2(predict(mod), private$ale_values)
         self$approx_values = predict(mod)
         model = mod
@@ -359,7 +362,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       fdat = self$ale$predictor$data$get.x()[[self$feature]]
       x = seq(from = min(fdat), to = max(fdat), length.out = 200)
       y = self$predict(x)
-      intervals = cut(x, breaks = self$breaks)
+      intervals = cut(x, breaks = self$breaks, include.lowest = TRUE)
       dat = data.frame(x = x, y = y, interval = intervals)
       max_string = ifelse(self$max_complex, "+", "")
       varv = ifelse(is.null(maxv), self$var, self$var/maxv)
@@ -385,6 +388,11 @@ segment_fn = function(par, ale, SST, x, ale_prediction){
   dat = data.table(xv = x, interval = x_interval, alev = ale_prediction)
   # TODO: First check whether step function would be enough
   dat2 = dat[,.(ale_mean = mean(alev), n = .N), by = interval]
+  # punish empty intervals
+  if(any(dat2$n == 0)) {
+    print("empty interval")
+    return(1)
+  }
   # ALE plots have mean zero
   SSM = sum((dat2$ale_mean)^2 * dat2$n)
   r2step = 1 - (SSM/SST)
@@ -398,6 +406,9 @@ segment_fn = function(par, ale, SST, x, ale_prediction){
 eliminate_slopes = function(segments, x, ale_values, epsilon, breaks){
   if(nrow(segments) == 1) return(segments)
   # order of slopes by increasing absolute slope
+
+  # can happen that segment slope is NA because only one point is in there
+  segments$slope[is.na(segments$slope)] = 0
 
   x_interval = cut(x, breaks = breaks, include.lowest = TRUE)
   dat = data.frame(x, interval = x_interval)
@@ -413,6 +424,8 @@ eliminate_slopes = function(segments, x, ale_values, epsilon, breaks){
     segments_new[i, "slope"] = 0
     new_intercept = mean(ale_values[dat$interval == segments_new$interval[i]])
     segments_new[i, "intercept"] = new_intercept
+    if(any(is.na(pr(segments_new)))) browser()
+    if(any(is.na( ale_values))) browser()
     if(get_r2(pr(segments_new), ale.values = ale_values) < epsilon) {
       segments = segments_new
     }
@@ -432,6 +445,8 @@ ssq = function(x) {
 get_r2 = function(seg.predictions, ale.values) {
   SST = ssq(ale.values)
   if(SST == 0) { return(FALSE)}
+
+
   SSE = ssq(seg.predictions - ale.values)
   SSE / SST
 }
@@ -457,6 +472,7 @@ feature_used = function(pred, feature, M = 3, sample_size = 100){
 # TODO: Write some tests
 extract_segments = function(model, breaks, intervals, feature.cname = "x") {
   assert_class(model, "lm")
+  stopifnot(!any(duplicated(breaks)))
   cfs = coef(model)
   coef_slope = cfs[grep(feature.cname, names(cfs))]
   coef_intercept = cfs[setdiff(names(cfs), names(coef_slope))]

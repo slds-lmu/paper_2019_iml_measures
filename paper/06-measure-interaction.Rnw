@@ -82,7 +82,12 @@ If Interaction is 0, we can fully represent how the model works by showing the 1
 IA can be a better measure than to only look at model parameters.
 A decision tree might increase its depth, but interaction might not change or even decrease, because same feature is picked up again, or identical subtrees are fitted.
 
+While the decomoosition of variance does not work with correlated features (1st order correlated with higher order) it should be still ok to just describe the SSE I get when using first order ALE model.
 
+
+
+
+Making no assumptions, but simply describe how much residuals are left after modeling with first order ALE.
 
 \subsubsection{PDP unreliable with high IA}
 

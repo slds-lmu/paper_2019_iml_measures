@@ -96,7 +96,7 @@ tsk = makeRegrTask(data = dat1, target = "y")
 lrn = makeLearner("regr.ksvm")
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.01,grid.size = grid.size)
 #FeatureEffects$new(pred.ksvm, grid.size = grid.size)$plot(nrow = 1)
 plot(fc, nrow = 1)
 fc$approx_models$V1$plot()
@@ -132,16 +132,16 @@ plot(fc$approx_models$V4)
 
 The effect of different values for $epsilon$, here on the piece-wise linear model:
 <<depends = "fun-complex">>=
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c  = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05,  grid.size = grid.size)
 p1 = plot(fc$approx_models$V4)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_c = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, grid.size = grid.size)
 p2 = plot(fc$approx_models$V4)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.05,  grid.size = grid.size)
 p3 = plot(fc$approx_models$V1)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, max_c = 10, grid.size = grid.size)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001,  grid.size = grid.size)
 p4 = plot(fc$approx_models$V1)
 
 gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
@@ -150,7 +150,7 @@ gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 
 
 <<depends = "fun-complex">>=
-fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05, max_c = 10, grid.size = grid.size)
+fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05,  grid.size = grid.size)
 p1 = plot(fc.ksvm, nrow = 1)
 
 lrn = makeLearner("regr.rpart")
@@ -158,7 +158,7 @@ lrn = makeLearner("regr.rpart")
 
 mod = train(lrn, tsk)
 pred.rpart = iml::Predictor$new(mod, dat1)
-fc.rpart = FunComplexity$new(pred.rpart, epsilon = 0.05, max_c = 10, grid.size = grid.size)
+fc.rpart = FunComplexity$new(pred.rpart, epsilon = 0.05,  grid.size = grid.size)
 
 p2 = plot(fc.rpart, nrow = 1)
 

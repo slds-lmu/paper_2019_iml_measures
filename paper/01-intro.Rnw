@@ -2,11 +2,17 @@
 \section{Introduction}
 \label{sec:introduction}
 
-% TODO: Rewrtite
-% Motivation
+% =============================================================================
+% Machine learing big, interpretability lacking
+% =============================================================================
 Machine learning is often considered to create black box models that don't provide any direct explanation for their predictions.
 Machine learning models often outperform models with more restrictive ways to model the relationship between features like linear models and decisions terms, especially in cases where the response is a non-linear function of the inputs with a lot of interactions.
 %\citep{fernandez2014we}.
+
+
+% =============================================================================
+% Some for adding interpretability
+% =============================================================================
 Due to their better interpretability, linear regression models an decision trees are preferred in the life science and social sciences \citep{Lipton2016}.
 But also for black box models we have a lot of methods to explain some behaviors and explain individual predictions.
 Here we list foremost model-agnostic methods:
@@ -17,7 +23,9 @@ Furthermore we can discover influential data points \citep{Datta2016} and protot
 
 
 
-% Model selection
+% =============================================================================
+% Model selection as use case
+% =============================================================================
 There are many different models in machine learning.
 Usually the one is selected with the best performance.
 Or some model class is selected a priori because of some restrictions of the relationships it can model and because people claim they are interpretable.
@@ -30,7 +38,9 @@ An xgboost model with a maximum depth of 1 fits an additive model and might be l
 Proposed measures have two immediate use cases:
 Comparison of multiple models and assesment of how well other interpretation methods will work.
 
-%Interpretable models: \citep{Caruana2015a}
+% =============================================================================
+% Problems with post-hoc
+% =============================================================================
 While in theory these post-hoc interpretation methods can always be applied, their usefulness is influenced by properties of the model.
 A lack of sparseness, complex relationships between features and prediction and interactions cause a detoriation of post-hoc methods.
 The more features were used in the model, the more feature effect plots, feature importance values and so on the user has to look at.
@@ -39,6 +49,9 @@ The more interactions, the less reliable global average of feature effects are, 
 Also approximation like global surrogates or LIME with additive models will have a low fidelity.
 
 
+% =============================================================================
+% Need interpretability measures
+% =============================================================================
 We need model-agnostic measures says \citep{ruping2006learning}.
 Current formal complexity measures are either model-specific (or for one type of model) like the depth of a decision tree or the degrees of freedom in a GAM.
 Some only work for a specific class of models like AIC.
@@ -47,12 +60,15 @@ Tradeoff between accuracy and interpretability has to be decided by the user.
 Arguments for Multiobjective instead of weighted single objective.f \citep{freitas2004critical}
 \citep{bibal2016interpretability} authors suggest that we need to have interpretability across different models.
 
+
+% =============================================================================
+% Our solution
+% =============================================================================
 We address this by using model-agnostic measures of model complexity that can be applied to the model.
 We suggest to measure the number of features used in the model, the non-linearity of the feature effects and the interaction effects.
 They also call for multi-objective optimization "In contrast, heuristics can be integrated in learning through multi-objective optimisation techniques."
 We show how these complexity measures can be optimized in multi-objective optimization setting to allow a tradeoff between interpretability and accuracy.
 The presented measures work regardles of the underlying model.
-
 Interpretability is not well defined \citep{Lipton2016}.
 We approach interpretability by quantifying the complexity of the functional decomposition of the machine learning model.
 We decompose and simplify the prediction function using the Accumulated Local Effects (\citep{apley2016visualizing}) decomposition.
@@ -60,14 +76,15 @@ We demonstrate that minimizing the functional complexity (namely number of featu
 For a given regression or classification task and multiple models we define interpretability measures as a function of the model complexity measures.
 One of the measures describes the complexity of first-order model with the degrees of freedom.
 The other measure describes how big the higher-order portion of the model is, and with that kind of equating anything higher order as non-interpretable.
-
-
 \citep{rudin2018please} argues that we need interpretable models and that interpretability depends on the audience or use case.
 We argue that the developer should now the tradeoff and make an informed decision what model to use.
 How deep can rules be in decision rules algorithm?
 How many rules?
 
 
+% =============================================================================
+% Paper structure
+% =============================================================================
 We have the following paper structure:
 We show related work for measuring interpretability and for decomposing prediction functions into feature effects with ALE.
 We introduce a heuristic for identifying in a model-agnostic way how many features were used.

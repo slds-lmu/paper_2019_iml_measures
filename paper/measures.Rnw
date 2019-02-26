@@ -4,6 +4,21 @@
 
 
 % =============================================================================
+% Desiderata for models
+% =============================================================================
+Throughout the literature, following desiderata for the complexity of models often come up, either explicitly or implictly.
+Those are sparsity, additivity and effect simplicity (TODO: Find better name).
+Sparsity means that as few as possible features should be used by a machine learning.
+TODO: Cite papers that call for sparsity and list approaches.
+
+Additivity means that as little interaction between the features as possible should be modeled.
+TODO: Talk about LMs, GAMS, ...
+
+Simplicity means that the functional form of the feature effects should be as simple as possible.
+TODO: Talk about LMs, GAMs, penalization. CITE aproaches.
+TODO: Cite monotonicity approaches
+
+% =============================================================================
 % General idea in words
 % =============================================================================
 We propose measures that depend on the models prediction function (ignoring internal parameter).
@@ -142,19 +157,20 @@ But for any other, the $R^2$ will be very bad if the approximation is unfaithful
 % $IA(x)$ the interaction terms.\\
 
 
-\citep{murdoch2019interpretable} defines the following desiderata for an interpretability measure:
-\begin{itemize}
-\item Accuracy (of interpretation method), which matches that we look at R squared. Predictive accuracy is measured as usual. Descriptive accuracy is measured with novel measures
-\item Relevancy: Show only relevant information. With our measures we can decide which plots to show. Remove when effect is zero. Also we can measure variance of each of the 1st order components and only show the most relevant ones.
-\item Sparsity: Directly optimized with our measures
-\item Simulatability: Can human internally simulate and reason about
-\item Modularity: Can model parts be interpreted independently? Interaction measure allows us to determine how independently we can analyze the individual features with their ALE plots
-\item They also say: "Moreover, it is unclear if any of the current interpretation forms can fully capture a model’s behaviour, or if a new format altogether is needed. How to close that gap, while producing outputs relevant to a particular audience/problem, is an open problem."
-\end{itemize}
-
-We claim that optimizing the two measures we will propose will improve those desiderata:
-Decreasing interactions will improve the accuracy of the view of ALE first order plots.
-modularity is achieved by doing a decomposition.
-With interaction measure you can see how much the first order ALE plots of the variance already explain.
+% \citep{murdoch2019interpretable} defines the following desiderata for an interpretability measure:
+% Accuracy
+% \begin{itemize}
+% \item Accuracy (of interpretation method), which matches that we look at R squared. Predictive accuracy is measured as usual. Descriptive accuracy is measured with novel measures
+% \item Relevancy: Show only relevant information. With our measures we can decide which plots to show. Remove when effect is zero. Also we can measure variance of each of the 1st order components and only show the most relevant ones.
+% \item Sparsity: Directly optimized with our measures
+% \item Simulatability: Can human internally simulate and reason about
+% \item Modularity: Can model parts be interpreted independently? Interaction measure allows us to determine how independently we can analyze the individual features with their ALE plots
+% \item They also say: "Moreover, it is unclear if any of the current interpretation forms can fully capture a model’s behaviour, or if a new format altogether is needed. How to close that gap, while producing outputs relevant to a particular audience/problem, is an open problem."
+% \end{itemize}
+%
+% We claim that optimizing the two measures we will propose will improve those desiderata:
+% Decreasing interactions will improve the accuracy of the view of ALE first order plots.
+% modularity is achieved by doing a decomposition.
+% With interaction measure you can see how much the first order ALE plots of the variance already explain.
 
 

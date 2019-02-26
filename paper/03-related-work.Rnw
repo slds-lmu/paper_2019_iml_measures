@@ -6,7 +6,11 @@
 
 \subsection{Measure Interpretability}
 
-% Intepretability hard to define, many say application-specific
+
+
+% =============================================================================
+% Lack of definition of interpretability
+% =============================================================================
 Interpretability is not well defined \citep{Lipton2016}.
 So we can't measure it really.
 Also other say that what Interpretability is depends on the domain \citep{rudin2018please, freitas2014comprehensible, huysmans2011empirical,ruping2006learning}.
@@ -16,14 +20,22 @@ Many papers rely on intuition in the use of interpretability, which leads to a f
 This paper is concerned with model interpretability.
 We propose multiple measures to accomodate different notions of interpretability.
 
-% Some taxonomy:
+
+% =============================================================================
+% Some taxonomy
+% =============================================================================
+
 \citep{bibal2016interpretability} distinguish between interprebaility on model level and on representation level.
 This adds to the taxonomy of \citep{doshi2017towards}
 Quantiative measurements of model: Either some heuristic of model (e.g. number of features in Lasso) or user-based surveys \citep{freitas2014comprehensible}.
 Quantiative heuristic measure model.
 User-based surveys measure representation
 
+
+% =============================================================================
 % Concepts for interpretability
+% =============================================================================
+
 There are a few concepts of interpretability.
 Other suggested measures of interpretability is to constrain model form:
 Monotonicity constraints: CITE.
@@ -32,14 +44,16 @@ Additivity. CITE.
 Sparsity. CITE.
 Linearity. CITE.
 
-% Which one should be used?
 \citep{freitas2014comprehensible} says that acceptability and interpretability of a model might not be the same.
 For example a doctor might reject a short decision tree because it is too simplistic.
 According to him, following the medical example of [18], experts can be
 opposed to over-simplistic models.
 % Some directly measurable (e.g. sparsity)
 
+
+% =============================================================================
 % Model-specific or class-specific measures of interpretability
+% =============================================================================
 Existing measures are usuually only comparable within model classes, but not between model classes.
 E.g. you can compare number of leave nodes for trees with different depths.
 But how do you compare the complexity of a decision tree and an SVM?
@@ -57,17 +71,20 @@ AIC, BIC combine performance and number of parameters, but only for linear model
 TODO: cite AIC
 TODO: cite BIC
 
-% A hard to categorize approach
+
+% =============================================================================
+% Other approaches
+% =============================================================================
 TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. My critique: Always needs some baseline which might not exist. For example discovering new knowledge. Also, target model is fixed, can't decide accuracy interpretability tradeoff.  sparsity is not rewarded.
 What if interpretability needed for not yet known purporse? Like future proof for unknown problems.
 \citep{dhurandhar2017tip}
-
-
 % Measruing interpretability through users.
 \citep{friedler2019assessing} measure with users if models are intepretable.
 
 
-% But we need model-agnostic measures for comparison
+% =============================================================================
+% Need model-agnostic measures for comparison
+% =============================================================================
 Lack of model-agnostic measures of interpretability, which are needed to compare different model choices.
 Towards A rigourous sience ... \citep{doshi2017towards}
 In this framework, we are at function level.
@@ -79,7 +96,10 @@ Not always is a strictly smaller model (in terms of nodes) more accepted by the 
 \citep{lavravc1999selected} showed a case where medical experts preferred larger trees, since shor trees were not as informative for their decision making.
 
 
+
+% =============================================================================
 % Categorization of our method
+% =============================================================================
 According to \citep{bibal2016interpretability} we can distinguish measures of interpretability for following areas.
 \begin{itemize}
 \item model (specific, general)
@@ -89,8 +109,9 @@ Our method depends on representation and on the model of course.
 So something in between.
 
 
-% TODO: Continue cleanup here
-
+% =============================================================================
+% Bridge to decomposition
+% =============================================================================
 This paper does not look at interpretability from a represntation level, but from the functional complexity of the decomposition.
 Representation is independent from that.
 We would not use ALE plot for the tree, but could still show the tree how you visualize trees, but use interpretability measures to compare with other trees.
@@ -99,6 +120,10 @@ We would not use ALE plot for the tree, but could still show the tree how you vi
 \subsection{Functional Decomposition}
 \label{sec:decomposition}
 
+
+% =============================================================================
+% General decomposition
+% =============================================================================
 We can decompose the high-dimensional model prediction function $f(x)$ into a sum of functions describing feature and interaction effects.
 Let f be the model prediction function that maps from features to the prediction, $f(x): X \rightarrow \mathbb{R}$ where x is a p-dimenionsal feature vector: $x = (x_1, \ldots, x_p)$.
 
@@ -108,16 +133,23 @@ Let f be the model prediction function that maps from features to the prediction
 The decomposition contains a constant mean plus the feature first order effects, second order effects up to the p-th order effect.
 The notation of the j-th order effect can be simplified by using a multi-index notation: $S \subset \{1,\ldots,p\}$.
 
+
+% =============================================================================
+% Some useful decompositions
+% =============================================================================
 We need further constraints to get a unique decomposition.
 Multiple suggestions have been made in the literature.
 Stone \citep{stone1994use} suggest to approximate the function with weighted integrals and function orthogonality constraints.
 \citep{hooker2004discovering,hooker2007generalized} defined centering, orthogonality and variance decomposition as desirable properties, which results in hierarchically orthogonal components (in decomposition) under the correlation inner product.
-
-
 If the feature are uncorrelated, Partial Dependence  plots \citep{friedman2001greedy} can be used to describe main effects and other effects (minus some constant).
 But, as shown by \citep{hooker2007generalized} (TODO: Check citation), it does not work well when features are correlated and the effect estimates are biased.
 The partial dependence plot suffers from extrapolation into areas without data, which the ALE plots solve.
+TODO: Find paper with PDP decomposition
 
+
+% =============================================================================
+% ALE decompositions
+% =============================================================================
 % This means that higher order effects are uncorrelated with any lower-order effects that are subsets of the higher order effect: $f_{j,ANOVA}$ and $f_{S,ANOVA}$ are uncorrelated when $j\subset S$.
 % Any other combination of j and S are not in general uncorrelated.
 Another suggestion is a decomposition into Accumulated Local Effects \citep{apley2016visualizingapley2016visualizing} (ALE).
@@ -128,11 +160,43 @@ This is the solution used in this paper and is explained a bit in detail here:
 A fitted supervised machine learning model $f$ can be decomposed as:
 $f(x) = \sum_{S\subseteq P} f_{S,ALE}(x_S)$
 where $f_{S,ALE}$ represents the $|S|$-order effect of feature(s) $x_S$ on $f$.
+
+
+% =============================================================================
+% ALE property: Pseudo-orthogonality
+% =============================================================================
 Let $H_S(f_S)$ be a function that maps a function to its ALE function with features S.
 ALE defines the components in such a way that they are "pseudo-orthogonal", which is not true orthogonality, but a similar concept.
 "Pseudo-orthogonality": $H_j(f_j) = f_j$ and $H_u(f_j) = 0$ for each $j \subseteq D$ and $u \subseteq D$ with $u \neq j$.
 In words, pseudo-orthogonality is:
 The S-ALE of an S-ALE function is again S-ALE and the S-ALE function of u-ALE is 0 when S and u are not equal.
+
+
+
+% =============================================================================
+% ALE is best
+% =============================================================================
+We decided to use ALE plots instead of the other approaches for the following reasons:
+ALE plots are easier to compute, because the can be computed sequentially (each main effect, then each 2nd-order and so on), do not require to estimate the data distribution as Hookers approach.
+fANOVA has to be computed all at once, involving a complex system of equations.
+Pseudo-orthogonality preferable over orthogonality, since when feature are correlated, the true additive structure is not reflected when effects have to be orthogonal.
+Other advantages are the superior computational efficiency and the more sytematic way to compute the decomposition.
+Also ALE plots have software solutions, see \citep{iml,alepackage}.
+
+
+
+
+
+
+
+
+
+
+
+
+% =============================================================================
+% Material
+% =============================================================================
 
 % Pseudo-orthogonality > Orthogonality
 % True orthogonality is not desirable, as illustrated with this next example.
@@ -146,10 +210,3 @@ The S-ALE of an S-ALE function is again S-ALE and the S-ALE function of u-ALE is
 %                   \neq & x_1
 % \end{eqnarray*}
 % Intuition: Feature x1 and x2 are correlated. But effects are forced to be non-correlated.
-
-We decided to use ALE plots instead of the other approaches for the following reasons:
-ALE plots are easier to compute, because the can be computed sequentially (each main effect, then each 2nd-order and so on), do not require to estimate the data distribution as Hookers approach.
-fANOVA has to be computed all at once, involving a complex system of equations.
-Pseudo-orthogonality preferable over orthogonality, since when feature are correlated, the true additive structure is not reflected when effects have to be orthogonal.
-Other advantages are the superior computational efficiency and the more sytematic way to compute the decomposition.
-Also ALE plots have software solutions, see \citep{iml,alepackage}.

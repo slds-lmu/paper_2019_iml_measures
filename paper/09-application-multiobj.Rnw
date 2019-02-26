@@ -36,8 +36,12 @@ GRID.SIZE = 50
 wine = read.csv(here("./data/winequalityN.csv"))
 wine = na.omit(wine)
 
-WINE_SAMPLE = sample(1:nrow(wine), size = 500)
-WINE_SAMPLE = sample(1:nrow(wine))
+if(DEBUG_MODE) {
+  WINE_SAMPLE = sample(1:nrow(wine), size = 500)
+} else {
+  WINE_SAMPLE = sample(1:nrow(wine))
+}
+
 
 if(length(WINE_SAMPLE) < nrow(wine)) {
   warning("Not using all data points")

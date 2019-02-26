@@ -81,7 +81,7 @@ devtools::load_all()
 # Make sure we are at root
 library(here)
 
-DEBUG_MODE  = TRUE
+DEBUG_MODE  = FALSE
 
 # supress prints from mlr
 configureMlr(show.info = FALSE)
@@ -104,6 +104,7 @@ opts_chunk$set(size = "small",
                fig.width = 16,
                fig.height = 10,
                warning = DEBUG_MODE,
+               message = DEBUG_MODE,
                dev = "CairoJPEG")
 
 ## ggplot black and white

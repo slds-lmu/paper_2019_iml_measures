@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Application: Compare interpretability of two models}
+\section{Application: Compare with model-specific measures}
 \label{sec:app1}
 
 
@@ -168,7 +168,7 @@ We compare random forest with linear model in terms of performance
 <<adult-data>>=
 SAMPLE = TRUE
 
-adult = read.csv("./data/adult.data")
+adult = read.csv("../data/adult.data")
 if(SAMPLE) {
   adult = adult[sample(1:nrow(adult), size = 1000),]
   print("ADULT DATA WAS SAMPLED")

@@ -18,6 +18,7 @@ Simplicity means that the functional form of the feature effects should be as si
 TODO: Talk about LMs, GAMs, penalization. CITE aproaches.
 TODO: Cite monotonicity approaches
 
+
 % =============================================================================
 % General idea in words
 % =============================================================================
@@ -98,13 +99,6 @@ $$\hat{f}_{j,ALE}(x)=\hat{\tilde{f}}_{j,ALE}(x)-\frac{1}{n}\sum_{i=1}^{n}\hat{\t
 % Categorical features
 Categorical features require an ordering of the categories so that accumulated local effects can be estimated.
 Any ordering of the categories will yield a valid ALE, but the interpretation differs, because category effects are interpreted in terms of changes to the neighbouring categories.
-
-
-% =============================================================================
-% Approximation of first order ALE effects
-% =============================================================================
-
-% Maybe only when explaining the complexity measures
 
 
 % =============================================================================

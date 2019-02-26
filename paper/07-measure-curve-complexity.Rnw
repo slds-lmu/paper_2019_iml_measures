@@ -26,7 +26,7 @@ Recipe:
 \end{itemize}
 \item For numeric: Set slopes to zero. For each segment $k \in 1,\ldots,K$:
 \begin{enumerate}
-\item Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\left \falej(\xij)$ and $\beta_{j1}^k$ = 0
+\item Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\falej(\xij)$ and $\beta_{j1}^k$ = 0
 \item If still $R^2 > 1 - \epsilon$, overwrite both $\beta$.
 \end{enumerate}
 \item $C_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_k > 0}$ for numerical; $C_j = K$ for categorical
@@ -58,7 +58,7 @@ where $c = \frac{1}{n}\sum_{i: x^{(i)} \in I_k} f_{j,ALE}(x^{(i)})$ is the mean 
 
 
 
-For categorical features we do an exhaustive search with through all possible n_breaks:
+For categorical features we do an exhaustive search with through all possible n.breaks:
 
 
 
@@ -198,12 +198,8 @@ For cheap cost, because we might already have ALE plots.
 \subsubsection{LIME unreliable when C high}
 
 Quick Idea: Maybe LIME models match the ALE curves roughly?
-
-
 Show that $R^2$ of LIME suffers with increasing in C.
-
 GAmboost for friedman2 with increasing m.
-
 
 <<>>=
 library("lime")
@@ -231,7 +227,6 @@ for(pn in c(-1,0,1, 2, 3)) {
 @
 
 \subsubsection{Correlation between GAM degrees of freedom and C??}
-
 <<gam-approx>>=
 set.seed(123)
 n = 500

@@ -2,40 +2,46 @@
 \subsection{Number of Features}
 \label{sec:interaction}
 
-Desiderata was model-agnostic measures.
+% =============================================================================
+% About sparsity
+% =============================================================================
+We propose a model-agnostic heuristic for estimating the number of features that are used by a model for making predictions.
+Here we clearly distinguish between the number of features that the model was trained on and the features that actually ended up being used by the model.
+The exact method for each model class and implementation would be to inspect the model object and extract the information about which features were used.
+In L1 regularized linear models, we can extract the number of features with a non-zero weight.
+In trees we count the number of features that were used for splitting.
 
-Many models always use all features.
-e.g. linear model always uses all features.
-
-For other models we have easy ways to extract it:
-For tree we can extract the features used in the splits
-for sparse linear model the weights that are non-zero.
-
-For ensembles and pipelines it is more complex.
-e.g. stacking of multiple sparse models. in theory have to go through all models and see what features were used and take  union.
-
-Also we might not have access to the model itself, only via API.
-Then we can't extract the model-specific number of features.
-
-
-We propose a heuristic approach to determine how many features were used, which is based on permutation of features.
-Has a bit similarity to feature importance.
-
-Take sample from data, measure predictions.
-to see whether feature $x_j$ was used for the predictions, shuffle feature $x_j$ in the sample and get predictions from model.
-If prediction was changed, the feature is used and we count it to the number of features used in the model.
-
-We repeat a couple of times to reduce false negative rate.
-False positive rate is zero, because when method says that feature is used, then it is used for sure in model (assuming that the model is deterministic).
+% =============================================================================
+% Why model-agnostic
+% =============================================================================\
+If available, model-specific methods for extracting the number of features used by the model are preferable over model-agnostic estimation heuristic.
+We still propose a model-agnostic method because of its generality.
+Model-specific methods have to be defined for each method, and when implementing a general-purpose machine learning interpretation library it's not future proof to create this for every machine learning model.
+In the case that you don't have access directly to a model, but only to the prediction method via API, only a model-agnostic heuristic for counting the number of features is needed.
+Also in cases where the features are transformed before being input into a machine learning model, e.g. sparse Principal Component Analysis or rule mining the model-specific feature-counter can only measure which of the transformed features were used, but not how many of the original features where effectively used for making predictions.
+e.g. you might have 100 features, apply sparse PCA and train a decision tree on the PCA components.
+The tree uses 5 of the components.
+To understand which of the original features are effectively used for the prediction, you would have to take the union of each of the components used features, only for the components used by the tree.
+In an ensemble of models, each of the models must have an exact method for determining the number of features used.
+If only one does not have a model-specific feature-counter, you have to rely on model-agnostic heuristics.
 
 
 
-We draw M instances from the data and for each randomly draw K permutations.
+% =============================================================================
+% Feature-count heuristic: intuition
+% =============================================================================
+We propose a feature-permutation based approach to determine how many features are used by the model  for making predictions.
+The rough idea for computing whether an individual feature was used:
+Take a sample from the data (can be training or test data), get the model predictions for the sample, replace the values for the feature in question with values randomly sampled from the data, get the predictions for the manipulated instances and measure the differences.
+If any of the differences is bigger than zero, the feature was used for the prediction
+We repeat the permutation step a couple of times to reduce the false negative rate.
+The procedure is formally described in Algorithm~\ref{algo:nfeat}
 
+
+% =============================================================================
+% Feature-count heuristic: algorithm
+% =============================================================================
 The algorithm for computing if feature j was used:
-
-
-
 \begin{algorithm}
 \caption{Estimate whether feature was used}\label{algo:nfeat}
 \begin{enumerate}
@@ -53,21 +59,20 @@ The algorithm for computing if feature j was used:
 
 
 
-Let $z_j$ indicate whether at least one maninpulation of feature j would lead to a change in prediction:
 
+% =============================================================================
+% False negatives
+% =============================================================================
+The false positive rate is zero, because when the method detects that a feature is used, then it is used for sure in model (assuming that the model is deterministic).
+Next we show an estimate for the false discovery rate.
+
+Let $z_j$ indicate whether at least one maninpulation of feature j would lead to a change in prediction.
 $$ z_j = \begin{cases}1 & \exists x, d \Rightarrow \hat{f}(x) - \hat{f}(x + d_j) \neq 0 \\0 & else\\\end{cases}$$
-
 where $d_j$ is a vector with zeroes that's only different from zero for feauture j.
-
 Let $\hat{z}_j$be our guess of $z_j$.
-
 We know that the false positive rate is zero for deterministic prediction functions:
-
 $$\mathbb{P}(\hat{z}_j = 1 | z_j = 0) = 0$$
-
 false negative rate depends on the model and data distribution.
-
-We have the following:
 
 Let $p_j$ be the probability that for a randomly sampled instance from the data  we can find a change in feature $x_j$ that would lead to a change in the prediction.
 For linear models, this is always 1.
@@ -80,33 +85,39 @@ For a categorical feature with two categories it's the probability of staying wi
 
 
 Then the probability of false negative is:
-
 \begin{eqnarray*}
 \mathbb{P}(\hat{z}_j = 0 | z_j = 1) &= \prod_{m=1}^M \left(\underbrace{1-p_j}_{\text{instance unchangeable by j}}  + \underbrace{p_j  \prod_{k=1}^K r_j^{(i)}}_{repeatedly unlucky} \right) \\
 &\underbrace{=}_{r_{j}^{(i)} = r_j} \left(1 - p_j + p_j (r_j)^K\right)^M
 \end{eqnarray*}
 
 
-A few examples:
+% =============================================================================
+% False negatives examples
+% =============================================================================
+For a linear model without interactions and only numerical features, the false negative rate is 0:
+$p_j=1$ and $r_j^{(i)} = r_j = 0$
+$$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (1 - 1 + 0^K)^M = 0$$
 
-M always 100, K always 10.
 
-Linear model without interactions: $p_j=1$ and $r_j^{(i)} = r_j = 0$
-$$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (1 - 1 + 0^10)^100 = 0$$
-
-Let's say only 1 percent of instances is affected by a change in a feature, and for those the probability that a change in the feature wil change the prediction is also 2 percent.
-E.g. only features with a certain category level are affected, which only 1 percent of instances have.
-There is an interaction effect with a second categorical feature, but only when a certain level combination comes, which has a probability of 2 percent to happen.
-If $p_j=0.01$ and $r_j=0.02$, then
+Let's assume that only 1 percent of instances are affected by a change in a numerical feature $\xj$ ($p_j=0.01$), and for those the average probability that a change in the feature will change the prediction is 2 percent ($r_j=0.02$).
+This could happen when another feature $x_k$ is a categorical feature with 100 values (each has same frequency in data).
+Only for instances with one of those values does the prediction change when we change $x_j$ (interaction between $\xj$ and $x_k$), meaning if we only sample instances with one of the 99 other values, we will have a false negative.
+For instances with that special category in $x_k$, the probability that we sample a value for $x_j$ changes the prediction is 2\% (This varies per instance).
+Imagine a decision tree that splits once in $xj$ at 5 and $\xj$ ranges from 2 to 6.
+83\% of the data instance are have a value of $x_j$ below 5, 17\% have a value above 5.
+The average probability that a random sample changes the prediction is
+$0.83\cdot 0.17 + 0.17\cdot 0.83 \approx 0.02$, which is the probability that we randomly pick an instance from the left side of the split times the probability that we randomly replace its value with a value bigger than 5 plus the reversed case.
+When we use $M=100$, $K=10$:
 
 $$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01 * 0.01^10)^100 = 0.3660323$$
 
-IN this case limited by number of instances sampled.
-If we increase to 500, the probability drops to  0.006570483.
+In this case the false discovery rate is quite high due to a too low number of instances sampled.
+If we increase M to 500, the probability drops to  0.006570483.
 
 
-
+% =============================================================================
+% Summary of n.features measure
+% =============================================================================
 The n.features measure directly tells us how well we can interpret a model, regardless of whether it's an intrinsically interpretable model (linear regression model) or a black box model analyzed with post-hoc models (xgboost and feature importance).
 If n.features is 5, this means that to understand the model, we have to look at 5 coefficients in  a linear model or a list of 5 feature importances for the xgboost model.
-If n.features is 5000, the number of numbers scales linearly.
 

@@ -2,48 +2,63 @@
 \subsection{Measure ALE First Order Approximiation (Interaction)}
 \label{sec:interaction}
 
-Based on the ALE decomposition, we can define an additive model that is composed of the first-order effects:
+
+
+% =============================================================================
+% First order model
+% =============================================================================
+We propose to measure the level of additivity in the model by calculating the proportion of error for that is already covered by the main effects, when we are predicting the outcome of the model.
+Important to note is that error here refers to the error for predicting the full model.
+
+The general idea is that we have three models that are nested from left to right.
+Baseline (e.g. mean of y), main effects model, full model.
+The training data error decreases from left to right.
+For the full model it is zero.
+
+Based on the ALE decomposition, we can define an additive model that is composed of only the main  effects:
 
 $$f_{1st,ALE}(x) = f_0 + f_{1,ALE}(x_1) + \ldots  + f_{p,ALE}(x_p)$$
 
 $f_0$ is estimated using $f_0 = \frac{1}{n}\sum_{i=1}^n x_i$
 The individual ALE components $f_{j,ALE}$ can be estimated as described in ALE section.
+We can see this main effects model as a prediction model that is nested within the more complex complete model.
+As common for linear models, we can analyze how much of the
 
-We use the Proportional Reduction in Expected Loss as measure for how well the first-order model predictions approximates $f(x)$.
-When interaction is small, we have an additive model.
 
+% =============================================================================
+% PRE / PRL
+% =============================================================================
+We use the proportionate reduction of error (related to  Proportional Reduction in Expected Loss \citep{cooil1994reliability}) as measure for how well the first-order model predictions approximates $f(x)$.
+With some adaptions based on \citep{cooil1994reliability}, we define pre as:
 
-With some adaptions based on \citep{cooil1994reliability}, we define PRL as:
-
-$$PRL(\fh, \fale, L) = 1 - \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}$$
+$$pre(\fh, \fale, L) = 1 - \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}$$
 
 Where $c$ is a constant that optimizes the loss function $L$, which is the mean for the L2 loss, and the median for the L1 loss for example.
 
-The $R^2$-measure is a special case of the PRL using the squared loss:
+If Interaction is 0, we can fully represent how the model works by showing the 1D-ALE plots.
+IA can be a better measure than to only look at model parameters.
+A decision tree might increase its depth, but interaction might not change or even decrease, because same feature is picked up again, or identical subtrees are fitted.
 
-$$R^2 = 1 - \frac{SSE}{SST}$$
+While the decomoosition of variance does not work with correlated features (1st order correlated with higher order) it should be still ok to just describe the SSE I get when using first order ALE model.
 
-$$SSE = \sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2$$
 
-where $\fh_{1st,ALE}(x) = \sum_{j=1}^p f_{j,ALE}(x_j)$
+Making no assumptions, but simply describe how much residuals are left after modeling with first order ALE.
 
-$$SST = \sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2$$
+
+% =============================================================================
+% R2 special case
+% =============================================================================
+The $R^2$-measure is a special case of the PRL using the squared loss, which we estimate with:
+
+$$R^2 = 1 - \frac{SSE}{SST} = \frac{\sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2}{\sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2}$$
 
 Using the R-squared measure, has the interpretation of the variance, so we use this further on and for the examples.
 When a model is optimized with a different loss, it might make sense to measure the PRL also with another loss to quantify how appropriate an approximation with a first order ALE model is.
 
-TODO: image of higher order interactions??
-
-
-Things that did not work:
-\begin{itemize}
-\item Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}. Based on first-order indices
-Too much variance, doesn't handle interactions well. Not as nice as ALE decomp, because ALE decomp gives us first-order model approximation.
-\end{itemize}
-
-
-
-
+% =============================================================================
+% pre algorithm
+% =============================================================================
+The estimation of the pre of the main effects ALE model is described with the following algorithm.
 \begin{algorithm}
 \caption{Estimate PRL of ALE main effects model}\label{algo:ale1st}
 \begin{enumerate}
@@ -57,91 +72,10 @@ Too much variance, doesn't handle interactions well. Not as nice as ALE decomp, 
 
 
 
-\begin{algorithm}
-\caption{Estimate Interpretability}\label{algo:global}
-\begin{enumerate}
-\item Goal: C, NF, IA
-\item Given: Model $\fh$, dataset $\D$
-\item For each feature
-\begin{enumerate}
-\item Estimate whether feature was used.
-\item Estimate ALE
-\item Approximate ALE
-\item Measure approximation complexity
-\end{enumerate}
-\item $N = \sum$
-\item $C = \sum$
-\item $IA = A - B$
-\end{enumerate}
-\end{algorithm}
-
-
-If Interaction is 0, we can fully represent how the model works by showing the 1D-ALE plots.
-
-
-IA can be a better measure than to only look at model parameters.
-A decision tree might increase its depth, but interaction might not change or even decrease, because same feature is picked up again, or identical subtrees are fitted.
-
-While the decomoosition of variance does not work with correlated features (1st order correlated with higher order) it should be still ok to just describe the SSE I get when using first order ALE model.
-
-
-
-
-Making no assumptions, but simply describe how much residuals are left after modeling with first order ALE.
-
-\subsubsection{PDP unreliable with high IA}
-
-For one toy task and different learner/hyperparameters (that increase IA) show that PDP hide infos.
-PDP hides infos means that centered ICE curves vary.
-Show with plot.
-
-Using PDP here because, unlike ALE, they have a pendant for individual observations:ICE curves, which visualize heterogeneity of feature effects.
-
-Friedman 2
-
-Comparing kknn with k = XXX, gamboost and random forest.
-
-<<PDP-unreliable, fig.cap="Comparing PDP+ICE for models with different IA measure. The higher IA, the less reliable the PDP information. ICE shows high variance of feature effects. Here x3 is shown, x1 x2 and x4 look similar.">>=
-set.seed(123)
-n = 100
-dat = mlbench::mlbench.friedman2(n, sd = 0.3)
-datx = data.frame(cbind(dat$x, "y" = dat$y))
-task = makeRegrTask(data  = datx, target = "y")
-
-y_limit = c(-200, 1200)
-feature = "V2"
-
-lrn = makeLearner("regr.gamboost")
-mod = train(lrn, task)
-pred = Predictor$new(mod, datx, class = 1)
-fc = FunComplexity$new(pred, grid.size = 100)
-r2_gamboost = 1 - fc$r2
-fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_gamboost = plot(fe$effects[[feature]], ylim = y_limit) +
-  ggtitle(sprintf("gamboost, IA=%.2f", r2_gamboost))
-
-
-lrn = makeLearner("regr.ranger")
-mod = train(lrn, task)
-pred = Predictor$new(mod, datx)
-fc = FunComplexity$new(pred, grid.size = 100)
-r2_ksvm = 1- fc$r2
-fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_ksvm = plot(fe$effects[[feature]], ylim = y_limit) +
-    ggtitle(sprintf("ranger (random forest), IA=%.2f", r2_ksvm))
-
-
-lrn = makeLearner("regr.kknn", k = 3)
-mod = train(lrn, task)
-pred = Predictor$new(mod, datx, class = 1)
-fc = FunComplexity$new(pred, grid.size = 100)
-r2_kknn = 1- fc$r2
-fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_kknn = plot(fe$effects[[feature]], ylim = y_limit) +
-    ggtitle(sprintf("kknn, IA=%.2f", r2_kknn))
-
-grid.arrange(p_gamboost, p_ksvm, p_kknn, nrow = 1)
-@
-
-
-
+% =============================================================================
+% Further approaches
+% =============================================================================
+There are other ways to estimate the additivity of a model.
+One is via Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}.
+We decided against Sobol and Shapley since they were computationally expensive and varied a lot from run to run.
+Additonally it makes more sense to look at the PRL/PRE of the main effects of the decomposition, since then it is coherent with the plots that are shown and with the complexity, which is presented next.

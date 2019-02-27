@@ -6,7 +6,7 @@
 - Cite a few examples where interpretability is measured with human experiments
 - Formally define: Sparsity, Additivity, Performance, Simplicity (only possible if you have mutliple models)
 - Call $R^2$ approximation of first order model "Fidelity"?
-
+- Give names for all three measures. CAndidates: Average Main Effect Complexity (AMEC), Main Effect Interaction Residuals (MEIR) and Number of Features Used for Prediction (NFUP).
 
 # Ideas
 

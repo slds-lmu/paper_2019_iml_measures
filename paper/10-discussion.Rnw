@@ -32,6 +32,24 @@ Alternative measures:
 
 
 Further research:
+The approach is quite modular.
+Instead of using the suggested measures, you can invent your own measures based on a functional decomposition.
+\begin{itemize}
+\item Is linear yes or no, in a soft version so that we allow a bit zick-zack
+\item Is monotone yes or no
+\end{itemize}
+
+
+This measure also enhances ALE plots even when not used to measure model.
+For cheap cost, because we might already have ALE plots.
+
+\begin{itemize}
+\item We can use variance to sort ALE plots to show the ones where more is happening first.
+\item We can compute Average Marginal Effects from the approximation and report those
+\item We can sort ALE plots by complexity c and show the ones with similar complexity ("first row shows the plots with linear relationships, second with complexity of two, ...")
+\item With the feature.used approach we can omit computation of ALE plots of features that are not used.
+\item We can report the 1st-order fit measure along with the plots to assess how much they are responsible for the total prediction.
+\end{itemize}
 
 
 Implemented in iml package \citep{iml2018}

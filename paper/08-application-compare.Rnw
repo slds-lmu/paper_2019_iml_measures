@@ -3,11 +3,70 @@
 \label{sec:app1}
 
 
+
+
 Idea: We only compare tree based methods or also rule-based methods.
 Goal: Show that these tools are useful even if linear models are not our goal. Also that it can be used to compare trees.
 RIPPER, CART, SBRL, OneR, ctree
 
 IDEA: Show shortcomings of other measures like tree depth with a few examples.
+
+\subsubsection{PDP unreliable with high IA}
+
+For one toy task and different learner/hyperparameters (that increase IA) show that PDP hide infos.
+PDP hides infos means that centered ICE curves vary.
+Show with plot.
+
+Using PDP here because, unlike ALE, they have a pendant for individual observations:ICE curves, which visualize heterogeneity of feature effects.
+
+Friedman 2
+
+Comparing kknn with k = XXX, gamboost and random forest.
+
+<<PDP-unreliable, fig.cap="Comparing PDP+ICE for models with different IA measure. The higher IA, the less reliable the PDP information. ICE shows high variance of feature effects. Here x3 is shown, x1 x2 and x4 look similar.">>=
+set.seed(123)
+n = 100
+dat = mlbench::mlbench.friedman2(n, sd = 0.3)
+datx = data.frame(cbind(dat$x, "y" = dat$y))
+task = makeRegrTask(data  = datx, target = "y")
+
+y_limit = c(-200, 1200)
+feature = "V2"
+
+lrn = makeLearner("regr.gamboost")
+mod = train(lrn, task)
+pred = Predictor$new(mod, datx, class = 1)
+fc = FunComplexity$new(pred, grid.size = 100)
+r2_gamboost = 1 - fc$r2
+fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
+p_gamboost = plot(fe$effects[[feature]], ylim = y_limit) +
+  ggtitle(sprintf("gamboost, IA=%.2f", r2_gamboost))
+
+
+lrn = makeLearner("regr.ranger")
+mod = train(lrn, task)
+pred = Predictor$new(mod, datx)
+fc = FunComplexity$new(pred, grid.size = 100)
+r2_ksvm = 1- fc$r2
+fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
+p_ksvm = plot(fe$effects[[feature]], ylim = y_limit) +
+    ggtitle(sprintf("ranger (random forest), IA=%.2f", r2_ksvm))
+
+
+lrn = makeLearner("regr.kknn", k = 3)
+mod = train(lrn, task)
+pred = Predictor$new(mod, datx, class = 1)
+fc = FunComplexity$new(pred, grid.size = 100)
+r2_kknn = 1- fc$r2
+fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
+p_kknn = plot(fe$effects[[feature]], ylim = y_limit) +
+    ggtitle(sprintf("kknn, IA=%.2f", r2_kknn))
+
+grid.arrange(p_gamboost, p_ksvm, p_kknn, nrow = 1)
+@
+
+
+
 
 
 \subsection{Linear tree}
@@ -285,3 +344,69 @@ fc = FunComplexity$new(pred)
 fc2$c_wmean
 fc2$r2
 @
+
+\subsubsection{LIME unreliable when C high}
+
+Quick Idea: Maybe LIME models match the ALE curves roughly?
+Show that $R^2$ of LIME suffers with increasing in C.
+GAmboost for friedman2 with increasing m.
+
+<<>>=
+library("lime")
+set.seed(123)
+n = 500
+dat = mlbench::mlbench.friedman3(n, sd = 0.3)
+datx = data.frame(cbind(dat$x, "y" = dat$y))
+task = makeRegrTask(data  = datx, target = "y")
+
+for(pn in c(-1,0,1, 2, 3)) {
+  lrn = makeLearner("regr.earth", penalty  = pn)
+  mod = train(lrn, task)
+  pred = Predictor$new(mod, datx, class = 1)
+  fc = FunComplexity$new(pred, grid.size = 100)
+  c = fc$c_wmean
+  print(c)
+  print(fc$r2)
+  fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
+  # TODO: Fit LIME models
+  exp = lime(datx, mod)
+  x = explain(datx[1:50,], exp, n_features = 2)
+  print(median(x$model_r2))
+}
+
+@
+
+\subsubsection{Correlation between GAM degrees of freedom and C??}
+<<gam-approx>>=
+set.seed(123)
+n = 500
+dat = mlbench::mlbench.friedman3(n, sd = 0.3)
+datx = data.frame(cbind(dat$x, "y" = dat$y))
+task = makeRegrTask(data  = datx, target = "y")
+library("mgcv")
+
+
+gammas = c(0.1, 0.5, 1, 2, 5, 10, 20, 100)
+edf = vector()
+cs = vector()
+epsilons = vector()
+for (eps in c(0.1, 0.05, 0.01, 0.001)) {
+  for(gamma in gammas) {
+    gm = gam(y ~ s(V1) + s(V2) + s(V3) + s(V4), data = datx, gamma = gamma)
+    edf  = c(edf, sum(gm$edf)/4)
+    pred = Predictor$new(gm, datx)
+    fc = FunComplexity$new(pred, epsilon = eps)
+    cs = c(cs, fc$c_wmean)
+    epsilons = c(epsilons, eps)
+  }
+}
+ggplot(data.frame(x = edf, y = cs, e = factor(epsilons))) +
+  geom_line(aes(x=x,y=y, group = e, color = e))  +
+  scale_x_continuous(limits = c(0,NA)) +
+  scale_y_continuous(limits = c(0,NA))
+@
+
+
+
+
+

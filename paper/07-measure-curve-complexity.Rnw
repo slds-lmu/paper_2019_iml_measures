@@ -2,17 +2,131 @@
 \subsection{Measure ALE First Order Complexity}
 \label{sec:curve}
 
-We propose a measure that, for each of the main effects, approximates the ALE curve with linear segments and adds up the parameters needed if we were to model all those segments in a linear regression model.
-
+% =============================================================================
+% Measure Intro
+% =============================================================================
+We propose a measure that, for each of the main effects, approximates the ALE curve with linear segments and adds up the parameters needed if we were to model all those segments in a segmented linear regression model, which models the (approximate) ALE curve as a function of the single feature.
 When complexity measure is minimized, we get linear effects or binary split.
 
-Recipe:
+
+% =============================================================================
+% Measure Intuition
+% =============================================================================
+Before we dive into the algorithm we show an example.
+Figure \ref{fig:c-demo} shows an ALE plot and an approximation with linear segments.
+The ALE curve can be complex, only limited by the number of intervals used by the ALE method.
+The goal is to replace the ALE curve by something where we know how complex it is.
+We decided to use linear segments.
+Another goal is that if a curve is approximately linear but with some additional ups and downs, we would want to approximate the curve with only a linear function.
+Therefore we have to introduce some allowed error.
+To account for possible constant ALE plots (e.g. for a tree, where there might be only one jump between two constant pieces), we additionally have built in some ways to try to approximate the curve with constant segments.
+We measured the approximation with $R^2$ of the approximation vs. the full ALE curve.
+
+<<c-demo, fig.cap = "An ALE curve (black line) approximated by two linear segments. Segments are vertical lines, approximation the doted lines.">>=
+n = 300
+x = runif(n = n)
+y = log(x)
+dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
+mod = mgcv::gam(y ~ s(x), data = dat)
+pred = Predictor$new(mod, dat)
+fe = FeatureEffect$new(pred, "x")
+app = AleNumApprox$new(ale = fe, max_seg = 2, epsilon = 0.05)
+plot(app) + ggtitle("")
+@
+%TODO: Fix max_seg = 1 only alllowed to spit out one segment
 
 
+% =============================================================================
+% Measure Sum Up and Fix
+% =============================================================================
+For computing the complexity per feature, we only look at this feature.
+But we have to aggregate these measures over all feature got get one number.
+Looking only at one feature at a time has one problem:
+The features might have different overall impact on prediction (some close to none), but the complexity measures don't reflect this and tend to be higher the lower the variance of the ALE plot is.
+
+<<c-demo2, fig.cap = "Two identical ALE curves with the difference that one has a jump at 0.5. The measures complexity is higher for the left curve, since we need more segments to describe the variance of the curve. Both have an R squared above 0.95">>=
+n = 3000
+grid.size = 100
+x = runif(n = n)
+y = 0.5 * sin(15 * x)
+dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
+mod = mgcv::gam(y ~ s(x), data = dat)
+pred = Predictor$new(mod, dat)
+fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
+app = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+p1 = plot(app)  + scale_y_continuous(limits = c(-7,7))
+
+# add
+dat2 = dat
+dat2$y = 0.5 * sin(20 * dat$x) + 10 * as.numeric(dat$x >0.5)
+
+mod = mgcv::gam(y ~ s(x) + I(x >0.5), data = dat2)
+pred = Predictor$new(mod, dat2)
+fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
+app = AleNumApprox$new(ale = fe, max_seg = 5, epsilon = 0.05)
+p2 = plot(app) + scale_y_continuous(limits = c(-7,7))
+grid.arrange(p1, p2, nrow = 1)
+@
+
+Also at what point would we decide between "this is a noisy ALE plot" and "we have to approximate this"?
+
+<<c-demo3, fig.cap = "Three ALE curves that only differ by a scaling factor in  dicrection of the y-axis. All three need the same amount of segments to be approximated with R squared above 0.95">>=
+n = 3000
+grid.size = 100
+x = runif(n = n)
+
+
+y = 0.2 * sin(15 * x)
+dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
+mod = mgcv::gam(y ~ s(x), data = dat)
+pred = Predictor$new(mod, dat)
+fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
+app = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+p1 = plot(app)  + scale_y_continuous(limits = c(-7,7))
+
+y = 2 * sin(15 * x)
+dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
+mod = mgcv::gam(y ~ s(x), data = dat)
+pred = Predictor$new(mod, dat)
+fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
+app = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+p2 = plot(app)  + scale_y_continuous(limits = c(-7,7))
+
+y = 6 * sin(15 * x)
+dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
+mod = mgcv::gam(y ~ s(x), data = dat)
+pred = Predictor$new(mod, dat)
+fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
+app = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+p3 = plot(app)  + scale_y_continuous(limits = c(-7,7))
+
+grid.arrange(p1, p2, p3, nrow  = 1)
+@
+
+
+We are only interested in the average of the complexity.
+An alternative would be the sum, but we already capture the number of features.
+So we propose to weight each of the complexity measures by the variance of the corresponding ALE plot.
+If all features in the data are uncorrelated, this has the nice interpretation that each feature main effect complexity (MEC) is weighted by the percentage it contributed to the variance of the complete main effects model.
+In case of correlated features, it's more complicated.
+If we were to fairly assign to each feature the share of the first order model variance, we would need an attribution method such as the Shapley value.
+The big problem is that the contribution can be negative when features are correlated and one of the correlated features has a much stronger effect.
+This can happen when the covariance is negative.
+The interpretation is not very intuitive then.
+An advantage of weighting by the individual variances is that it has a visual connection:
+The smaller the variance, the lower the amplitude of the curve in y-direction.
+And we want that weighted by the data distribution, so taking the minimum and maximu for scaling is not an option.
+
+% =============================================================================
+% Algorithm for complexity
+% =============================================================================
+The following algorithm describes our procedure for determining the average main effect complexity (AMEC).
+
+TODO: Iterate over the description of the algorithm to improve it
 \begin{algorithm}
-\caption{Estimate ALE curve complexity}\label{algo:ale-complexity}
+\caption{Estimate average main effect complexity (AMEC).}\label{algo:ale-complexity}
 \begin{enumerate}
-\item Input: Model $\fh$, PRL-bound $\epsilon$, complexity limit $max_{seg,j}$
+\item Input: Model $\fh$, PRL-bound $\epsilon$, complexity limits $max_{segcat}$ and $max_{segnum}$
 \item Output: Weighted average complexity $C$
 \item For each $j \in \pset$ do:
 \begin{enumerate}
@@ -21,14 +135,8 @@ Recipe:
 \item Set $K=0$ and $\galej = 0$
 \item While $K < max_{seg}$ AND $PRL(\falej, \galej, L) < 1- \epsilon$:
 \begin{itemize}
-\item $\hat{z}_1,\ldots, \hat{z}_K = argmin_{z_1,\ldots,z_K} \sum_{k=1}^{K+1} \sum_{\xi\in Z_k}\left(\falej(\xij) - (\beta_{j0}^k + \beta_{j1}^k\xij)\right)^2$ where $Z_1 = [min(\xj), z_1], \ldots, Z_k = [z_{k-1}, z_k],\ldots,Z_{K+1} = [z_K,max(\xj)]$ and $\beta_{j0}^k$ and $\beta_{j1}^k$ are the least square estimates. If $K=0$, then $Z_1 = [min(\xj), max(\xj)]$. In case of categorical, $\beta_j$ is set to zero. Solve optimization with Generalized Simulated annealing (package GenSA).
-\item $\galej(\xj) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$. For categorical, $\hat{\beta}_j = 0$
+\item $\galej = FindBestSplit(K, \falej, \epsilon)$
 \end{itemize}
-\item For numeric: Set slopes to zero. For each segment $k \in 1,\ldots,K$:
-\begin{enumerate}
-\item Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\falej(\xij)$ and $\beta_{j1}^k$ = 0
-\item If still $R^2 > 1 - \epsilon$, overwrite both $\beta$.
-\end{enumerate}
 \item $C_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_k > 0}$ for numerical; $C_j = K$ for categorical
 \item ALE variance $V_j = \frac{1}{n}\sum_{i=1}^n \hat{f}^{ALE}_j(x^{(i)})$
 \end{enumerate}
@@ -38,62 +146,55 @@ Recipe:
 
 
 
-
-Optimization problem for numerical features:
-
-Given a fixed number $K$ of intervals $I_k$ defined by K-1 break points $z_k$: $[\min(x_j), z_1], ]z_1, z_2], \ldots ] z_k,\max(x_j)]$
-
-$$\argmin{z_1,\ldots,z_{K-1}} \sum_{k=1}{K}\sum_{x^{(i)} \in I_k} (f_{j,ALE}(x^{(i)}) - (\beta_{0,k} + \beta_{1,k} x^{(i)}))^2$$
-
-where $\beta_{0,k}$ and $\beta_{1,k}$ are the ordinary least square estimates in interval $I_k$.
-
-
-Optimization problem for numerical features:
-Given a fixed number $K$ of intervals $I_k$ defined by K-1 break points $z_k$:
-
-$$x^{(i)} \in I_k: z_{k-1} \leq f_{j,ALE}(x^{(i)}) < z_{k}$$
-where  $z_0 = min(f_{j,ALE}(x^{(i)})) i=1,\ldots,n$ and $z_k = max(f_{j,ALE}(x^{(i)})) i=1,\ldots,n$
-$$\argmin{z_1,\ldots,z_{K-1}} \sum_{k=1}{K}\sum_{i: x^{(i)} \in I_k} (f_{j,ALE}(x^{(i)}) - c)^2$$
-where $c = \frac{1}{n}\sum_{i: x^{(i)} \in I_k} f_{j,ALE}(x^{(i)})$ is the mean  ALE in that interval.
-
-
-
-For categorical features we do an exhaustive search with through all possible n.breaks:
+% =============================================================================
+% Find best splits
+% =============================================================================
+\begin{algorithm}
+\caption{Find best splits for given k.}\label{algo:ale-complexity-splits}
+\begin{enumerate}
+\item Input: K, $\falej$, $\epsilon$, Number of samples $m$
+\item If numeric: $\hat{z}_1,\ldots, \hat{z}_K = argmin_{z_1,\ldots,z_K} \sum_{k=1}^{K+1} \sum_{\xi\in Z_k}\left(\falej(\xij) - (\beta_{j0}^k + \beta_{j1}^k\xij)\right)^2$ where $Z_1 = [min(\xj), z_1], \ldots, Z_k = [z_{k-1}, z_k],\ldots,Z_{K+1} = [z_K,max(\xj)]$ and $\beta_{j0}^k$ and $\beta_{j1}^k$ are the least square estimates. If $K=0$, then $Z_1 = [min(\xj), max(\xj)]$. Solve optimization with Generalized Simulated annealing (package GenSA).
+\item If categorical: Do $m$ times random search of split points and estimate mean in each segment.
+\item $\galej(\xj) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$. For categorical, $\hat{\beta}_j = 0$
+\item For numeric: Set slopes to zero. For each segment $k \in 1,\ldots,K$:
+\begin{enumerate}
+\item Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\falej(\xij)$ and $\beta_{j1}^k$ = 0
+\item If still $R^2 > 1 - \epsilon$, overwrite both $\beta$.
+\end{enumerate}
+\end{enumerate}
+\end{algorithm}
 
 
 
 
 
 
-We look at each of the ALE plots and  answer: How many weights would we need if we were to approximate all of the ALE plots with a linear model
-
-The following figure shows an ALE plot for a feature from the Friedman2 formula from mlbench TODO:CITE Friedman paper.
-We generated 500 data points from this formula an trained a random forest to predict.
+% =============================================================================
+% C example
+% =============================================================================
+We illustrate the measure with a short example.
+We simulated 500 data points with 4 features as a regression problem \citep{friedman1991multivariate}.
+The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
+The regression target was simulated as:
 
 $$y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$$
+where $ e \sim N(0,125)$.
 
-Input are uniformly distributed in ranges:
-$$0\leq x_1 \leq 100$$
-$$ 40\pi \leq x_2 \leq 560 \pi$$
-$$ 0 \leq x_3 \leq 1$$
-$$ 1 \leq x_4 \leq 11$$
+We trained a random forest, plotted the ALEs and calculated the complexities with the parameters $\epsilon = 0.95$, $max_{segnum} = 5$ and $max_{segcat} = 9$
 
-and
-
-$$ e \sim N(0,125)$$
 <<fun-complex>>=
 n = 1000
 grid.size = 50
 dat1 = mlbench::mlbench.friedman2(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
 
-dat1$V1 = cut(dat1$V1, breaks = 100 * c(0, 0.2, 0.4, 0.6, 0.8, 1), include.lowest = TRUE)
-dat1$V2 = cut(dat1$V2, breaks = quantile(dat1$V2, probs = c(0, 0.2, 1)), include.lowest = TRUE)
+#dat1$V1 = cut(dat1$V1, breaks = 100 * c(0, 0.2, 0.4, 0.6, 0.8, 1), include.lowest = TRUE)
+#dat1$V2 = cut(dat1$V2, breaks = quantile(dat1$V2, probs = c(0, 0.2, 1)), include.lowest = TRUE)
 #dat1$V3 = cut(dat1$V3, breaks = quantile(dat1$V3, probs = c(0, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1)), include.lowest = TRUE)
 #dat1$V4 = cut(dat1$V4, breaks = quantile(dat1$V4, probs = c(0, 0.2, 0.4, 0.6, 0.8, 1)), include.lowest = TRUE)
 
 tsk = makeRegrTask(data = dat1, target = "y")
-lrn = makeLearner("regr.ksvm")
+lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
 fc = FunComplexity$new(pred.ksvm, epsilon = 0.01,grid.size = grid.size)
@@ -102,159 +203,45 @@ plot(fc, nrow = 1)
 fc$approx_models$V1$plot()
 FeatureEffect$new(pred.ksvm, "V1")$plot()
 # Introduce second epsilon
-fc$plot(fc$relevant_features)
-
-fc$c_wmean
-
-
-# order by increasing y
-dat2 = impact_order_all(dat1, y = dat1$y)
-pred.ksvm = iml::Predictor$new(mod, dat2)
-fe = FeatureEffect$new(pred.ksvm, feature  = "V4", method = "ale")
-fe$plot()
+fc$plot(fc$relevant_features, nrow = 1)
 @
-
-
-Best step and best piece-wise linear models for $epsilon = 0.05$
-
-Categorical feature
-<<dependson = "fun-complex">>=
-plot(fc$approx_models$V1)
-@
-
-
-Numerical feature
-<<dependson = "fun-complex">>=
-plot(fc$approx_models$V4)
-@
+Since the model relied the most on $x2$ and $x3$ as main effects, the weighted main effect complexity is \Sexpr{fc$c_wmean}.
+Both features main effects can be approximated with a linear segment.
+The other two feature have a very low variance and get a low weight.
 
 
 
+
+
+
+% =============================================================================
+% Different epsilons
+% =============================================================================
 The effect of different values for $epsilon$, here on the piece-wise linear model:
-<<depends = "fun-complex">>=
+<<depends = "fun-complex", fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
 fc = FunComplexity$new(pred.ksvm, epsilon = 0.05,  grid.size = grid.size)
-p1 = plot(fc$approx_models$V4)
+p1 = plot(fc$approx_models$V3)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, grid.size = grid.size)
-p2 = plot(fc$approx_models$V4)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, grid.size = grid.size, max_seg_num = 10)
+p2 = plot(fc$approx_models$V3)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05,  grid.size = grid.size)
-p3 = plot(fc$approx_models$V1)
-
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001,  grid.size = grid.size)
-p4 = plot(fc$approx_models$V1)
-
-gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
+gridExtra::grid.arrange(p1, p2, nrow = 1)
 
 @
 
 
-<<depends = "fun-complex">>=
-fc.ksvm = FunComplexity$new(pred.ksvm, epsilon = 0.05,  grid.size = grid.size)
-p1 = plot(fc.ksvm, nrow = 1)
-
-lrn = makeLearner("regr.rpart")
-#lrn = makeLearner("regr.kknn")
-
-mod = train(lrn, tsk)
-pred.rpart = iml::Predictor$new(mod, dat1)
-fc.rpart = FunComplexity$new(pred.rpart, epsilon = 0.05,  grid.size = grid.size)
-
-p2 = plot(fc.rpart, nrow = 1)
-
-gridExtra::grid.arrange(p1, p2, row = 2)
-@
 
 
-
-Things that did not work out:
-\begin{itemize}
-\item Version for cubic splines approx
-\item Version for tree split approx
-\end{itemize}
-
-
-Alternatives that can also be measured with this approach:
-\begin{itemize}
-\item complexity can be computed differently with this ALE plot approximation. e.g. without weighting
-\item Is linear yes or no, in a soft version so that we allow a bit zick-zack
-\item Is monotone yes or no
-\end{itemize}
+% =============================================================================
+% Different epsilons
+% =============================================================================
+We tried a few alternatives to approximate the ALE plots for measuring their complexity, which turned out to be impractical.
+We tried approximation with cubic (overlapping) splines and measuring the complexity as degrees of freedom.
+The degrees of freedom exploded when the ALE plot was not quite linear, but almost, yielding an unintuitive measure.
+Tree splits did not work, like for example model based partitioning TODO: CITE mob.
+One reason is that the greedy approach did not work well and we found it better to search per number of splits.
 
 
-This measure also enhances ALE plots even when not used to measure model.
-For cheap cost, because we might already have ALE plots.
-
-\begin{itemize}
-\item We can use variance to sort ALE plots to show the ones where more is happening first.
-\item We can compute Average Marginal Effects from the approximation and report those
-\item We can sort ALE plots by complexity c and show the ones with similar complexity ("first row shows the plots with linear relationships, second with complexity of two, ...")
-\item With the feature.used approach we can omit computation of ALE plots of features that are not used.
-\item We can report the 1st-order fit measure along with the plots to assess how much they are responsible for the total prediction.
-\end{itemize}
-
-
-
-\subsubsection{LIME unreliable when C high}
-
-Quick Idea: Maybe LIME models match the ALE curves roughly?
-Show that $R^2$ of LIME suffers with increasing in C.
-GAmboost for friedman2 with increasing m.
-
-<<>>=
-library("lime")
-set.seed(123)
-n = 500
-dat = mlbench::mlbench.friedman3(n, sd = 0.3)
-datx = data.frame(cbind(dat$x, "y" = dat$y))
-task = makeRegrTask(data  = datx, target = "y")
-
-for(pn in c(-1,0,1, 2, 3)) {
-  lrn = makeLearner("regr.earth", penalty  = pn)
-  mod = train(lrn, task)
-  pred = Predictor$new(mod, datx, class = 1)
-  fc = FunComplexity$new(pred, grid.size = 100)
-  c = fc$c_wmean
-  print(c)
-  print(fc$r2)
-  fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-  # TODO: Fit LIME models
-  exp = lime(datx, mod)
-  x = explain(datx[1:50,], exp, n_features = 2)
-  print(median(x$model_r2))
-}
-
-@
-
-\subsubsection{Correlation between GAM degrees of freedom and C??}
-<<gam-approx>>=
-set.seed(123)
-n = 500
-dat = mlbench::mlbench.friedman3(n, sd = 0.3)
-datx = data.frame(cbind(dat$x, "y" = dat$y))
-task = makeRegrTask(data  = datx, target = "y")
-library("mgcv")
-
-
-gammas = c(0.1, 0.5, 1, 2, 5, 10, 20, 100)
-edf = vector()
-cs = vector()
-epsilons = vector()
-for (eps in c(0.1, 0.05, 0.01, 0.001)) {
-  for(gamma in gammas) {
-    gm = gam(y ~ s(V1) + s(V2) + s(V3) + s(V4), data = datx, gamma = gamma)
-    edf  = c(edf, sum(gm$edf)/4)
-    pred = Predictor$new(gm, datx)
-    fc = FunComplexity$new(pred, epsilon = eps)
-    cs = c(cs, fc$c_wmean)
-    epsilons = c(epsilons, eps)
-  }
-}
-ggplot(data.frame(x = edf, y = cs, e = factor(epsilons))) +
-  geom_line(aes(x=x,y=y, group = e, color = e))  +
-  scale_x_continuous(limits = c(0,NA)) +
-  scale_y_continuous(limits = c(0,NA))
-@
 
 
 

@@ -4,14 +4,102 @@
 
 
 
+In this section we demonstrate with various simulations that our proposed measures can be more useful to describe model complexity than model-specific measures that are based on the structure of the model.
 
-Idea: We only compare tree based methods or also rule-based methods.
-Goal: Show that these tools are useful even if linear models are not our goal. Also that it can be used to compare trees.
-RIPPER, CART, SBRL, OneR, ctree
 
-IDEA: Show shortcomings of other measures like tree depth with a few examples.
+\subsection{Linear relationships in a tree}
+<<tree-increase-data, fig.cap="Increasing the tree>>=
+set.seed(42)
+library(rpart)
+n = 1000
+dat = data.frame(x = runif(n), x2 = rnorm(n))
+nsd = 0.4
+dat$y = 2 * dat$x + rnorm(n, sd = nsd)
 
-\subsubsection{PDP unreliable with high IA}
+grid.size = 100
+epsilon = 0.05
+@
+Decision trees need to grow very deep to approximate linear relationship.
+When a tree approximates a linear relationship, arguably the model structure might be complex, but the actual prediction function might be approximately linear.
+We demonstrate how the two both the number of nodes and complexity measure C increase with increasing model accuracy, but at some point the complexity C decreases again.
+We argue that the measure of complexity is better, since it describes the complexity on the level of the output.
+In the following example, \Sexpr{n} data points are drawn from  a uniform distribution between 0 and 1, and the target is simulated as $2 * x + \epsilon$, where $\epsilon \sim N(0,\Sexpr{nsd})$.
+<<tree-increase, fig.cap="Increasing the tree depth always increases number of terminal nodes, but the complexity measure increases at some point because the prediction function can be approximated by a single linear function.">>=
+
+rp_width = function(rp) sum(rp$frame$var == "<leaf>")
+
+rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 1))
+pred1 = Predictor$new(rp1, data = dat)
+fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
+p1 = fc1$approx_models$x$plot() +
+  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp1), fc1$c_wmean))
+
+rp2 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
+pred2 = Predictor$new(rp2, data = dat)
+fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
+p2 = fc2$approx_models$x$plot() +
+  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp2), fc2$c_wmean))
+
+rp3 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 3))
+pred3 = Predictor$new(rp3, data = dat)
+fc3 = FunComplexity$new(pred3, grid.size = grid.size, epsilon = epsilon)
+p3 = fc3$approx_models$x$plot() +
+  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp3), fc3$c_wmean))
+
+grid.arrange(p1, p2, p3, nrow = 1)
+@
+
+
+\subsection{Interaction: tree vs. logistic regression}
+
+In this example we demonstrate how deceptive model formulization can be and that we need a measure to really compare if one or the other model relies more heavily on interactions.
+Interaction means that the output of the model can't be fully explained by the main effects of the model.
+The logistic regression model might be a linear model on the level of the log odds, but not on the probability level.
+
+<<interaction-demo-data>>=
+library(rpart)
+library(partykit)
+library(ranger)
+set.seed(42)
+n = 500
+dat = data.frame(x1 = rnorm(n), x2 = rnorm(n), x3  = rnorm(n))
+dat$y = ifelse(exp(dat$x1 +  dat$x2 + dat$x3^2)> 0.1, 1, 0)
+# to remove linear separability
+change_prob = 0.01
+change_index = which(rbinom(size = 1, n = n, prob = change_prob) == 1)
+dat$y[change_index] = 1 - dat$y[change_index]
+dat$y = factor(dat$y)
+
+grid.size = 100
+epsilon = 0.05
+@
+
+In the following example we simulate 3 features each is normal distributed with mean zero and standard deviation of 1.
+We sample \Sexpr{n} data points from this distribution and simulate the target y as follows:
+
+$$\eta = exp(x_1 + x_2 + x_3)$$
+$$y = \begin{cases}\eta>0.5&1\\\eta \leq 0.5 0\\\end{cases}$$
+We flip each of the computed y's with a probability of \Sexpr{change_prob * 100} \% to avoid linear separability.
+
+We train a logistic regression model.
+
+<<interaction-demo>>=
+rp = glm(y ~ ., data = dat, family = "binomial")
+pred = Predictor$new(rp, data = dat, predict.fun = function(model, newdata) predict(model, newdata, type = "response"))
+fc = FunComplexity$new(pred)
+@
+
+The main effect model explains \Sexpr{100 * fc2$r2}\% of output for the logistic regression model.
+Measures have advantage to operate on the level of outcome.
+Usual interpretation of parameters in logistic regression, which are linear within the non-linear transformation function (logit), hides that logistic regression models interactions.
+The interactions come from the logistic function and saturation.
+When an instance has already 0.995 probability, changing a feature by one unit might increase probability to 0.996, but if probability would be lower, like 0.5, an increase might change it to 0.8.
+
+
+% TODO: Continue here
+
+
+\subsubsection{PDP unreliable high Interaction}
 
 For one toy task and different learner/hyperparameters (that increase IA) show that PDP hide infos.
 PDP hides infos means that centered ICE curves vary.
@@ -68,71 +156,6 @@ grid.arrange(p_gamboost, p_ksvm, p_kknn, nrow = 1)
 
 
 
-
-\subsection{Linear tree}
-Interpretability of tree as depth or number of leaf nodes is not good.
-Measure of complexity is better, since it describes the complexity on the level of the output.
-<<>>=
-set.seed(42)
-library(rpart)
-n = 1000
-dat = data.frame(x = runif(n), x2 = rnorm(n))
-dat$y = 2 * dat$x + rnorm(n, sd = 0.4)
-
-grid.size = 100
-epsilon = 0.05
-
-rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 1))
-pred1 = Predictor$new(rp1, data = dat)
-fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
-p1 = fc1$approx_models$x$plot()
-
-rp2 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
-pred2 = Predictor$new(rp2, data = dat)
-fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
-p2 = fc2$approx_models$x$plot()
-
-rp3 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 5))
-pred3 = Predictor$new(rp3, data = dat)
-fc3 = FunComplexity$new(pred3, grid.size = grid.size, epsilon = epsilon)
-p3 = fc3$approx_models$x$plot()
-
-grid.arrange(p1, p2, p3, nrow = 1)
-@
-
-
-
-\subsection{Interaction: tree vs. logistic regression}
-<<>>=
-library(rpart)
-library(partykit)
-set.seed(42)
-n = 500
-dat = data.frame(x1 = runif(n), x2 = rnorm(n))
-dat$y = factor(ifelse((dat$x1 + dat$x2 + rnorm(n, sd = 0.07))> 0.5, 1, 0))
-
-grid.size = 100
-epsilon = 0.05
-
-rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
-pred1 = Predictor$new(rp1, data = dat, predict.fun = function(model, newdata){predict(model, newdata)[,1]})
-fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
-fc1$r2
-plot(fc1)
-# TODO: Plot without boxplots, but with the barplots
-plot(as.party(rp1))
-
-rp2 = glm(y ~ ., data = dat, family = "binomial")
-pred2 = Predictor$new(rp2, data = dat, predict.fun = function(model, newdata) predict(model, newdata, type = "response"))
-fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
-fc2$r2
-@
-
-Tree has less interactions with \Sexpr{fc1$r2} of main effect model vs. \Sexpr{fc2$r2} of logistic regression.
-Measures have advantage to operate on the level of outcome.
-Usual interpretation of parameters in logistic regression, which are linear within the non-linear transformation function (logit), hides that logistic regression models interactions.
-The interactions come from the logistic function and saturation.
-When an instance has already 0.995 probability, changing a feature by one unit might increase probability to 0.996, but if probability would be lower, like 0.5, an increase might change it to 0.8.
 
 \subsection{Complexity lm, gam, interactions}
 <<>>=

@@ -22,7 +22,7 @@ $$f_{1st,ALE}(x) = f_0 + f_{1,ALE}(x_1) + \ldots  + f_{p,ALE}(x_p)$$
 $f_0$ is estimated using $f_0 = \frac{1}{n}\sum_{i=1}^n x_i$
 The individual ALE components $f_{j,ALE}$ can be estimated as described in ALE section.
 We can see this main effects model as a prediction model that is nested within the more complex complete model.
-As common for linear models, we can analyze how much of the
+As common for linear models, we can analyze how much of the variance comes from certain components, here the main effects estimated with ALE.
 
 
 % =============================================================================
@@ -43,7 +43,9 @@ While the decomoosition of variance does not work with correlated features (1st 
 
 
 Making no assumptions, but simply describe how much residuals are left after modeling with first order ALE.
-
+Note that our interaction strength measure does not account for the complexity of the interaction, just how much the main effect model leaves to be explained by the interactions.
+It's not the depth of the interaction.
+E.g. a tree might have a low interaction depth, but a high interaction strength and another tree might have a high interaction depth, but the main effects model already explains a lot.
 
 % =============================================================================
 % R2 special case

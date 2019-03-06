@@ -234,7 +234,7 @@ We fit 4 models:
 Apart from measuring the mean absolute error (based on \Sexpr{n.test} unseen samples), how would we traditionally compare the models?
 One commonly used complexity measure is the degrees of freedom and closely linked to this Akaikes Information criterion which gives a tradeoff between in-sample fit and degrees of freedom used by the model.
 
-<<lm-gam>>=
+<<lm-gam, results="asis">>=
 mod1 = lm(y ~ x1 + x2 + x3, data = dat)
 mod2 = lm(y ~ x1 * x2 + x3, data = dat)
 mod3 = gam(y ~ s(x1) + s(x2) + s(x3), data = dat)

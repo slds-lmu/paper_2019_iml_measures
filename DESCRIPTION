@@ -16,7 +16,8 @@ Depends: OpenML,
          ggplot2,
          GenSA,
          gridExtra,
-         here
+         here,
+         parallelMap
 Imports: checkmate,
          mlrMBO,
          rpart

@@ -13,7 +13,7 @@
 
 \begin{document}
 
-\title{Measuring interpretability for any machine learning model through functional decomposition}
+\title{Measuring interpretability for any machine learning model through functional decomposition}[Interpretability measures]
 \titlerunning{}
 
 \author{Christoph~Molnar~\and~Giuseppe~Casalicchio~\and~Bernd~Bischl}

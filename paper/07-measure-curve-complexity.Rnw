@@ -226,7 +226,6 @@ fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, grid.size = grid.size, max_se
 p2 = plot(fc$approx_models$V3)
 
 gridExtra::grid.arrange(p1, p2, nrow = 1)
-
 @
 
 

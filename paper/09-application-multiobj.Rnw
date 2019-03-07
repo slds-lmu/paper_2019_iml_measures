@@ -270,7 +270,7 @@ p  = ggplot(mapping = aes(y = variable, x = descr, color = value)) +
   geom_point(data = plot.dat, size = 15) +
   scale_size_continuous(range = c(0,10), guide = "none") +
   scale_x_discrete("") +
-  scale_color_gradient2(midpoint = 0.5, mid = "orange", high = "green") +
+  scale_color_viridis(option = "plasma") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   geom_label(data = plot.dat[plot.dat$variable == "simplicity",],
     aes(label = sprintf("C:%.2f", y_2)), nudge_y = nudge_y, color = "black") +

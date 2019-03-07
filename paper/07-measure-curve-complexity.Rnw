@@ -12,16 +12,6 @@ When complexity measure is minimized, we get linear effects or binary split.
 % =============================================================================
 % Measure Intuition
 % =============================================================================
-Before we dive into the algorithm we show an example.
-Figure \ref{fig:c-demo} shows an ALE plot and an approximation with linear segments.
-The ALE curve can be complex, only limited by the number of intervals used by the ALE method.
-The goal is to replace the ALE curve by something where we know how complex it is.
-We decided to use linear segments.
-Another goal is that if a curve is approximately linear but with some additional ups and downs, we would want to approximate the curve with only a linear function.
-Therefore we have to introduce some allowed error.
-To account for possible constant ALE plots (e.g. for a tree, where there might be only one jump between two constant pieces), we additionally have built in some ways to try to approximate the curve with constant segments.
-We measured the approximation with $R^2$ of the approximation vs. the full ALE curve.
-
 <<c-demo, fig.cap = "An ALE curve (black line) approximated by two linear segments. Segments are vertical lines, approximation the doted lines.">>=
 n = 300
 x = runif(n = n)
@@ -33,6 +23,20 @@ fe = FeatureEffect$new(pred, "x")
 app = AleNumApprox$new(ale = fe, max_seg = 2, epsilon = 0.05)
 plot(app) + ggtitle("")
 @
+
+Before we dive into the algorithm we show an example.
+Figure \ref{fig:c-demo} shows an ALE plot and an approximation with linear segments.
+Throughout the paper we will often represent those main effect ALE curves with sparklines, e.g. Figure \ref{fig:c-demo} looks like this in-text \Sexpr{spark(app)}.
+The dots represent the start and end of the curve, the vertical bars -- if present -- the segments the curve was divided into.
+The ALE curve can be complex, only limited by the number of intervals used by the ALE method.
+The goal is to replace the ALE curve by something where we know how complex it is.
+We decided to use linear segments.
+Another goal is that if a curve is approximately linear but with some additional ups and downs, we would want to approximate the curve with only a linear function.
+Therefore we have to introduce some allowed error.
+To account for possible constant ALE plots (e.g. for a tree, where there might be only one jump between two constant pieces), we additionally have built in some ways to try to approximate the curve with constant segments.
+We measured the approximation with $R^2$ of the approximation vs. the full ALE curve.
+
+
 %TODO: Fix max_seg = 1 only alllowed to spit out one segment
 
 
@@ -44,6 +48,7 @@ But we have to aggregate these measures over all feature got get one number.
 Looking only at one feature at a time has one problem:
 The features might have different overall impact on prediction (some close to none), but the complexity measures don't reflect this and tend to be higher the lower the variance of the ALE plot is.
 
+
 <<c-demo2, fig.cap = "Two identical ALE curves with the difference that one has a jump at 0.5. The measures complexity is higher for the left curve, since we need more segments to describe the variance of the curve. Both have an R squared above 0.95">>=
 n = 3000
 grid.size = 100
@@ -53,8 +58,8 @@ dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
 mod = mgcv::gam(y ~ s(x), data = dat)
 pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
-app = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
-p1 = plot(app)  + scale_y_continuous(limits = c(-7,7))
+app1 = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+p1 = plot(app1)  + scale_y_continuous(limits = c(-7,7))
 
 # add
 dat2 = dat
@@ -63,10 +68,12 @@ dat2$y = 0.5 * sin(20 * dat$x) + 10 * as.numeric(dat$x >0.5)
 mod = mgcv::gam(y ~ s(x) + I(x >0.5), data = dat2)
 pred = Predictor$new(mod, dat2)
 fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
-app = AleNumApprox$new(ale = fe, max_seg = 5, epsilon = 0.05)
-p2 = plot(app) + scale_y_continuous(limits = c(-7,7))
-grid.arrange(p1, p2, nrow = 1)
+app2 = AleNumApprox$new(ale = fe, max_seg = 5, epsilon = 0.05)
+p2 = plot(app2) + scale_y_continuous(limits = c(-7,7))
+#grid.arrange(p1, p2, nrow = 1)
 @
+
+Two identical ALE curves \Sexpr{spark(app1$ale, c(-7, 7), width = 5)} and \Sexpr{spark(app2$ale, c(-7, 7), width = 5)} with the difference that one has a jump at 0.5. The measures complexity is higher for the left curve, since we need more segments to describe the variance of the curve. Both have an R squared above 0.95
 
 Also at what point would we decide between "this is a noisy ALE plot" and "we have to approximate this"?
 
@@ -81,29 +88,29 @@ dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
 mod = mgcv::gam(y ~ s(x), data = dat)
 pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
-app = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
-p1 = plot(app)  + scale_y_continuous(limits = c(-7,7))
+app1 = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+p1 = plot(app1)  + scale_y_continuous(limits = c(-7,7))
 
 y = 2 * sin(15 * x)
 dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
 mod = mgcv::gam(y ~ s(x), data = dat)
 pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
-app = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
-p2 = plot(app)  + scale_y_continuous(limits = c(-7,7))
+app2 = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+p2 = plot(app2)  + scale_y_continuous(limits = c(-7,7))
 
 y = 6 * sin(15 * x)
 dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
 mod = mgcv::gam(y ~ s(x), data = dat)
 pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
-app = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
-p3 = plot(app)  + scale_y_continuous(limits = c(-7,7))
+app3 = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+p3 = plot(app3)  + scale_y_continuous(limits = c(-7,7))
 
 grid.arrange(p1, p2, p3, nrow  = 1)
 @
 
-
+Let's consider 3 curves \Sexpr{spark(app1$ale, c(-6, 6), width = 5)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)}.
 We are only interested in the average of the complexity.
 An alternative would be the sum, but we already capture the number of features.
 So we propose to weight each of the complexity measures by the variance of the corresponding ALE plot.
@@ -126,7 +133,7 @@ TODO: Iterate over the description of the algorithm to improve it
 \begin{algorithm}
 \caption{Estimate average main effect complexity (AMEC).}\label{algo:ale-complexity}
 \begin{enumerate}
-\item Input: Model $\fh$, PRL-bound $\epsilon$, complexity limits $max_{segcat}$ and $max_{segnum}$
+\item Input: Model $\fh$, PRL-bound $\epsilon$, complexity limit $max_{seg}$
 \item Output: Weighted average complexity $C$
 \item For each $j \in \pset$ do:
 \begin{enumerate}
@@ -135,9 +142,9 @@ TODO: Iterate over the description of the algorithm to improve it
 \item Set $K=0$ and $\galej = 0$
 \item While $K < max_{seg}$ AND $PRL(\falej, \galej, L) < 1- \epsilon$:
 \begin{itemize}
-\item $\galej = FindBestSplit(K, \falej, \epsilon)$
+\item $\galej = FindBestSplits(K, \falej, \epsilon)$
 \end{itemize}
-\item $C_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_k > 0}$ for numerical; $C_j = K$ for categorical
+\item $C_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_k > 0}$
 \item ALE variance $V_j = \frac{1}{n}\sum_{i=1}^n \hat{f}^{ALE}_j(x^{(i)})$
 \end{enumerate}
 \item $C = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jc_j$.
@@ -150,18 +157,21 @@ TODO: Iterate over the description of the algorithm to improve it
 % Find best splits
 % =============================================================================
 \begin{algorithm}
-\caption{Find best splits for given k.}\label{algo:ale-complexity-splits}
-\begin{enumerate}
-\item Input: K, $\falej$, $\epsilon$, Number of samples $m$
-\item If numeric: $\hat{z}_1,\ldots, \hat{z}_K = argmin_{z_1,\ldots,z_K} \sum_{k=1}^{K+1} \sum_{\xi\in Z_k}\left(\falej(\xij) - (\beta_{j0}^k + \beta_{j1}^k\xij)\right)^2$ where $Z_1 = [min(\xj), z_1], \ldots, Z_k = [z_{k-1}, z_k],\ldots,Z_{K+1} = [z_K,max(\xj)]$ and $\beta_{j0}^k$ and $\beta_{j1}^k$ are the least square estimates. If $K=0$, then $Z_1 = [min(\xj), max(\xj)]$. Solve optimization with Generalized Simulated annealing (package GenSA).
-\item If categorical: Do $m$ times random search of split points and estimate mean in each segment.
-\item $\galej(\xj) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$. For categorical, $\hat{\beta}_j = 0$
-\item For numeric: Set slopes to zero. For each segment $k \in 1,\ldots,K$:
-\begin{enumerate}
+\caption{FindBestSplits for given K.}\label{algo:ale-complexity-splits}
+Input: K, $\falej$, $\epsilon$, Number of samples $m$
+
+$\hat{z}_1,\ldots, \hat{z}_K = argmin_{z_1,\ldots,z_K} \sum_{k=1}^{K+1} \sum_{\xi\in Z_k}\left(\falej(\xij) - (\beta_{j0}^k + \beta_{j1}^k\xij)\right)^2$ where $Z_1 = [min(\xj), z_1], \ldots, Z_k = [z_{k-1}, z_k],\ldots,Z_{K+1} = [z_K,max(\xj)]$ and $\beta_{j0}^k$ and $\beta_{j1}^k$ are the least square estimates. If $K=0$, then $Z_1 = [min(\xj), max(\xj)]$.
+
+Optimize with Generalized Simulated annealing.
+
+$\galej(\xj) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$.
+Set slopes to zero. For each segment $k \in 1,\ldots,K$:
+\begin{itemize}
 \item Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\falej(\xij)$ and $\beta_{j1}^k$ = 0
 \item If still $R^2 > 1 - \epsilon$, overwrite both $\beta$.
-\end{enumerate}
-\end{enumerate}
+\end{itemize}
+
+* If the feature is numeric, fix all $\beta_{j1}^k$ at zero and we applied random search of break points instead of GenSA.
 \end{algorithm}
 
 
@@ -213,7 +223,6 @@ The other two feature have a very low variance and get a low weight.
 
 
 
-
 % =============================================================================
 % Different epsilons
 % =============================================================================
@@ -227,7 +236,6 @@ p2 = plot(fc$approx_models$V3)
 
 gridExtra::grid.arrange(p1, p2, nrow = 1)
 @
-
 
 
 

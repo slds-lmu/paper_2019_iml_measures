@@ -17,7 +17,9 @@ Depends: OpenML,
          GenSA,
          gridExtra,
          here,
-         parallelMap
+         parallelMap,
+         viridis,
+         ltxsparklines
 Imports: checkmate,
          mlrMBO,
          rpart

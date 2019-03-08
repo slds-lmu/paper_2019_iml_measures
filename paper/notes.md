@@ -8,6 +8,11 @@
 - Call $R^2$ approximation of first order model "Fidelity"?
 - Give names for all three measures. CAndidates: Average Main Effect Complexity (AMEC), Main Effect Interaction Residuals (MEIR) and Number of Features Used for Prediction (NFUP).
 - Write tests for spark function
+- Cite ECML 2019 paper about importance and ICE curves
+- Decrease figure height to save space
+- In multi-obj: Show tradeoff simplicity/performance, interaction/performance, n.features/performance
+- For multi-obj: Show for 2-5 good models table with: rows feature/C/IA/NF/MAE, cols models, cells sparkLine and measures.
+- Kick out decision tree examle? or maybe greatly shorten and move to curve-complexity
 
 # Ideas
 

@@ -65,6 +65,10 @@ We optimize model hyperparameters across different types of models for predictiv
 <<08-application-compare, child = "08-application-compare.Rnw">>=
 @
 
+<<08-application-post-hoc, child = "08-application-post-hoc.Rnw">>=
+@
+
+
 <<interpretability, child = "interpretability.Rnw">>=
 @
 

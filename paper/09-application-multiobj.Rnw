@@ -13,10 +13,10 @@ GRID.SIZE = 50
 wine = read.csv(here("./data/winequalityN.csv"))
 wine = na.omit(wine)
 
-DEBUG_MODE = FALSE
+DEBUG_MODE = TRUE
 
 if(DEBUG_MODE) {
-  WINE_SAMPLE = sample(1:nrow(wine), size = 1000)
+  WINE_SAMPLE = sample(1:nrow(wine), size = 400)
 } else {
   WINE_SAMPLE = sample(1:nrow(wine))
 }
@@ -30,6 +30,14 @@ wine = wine[WINE_SAMPLE, ]
 
 task = makeRegrTask(data = wine, target = "quality")
 task.dat = getTaskData(task)
+@
+
+<<mo-setup>>=
+n.folds = 2
+surrogate.ntree = 200
+n.initial.design = 20L
+infill.criterion = crit.cb
+n.cores = 3
 @
 
 
@@ -66,7 +74,8 @@ base.learners.regr = list(
   makeLearner("regr.xgboost.mod"),
   makeLearner("regr.rpart"),
   makeLearner("regr.lm"),
-  makeLearner("regr.cubist")
+  makeLearner("regr.cubist"),
+  makeLearner("regr.featureless", method = "median")
 )
 
 lrn.regr = makeModelMultiplexer(base.learners.regr)
@@ -104,14 +113,6 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
 We apply the model-based optimization framework \citep{mlrMBO} to find the best model based on the following 4 objectives: number of features (NF), main effect complexity (MEC), interaction strength (IA) and the performance measured as the mean absolute error (MAE).
 We compare the following models: linear regression model, CART (tuning maximum tree-depth), weighted k-nearest neighbor classifier (tuning number of neighbors k and the distance function), a support vector machine (tuning complexity parameter C and the type of kernel), sparse linear models glmnet (tuning alpha and s??), xgboost (tuning the maximum depth and number of rounds) and cubist (tuning the number of rules)
 
-<<mo-setup>>=
-n.folds = 2
-surrogate.ntree = 200
-n.initial.design = 100L
-infill.criterion = crit.cb
-n.cores = 3
-@
-
 
 % =============================================================================
 % MBO Setup
@@ -127,7 +128,6 @@ For the initial sample of models/hyperparameters we take a random Latin Hypercub
 % TODO: Stop criterion
 % TODO : Create own design to ensure that we have each learner in there.
 %        Maybe it's enough to have a big enough sample
-% TODO: Read more about ParEGO
 
 <<mo-run, dependson=c("mo-data", "mo-learners", "mo-setup")>>=
 resampDescr = makeResampleDesc(method = "CV", iters = n.folds)
@@ -211,7 +211,10 @@ best.models.print$descr = apply(best.models.print, 1, function(row) {
 })
 
 tab.cap = "Pareto front of models minimizing mean absolute error (MAE), number of features (NF), main effect complexity (MEC) and interaction strength (IA)."
-xtable::xtable(best.models.print[c("descr", measure_names)], caption = "tab.cap", label = "tab:pareto")
+
+to.print = best.models.print[c("descr", measure_names)]
+rownames(to.print) = NULL
+xtable::xtable(to.print, caption = "tab.cap", label = "tab:pareto")
 
 best.model.index = which(best.models.print$y_1 == min(best.models.print$y_1))[1]
 best.model = best.models.print[best.model.index,]
@@ -264,7 +267,6 @@ p = ggplot(plot.dat) +
 print(p)
 
 nudge_y = -0.25
-# TODO: change to colorblind friendly colors
 p  = ggplot(mapping = aes(y = variable, x = descr, color = value)) +
   #geom_point(data = max.plot.dat, shape = 1) +
   geom_point(data = plot.dat, size = 15) +
@@ -324,10 +326,14 @@ The selected model is a \Sexpr{best.model$selected.learner} using \Sexpr{best.mo
 % Another interesting model
 % =============================================================================
 Figure \ref{fig:mo-interesting-models} shows the main effects of another model of the pareto front.
-We chose a model that maximizes the following tradeoff:
 
-$$\text{Performance} + \frac{1}{3}(\text{Simplicity} + \text{Additivity} + \text{Sparsity}) $$
+In general, each of the models optimizes a different tradeoff:
 
+$$\lambda_1 \text{Performance} + \lambda_2\text{Simplicity} + \lambda_3 \text{Additivity} + \lambda_4 \text{Sparsity}) $$
+
+By fixing the $\lambda$'s we get certain single models that are optimal.\
+If we set $\lambda_1 = \frac{3}{6}, \lambda_2=\frac{1}{6}, \lambda_3=\frac{1}{6}, \lambda_4=\frac{1}{6}$, we weight performance as much as the three interpretability measures combined.
+And we get the following model as solution:
 
 <<mo-interesting-solution, dependson="mo-run">>=
 ## Extract parameters and refit best solutions

@@ -5,7 +5,7 @@
 % =============================================================================
 % Measure Intro
 % =============================================================================
-We propose a measure that, for each of the main effects, approximates the ALE curve with linear segments and adds up the parameters needed if we were to model all those segments in a segmented linear regression model, which models the (approximate) ALE curve as a function of the single feature.
+We propose a measure that, for each of the main effects $\falej$, approximates the ALE curve with linear segments and adds up the parameters needed if we were to model all those segments in a segmented linear regression model, which models the (approximate) ALE curve as a function of the single feature.
 When complexity measure is minimized, we get linear effects or binary split.
 
 
@@ -116,6 +116,7 @@ All three need the same amount of segments to be approximated with R squared abo
 We are only interested in the average of the complexity.
 An alternative would be the sum, but we already capture the number of features.
 So we propose to weight each of the complexity measures by the variance of the corresponding ALE plot.
+In our example if the three curves were ALE plots from three different features,  \Sexpr{spark(app1$ale, c(-6, 6), width = 5)} would get a weight of \Sexpr{sprintf("%.2f", app1$var)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app2$var)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app3$var)}.
 If all features in the data are uncorrelated, this has the nice interpretation that each feature main effect complexity (MEC) is weighted by the percentage it contributed to the variance of the complete main effects model.
 In case of correlated features, it's more complicated.
 If we were to fairly assign to each feature the share of the first order model variance, we would need an attribution method such as the Shapley value.
@@ -179,21 +180,9 @@ Set slopes to zero. For each segment $k \in 1,\ldots,K$:
 
 
 
-
-
 % =============================================================================
-% C example
+% Different epsilons
 % =============================================================================
-We illustrate the measure with a short example.
-We simulated 500 data points with 4 features as a regression problem \citep{friedman1991multivariate}.
-The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
-The regression target was simulated as:
-
-$$y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$$
-where $ e \sim N(0,125)$.
-
-We trained a random forest, plotted the ALEs and calculated the complexities with the parameters $\epsilon = 0.95$, $max_{segnum} = 5$ and $max_{segcat} = 9$
-
 <<fun-complex>>=
 n = 1000
 grid.size = 50
@@ -215,25 +204,10 @@ plot(fc, nrow = 1)
 fc$approx_models$V1$plot()
 FeatureEffect$new(pred.ksvm, "V1")$plot()
 # Introduce second epsilon
-fc$plot(fc$relevant_features, nrow = 1)
-
+#fc$plot(fc$relevant_features, nrow = 1)
 @
 
-Since the model relied the most on $x2$ and $x3$ as main effects, the weighted main effect complexity is \Sexpr{fc$c_wmean}.
-Both features main effects can be approximated with a linear segment.
-The other two feature have a very low variance and get a low weight.
-
-<<spark-table, dependson="fun-complex", results="asis">>=
-
-
-dat = data.frame(test = c(1,2), sp = c(spark(fc$approx_models$V1), spark(fc$approx_models$V2)), stringsAsFactors = FALSE)
-xtable::print.xtable(xtable::xtable(dat), sanitize.text.function = xtable::as.is)
-@
-
-% =============================================================================
-% Different epsilons
-% =============================================================================
-<<depends = "fun-complex", fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
+<<epsilons, depends = "fun-complex", fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
 eps1 = 0.05
 fc1 = FunComplexity$new(pred.ksvm, epsilon = eps1,  grid.size = grid.size)
 #p1 = plot(fc$approx_models$V3)
@@ -253,13 +227,47 @@ An ALE curve that looks like this \Sexpr{spark(fc1$approx_models$V3$ale)} can be
 
 
 % =============================================================================
-% Different epsilons
+% Did not work out
 % =============================================================================
 We tried a few alternatives to approximate the ALE plots for measuring their complexity, which turned out to be impractical.
 We tried approximation with cubic (overlapping) splines and measuring the complexity as degrees of freedom.
 The degrees of freedom exploded when the ALE plot was not quite linear, but almost, yielding an unintuitive measure.
 Tree splits did not work, like for example model based partitioning TODO: CITE mob.
 One reason is that the greedy approach did not work well and we found it better to search per number of splits.
+
+
+
+% =============================================================================
+% =============================================================================
+% =============================================================================
+% Material
+% =============================================================================
+% =============================================================================
+% =============================================================================
+
+
+% =============================================================================
+% C example
+% =============================================================================
+% We illustrate the measure with a short example.
+% We simulated 500 data points with 4 features as a regression problem \citep{friedman1991multivariate}.
+% The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
+% The regression target was simulated as:
+%
+% $$y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$$
+% where $ e \sim N(0,125)$.
+%
+% We trained a random forest, plotted the ALEs and calculated the complexities with the parameters $\epsilon = 0.95$, $max_{segnum} = 5$ and $max_{segcat} = 9$
+
+
+% Since the model relied the most on $x2$ and $x3$ as main effects, the weighted main effect complexity is \Sexpr{fc$c_wmean}.
+% Both features main effects can be approximated with a linear segment.
+% The other two feature have a very low variance and get a low weight.
+
+<<spark-table, dependson="fun-complex", results="asis", eval=FALSE>>=
+dat = data.frame(test = c(1,2), sp = c(spark(fc$approx_models$V1), spark(fc$approx_models$V2)), stringsAsFactors = FALSE)
+xtable::print.xtable(xtable::xtable(dat), sanitize.text.function = xtable::as.is)
+@
 
 
 

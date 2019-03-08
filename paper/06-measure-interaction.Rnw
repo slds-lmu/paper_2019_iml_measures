@@ -7,7 +7,7 @@
 % =============================================================================
 % First order model
 % =============================================================================
-We propose to measure the level of additivity in the model by calculating the proportion of error for that is already covered by the main effects, when we are predicting the outcome of the model.
+We propose to measure the level of additivity in the model by calculating the proportion of error for that is already covered by the main effects $\falej$, when we are predicting the outcome of the model.
 Important to note is that error here refers to the error for predicting the full model.
 
 The general idea is that we have three models that are nested from left to right.

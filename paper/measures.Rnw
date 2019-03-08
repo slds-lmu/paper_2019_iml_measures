@@ -85,24 +85,6 @@ Minimizing the complexity of the first order effects ensures that we need less p
 A complexity of 1 means that we only need a single number to describe the relationship.
 
 
-% =============================================================================
-% REmarks
-% =============================================================================
-The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
-All the three measures would also work with any other decomposition like fANOVA or PDP.
-It would even work with nonsensical decomposition, e.g.
-true model for two featuresis $\fh(x) = x_1$, but we decompose as $f_{nonsense}(x) = x_1 + x_2 + Rest$ and we show plots of $x_1$ and $x_2$.
-Complexity measure will not be so meaningful, but n.features would remain the same, and the R squared measure would be better for the first decomposition.
-As such the measures (IA and C) are intertwined between the model and the decomposition we choose, which makes sense.
-Problem with surrogate model: might approximate well, but not perfectly describe the model behaviour.
-e.g. x1, x2 strongly correlated, black box uses only x1.
-surrogate model uses x2.
-then perfect fidelity, but not true effects.
-All three measures would also work with surrogate models, because we can show how big their $R^2$ is for predicting the black box predictions and we can measure the complexity of the surrogate by using it's own C.
-For n.features we have now two options: we could use number of features in black box model or number of features in the surrogate model.
-What if the decomposition is bad?
-Well, for ALE we can show that it's a desirable decomposition.
-But for any other, the $R^2$ will be very bad if the approximation is unfaithful.
 
 
 % -----------------------------------------------------------------------------

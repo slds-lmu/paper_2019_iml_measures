@@ -262,3 +262,121 @@ ggplot(res) + geom_point(aes(x = c, y = fidelity, size = IA))
 @
 
   The table \ref{tab-fidelity} shows that with increasing complexity and interactions, the mean fidelity of the explanation falls.
+
+
+
+\subsection{Interaction in logistic regression}
+
+In this example we demonstrate how deceptive model formulization can be and that we need a measure to really compare if one or the other model relies more heavily on interactions.
+Interaction means that the output of the model can't be fully explained by the main effects of the model.
+The logistic regression model might be a linear model on the level of the log odds, but not on the probability level.
+
+<<interaction-demo-data>>=
+library(rpart)
+library(partykit)
+library(ranger)
+set.seed(42)
+n = 500
+dat = data.frame(x1 = rnorm(n), x2 = rnorm(n), x3  = rnorm(n))
+dat$y = ifelse(exp(dat$x1 +  dat$x2 + dat$x3^2)> 0.1, 1, 0)
+# to remove linear separability
+change_prob = 0.01
+change_index = which(rbinom(size = 1, n = n, prob = change_prob) == 1)
+dat$y[change_index] = 1 - dat$y[change_index]
+dat$y = factor(dat$y)
+
+grid.size = 100
+epsilon = 0.05
+@
+
+In the following example we simulate 3 features each is normal distributed with mean zero and standard deviation of 1.
+We sample \Sexpr{n} data points from this distribution and simulate the target y as follows:
+
+$$\eta = exp(x_1 + x_2 + x_3)$$
+$$y = \begin{cases}\eta>0.5&1\\\eta \leq 0.5 0\\\end{cases}$$
+We flip each of the computed y's with a probability of \Sexpr{change_prob * 100} \% to avoid linear separability.
+
+We train a logistic regression model.
+
+<<interaction-demo>>=
+  rp = glm(y ~ ., data = dat, family = "binomial")
+pred = Predictor$new(rp, data = dat, predict.fun = function(model, newdata) predict(model, newdata, type = "response"))
+fc = FunComplexity$new(pred)
+@
+
+  The main effect model explains \Sexpr{100 * fc2$r2}\% of output for the logistic regression model.
+Measures have advantage to operate on the level of outcome.
+Usual interpretation of parameters in logistic regression, which are linear within the non-linear transformation function (logit), hides that logistic regression models interactions.
+The interactions come from the logistic function and saturation.
+When an instance has already 0.995 probability, changing a feature by one unit might increase probability to 0.996, but if probability would be lower, like 0.5, an increase might change it to 0.8.
+
+\subsection{Complexity lm, gam, interactions}
+
+In this section we show that even for models from statistical modeling that come with a lot of tools (tests for nested models, degrees of freedom, AIC) our proposed measures are useful for comparing models.
+
+<<lm-gam-prepare>>=
+  library(mgcv)
+library(Metrics)
+set.seed(12)
+n.train = 1000
+n.test = 5000
+create_dat = function(n) {
+  dat = data.frame(x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n))
+  dat$y = dat$x1 * dat$x2 +  sin(dat$x3)  + rnorm(n, sd = 0.3)
+  dat
+}
+dat = create_dat(n.train)
+newdat = create_dat(n.test)
+@
+
+  We simulate a very simple dataset:
+
+  $$y = x_1 \cdot x_2 + x_3^2 + \epsilon$$
+
+  where $x_1, x_2, x_3, \epsilon \sim N(0,1)$
+
+  We draw \Sexpr{n.train} points from this distribution.
+
+We fit 4 models:
+
+  \begin{enumerate}
+\item A vanilla linear regression model
+\item A linear regression model with an additional interaction between $x_1$ and $x_2$ and a quadratic term for $x_3^2$.
+\item A Generalized Additive model (GAM) with a non-linear effect (using thin plate splines) for each feature, but no interaction terms.
+\item A GAM with a non-linear handling of $x_1$, $x_2$ and their interaction.
+\item GAM with non-linear interaction between all three features
+\end{enumerate}
+
+Apart from measuring the mean absolute error (based on \Sexpr{n.test} unseen samples), how would we traditionally compare the models?
+  One commonly used complexity measure is the degrees of freedom and closely linked to this Akaikes Information criterion which gives a tradeoff between in-sample fit and degrees of freedom used by the model.
+
+<<lm-gam, results="asis">>=
+  mod1 = lm(y ~ x1 + x2 + x3, data = dat)
+mod2 = lm(y ~ x1 * x2 + x3, data = dat)
+mod3 = gam(y ~ s(x1) + s(x2) + s(x3), data = dat)
+mod4 = gam(y ~ s(x1, x2) + s(x3), data = dat)
+mod5 = gam(y ~ s(x1, x2, x3), data = dat)
+
+analyze_lin_mod  = function(mod, fc, newdat) {
+  data.frame(
+    c = fc$c_wmean,
+    IA = 1 - fc$r2,
+    df = mod$rank,
+    aic = AIC(mod),
+    mae = mae(newdat$y, predict(mod, newdat)))
+}
+
+res = lapply(list(mod1, mod2, mod3, mod4, mod5), function(mod) {
+  pred = Predictor$new(mod, newdat)
+  fc = FunComplexity$new(pred)
+  analyze_lin_mod(mod, fc, newdat)
+})
+
+xtable::xtable(rbindlist(res))
+@
+
+  While the AIC is a good measure here for assessing the goodness of fit and complexity tradeoff.
+But IA and AMEC give us a more detailed view.
+One thing is that we are actually not adding much IA between model 5 and 6  and also the MAE stays roughly the same.
+Curiously while the degrees of model 3 are very low, the IA is extremely high.
+

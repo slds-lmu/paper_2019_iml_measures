@@ -18,7 +18,7 @@ But also for black box models we have a lot of methods to explain some behaviors
 Here we list foremost model-agnostic methods:
 There are methods to describe the effect features have on the predition \citep{friedman2001greedy,goldstein2015peeking,apley2016visualizing}.
 Other methods rank the importance of the features \citep{Fisher2018, casalicchio2018visualizing}.
-And there are many options for explaining individual predictions \citep{lundberg2017unified,vstrumbelj2014explaining,vstrumbelj2011general,Ribeiro2016b}.
+And there are many options for explaining individual predictions \citep{lundberg2017unified,vstrumbelj2014explaining,Ribeiro2016b}.
 Furthermore we can discover influential data points \citep{Datta2016} and prototypes and criticisms \citep{kim2016examples}.
 
 

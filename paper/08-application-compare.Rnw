@@ -2,18 +2,9 @@
 \section{Application: Compare with model-specific measures}
 \label{sec:app1}
 
-% Datasets:
-%
-% Biodegradability
-% https://www.openml.org/d/1494
-%
-% Wind and Solar energy based on wheather
-% https://github.com/hugorcf/Renewable-energy-weather/blob/master/renewable.ipynb
 
 In this section we demonstrate with various simulations that our proposed measures can be more useful to describe model complexity than model-specific measures that are based on the structure of the model.
-We also demonstrate how minimizing NF, IA and AMEC improves the readability, reliability and summarizability of post-hoc explanation methods like partial dependence plots, feature importance, interaction effects and Shapley Values.
-All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2016}.
-The source code for all experimetns is availabel online
+
 
 \subsection{Linear relationships in a tree}
 <<tree-increase-data>>=
@@ -32,237 +23,46 @@ When a tree approximates a linear relationship, arguably the model structure mig
 We demonstrate how the two both the number of nodes and complexity measure C increase with increasing model accuracy, but at some point the complexity C decreases again.
 We argue that the measure of complexity is better, since it describes the complexity on the level of the output.
 In the following example, \Sexpr{n} data points are drawn from  a uniform distribution between 0 and 1, and the target is simulated as $2 * x + \epsilon$, where $\epsilon \sim N(0,\Sexpr{nsd})$.
-<<tree-increase, fig.cap="Increasing the tree depth always increases number of terminal nodes, but the complexity measure increases at some point because the prediction function can be approximated by a single linear function.">>=
 
+<<tree-increase, fig.cap="Increasing the tree depth always increases number of terminal nodes, but the complexity measure increases at some point because the prediction function can be approximated by a single linear function.", results="asis">>=
 rp_width = function(rp) sum(rp$frame$var == "<leaf>")
 
 rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 1))
 pred1 = Predictor$new(rp1, data = dat)
 fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
-p1 = fc1$approx_models$x$plot() +
-  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp1), fc1$c_wmean))
+#p1 = fc1$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp1), fc1$c_wmean))
 
 rp2 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
 pred2 = Predictor$new(rp2, data = dat)
 fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
-p2 = fc2$approx_models$x$plot() +
-  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp2), fc2$c_wmean))
+#p2 = fc2$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp2), fc2$c_wmean))
 
 rp3 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 3))
 pred3 = Predictor$new(rp3, data = dat)
 fc3 = FunComplexity$new(pred3, grid.size = grid.size, epsilon = epsilon)
-p3 = fc3$approx_models$x$plot() +
-  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp3), fc3$c_wmean))
+#p3 = fc3$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp3), fc3$c_wmean))
 
-grid.arrange(p1, p2, p3, nrow = 1)
-@
-
-
-\subsection{Interaction in logistic regression}
-
-In this example we demonstrate how deceptive model formulization can be and that we need a measure to really compare if one or the other model relies more heavily on interactions.
-Interaction means that the output of the model can't be fully explained by the main effects of the model.
-The logistic regression model might be a linear model on the level of the log odds, but not on the probability level.
-
-<<interaction-demo-data>>=
-library(rpart)
-library(partykit)
-library(ranger)
-set.seed(42)
-n = 500
-dat = data.frame(x1 = rnorm(n), x2 = rnorm(n), x3  = rnorm(n))
-dat$y = ifelse(exp(dat$x1 +  dat$x2 + dat$x3^2)> 0.1, 1, 0)
-# to remove linear separability
-change_prob = 0.01
-change_index = which(rbinom(size = 1, n = n, prob = change_prob) == 1)
-dat$y[change_index] = 1 - dat$y[change_index]
-dat$y = factor(dat$y)
-
-grid.size = 100
-epsilon = 0.05
-@
-
-In the following example we simulate 3 features each is normal distributed with mean zero and standard deviation of 1.
-We sample \Sexpr{n} data points from this distribution and simulate the target y as follows:
-
-$$\eta = exp(x_1 + x_2 + x_3)$$
-$$y = \begin{cases}\eta>0.5&1\\\eta \leq 0.5 0\\\end{cases}$$
-We flip each of the computed y's with a probability of \Sexpr{change_prob * 100} \% to avoid linear separability.
-
-We train a logistic regression model.
-
-<<interaction-demo>>=
-rp = glm(y ~ ., data = dat, family = "binomial")
-pred = Predictor$new(rp, data = dat, predict.fun = function(model, newdata) predict(model, newdata, type = "response"))
-fc = FunComplexity$new(pred)
-@
-
-The main effect model explains \Sexpr{100 * fc2$r2}\% of output for the logistic regression model.
-Measures have advantage to operate on the level of outcome.
-Usual interpretation of parameters in logistic regression, which are linear within the non-linear transformation function (logit), hides that logistic regression models interactions.
-The interactions come from the logistic function and saturation.
-When an instance has already 0.995 probability, changing a feature by one unit might increase probability to 0.996, but if probability would be lower, like 0.5, an increase might change it to 0.8.
-
-
-
-\subsubsection{Unreliability of Partial Dependence Plots}
-
-In this section we show how the interaction measure directly affects the reliability of a post-hoc interpretation method, the partial dependence plot.
-The partial dependence plots, as well as the Accumulated Effect plots show the marginal relationship between a feature and the prediction.
-Usually the curves are mean estimates of the effects, since the individual effects of features per instance can vary greatly, even take on a different direction.
-For example a feature might show a positive effect on the prediction, but for some instances the effect might be negative.
-This heterogeniety of effects is due to interactions with other features.
-The partial dependence plot has a counterpart, the individual conditional expectation curve TODO: CITE, which shows the relationship between input and outcome for an individual instance.
-We are using a PDP here because, unlike ALE, they have a pendant for individual observations:ICE curves, which visualize heterogeneity of feature effects.
-But also the ALE plot is affected by averaging heterogenous effects and hiding complexity.
-
-<<prepare-pdp-unreliable>>=
-set.seed(123)
-n = 500
-
-cnames = c("x1", "x2", "x3", "x4", "y")
-
-dat = mlbench::mlbench.friedman2(n, sd = 0.3)
-datx = data.frame(cbind(dat$x, "y" = dat$y))
-names(datx) = cnames
-task = makeRegrTask(data  = datx, target = "y")
-
-n.test = 100
-dat2 = mlbench::mlbench.friedman2(n.test, sd = 0.3)
-datx2 = data.frame(cbind(dat2$x, "y" = dat2$y))
-names(datx2) = cnames
-task2 = makeRegrTask(data  = datx2, target = "y")
-
-
-y_limit = c(-200, 1200)
-grid.size = 100
-feature = "x2"
-@
-In the following example, we show a data simulation that is approximated with different models that have a differently strong capabilities for modeling interactions in the data.
-
-We simulated 500 data points with 4 features as a regression problem \citep{friedman1991multivariate}.
-The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
-The regression target was simulated as:
-
-$$y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$$
-where $ e \sim N(0,125)$.
-
-We first sample \Sexpr{n} data points for training a gamboost model, a random forest and a k-nearest neighbors model (k = 3) all with otherwise default settings.
-Then we compute the partial dependence plots for feature $x_2$
-
-<<pdp-unreliable, fig.cap="Comparing PDP+ICE for models with different interaction strengths. The higher the interaction strength, the less reliable the PDP information. ICE shows high variance of feature effects. Here x3 is shown, x1 x2 and x4 look similar. The plots are centered at x= 0">>=
-lrn = makeLearner("regr.gamboost")
-mod.gamboost = train(lrn, task)
-pred = Predictor$new(mod.gamboost, datx2, class = 1)
-fc = FunComplexity$new(pred, grid.size = grid.size)
-r2_gamboost = 1 - fc$r2
-fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_gamboost = plot(fe$effects[[feature]], ylim = y_limit) +
-  ggtitle(sprintf("gamboost, IA=%.2f", r2_gamboost))
-
-
-lrn = makeLearner("regr.ranger")
-mod.ranger = train(lrn, task)
-pred = Predictor$new(mod.ranger, datx2)
-fc = FunComplexity$new(pred, grid.size = grid.size)
-r2_ksvm = 1- fc$r2
-fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_ksvm = plot(fe$effects[[feature]], ylim = y_limit) +
-  ggtitle(sprintf("ranger (random forest), IA=%.2f", r2_ksvm))
-
-
-lrn = makeLearner("regr.kknn", k = 3)
-mod.kknn = train(lrn, task)
-pred = Predictor$new(mod.kknn, datx2, class = 1)
-fc = FunComplexity$new(pred, grid.size = grid.size)
-r2_kknn = 1- fc$r2
-fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_kknn = plot(fe$effects[[feature]], ylim = y_limit) +
-  ggtitle(sprintf("kknn, IA=%.2f", r2_kknn))
-
-mae.gamboost = measureMAE(datx2$y, getPredictionResponse(predict(mod.gamboost, task2)))
-mae.ranger = measureMAE(datx2$y, getPredictionResponse(predict(mod.ranger, task2)))
-mae.kknn = measureMAE(datx2$y, getPredictionResponse(predict(mod.kknn, task2)))
-
-grid.arrange(p_gamboost, p_ksvm, p_kknn, nrow = 1)
-@
-
-Figure \ref{fig:pdp-unreliable} shows an increasing interaction strength depending on the model used.
-The higher the interaction measure, the less reliable the aggegrated partial dependence plot become.
-This means that we prefer models with less interactions when using feature effect plots.
-
-
-
-
-\subsection{Complexity lm, gam, interactions}
-
-In this section we show that even for models from statistical modeling that come with a lot of tools (tests for nested models, degrees of freedom, AIC) our proposed measures are useful for comparing models.
-
-<<lm-gam-prepare>>=
-library(mgcv)
-library(Metrics)
-set.seed(12)
-n.train = 1000
-n.test = 5000
-create_dat = function(n) {
-  dat = data.frame(x1 = rnorm(n), x2 = rnorm(n), x3 = rnorm(n))
-  dat$y = dat$x1 * dat$x2 +  sin(dat$x3)  + rnorm(n, sd = 0.3)
-  dat
-}
-dat = create_dat(n.train)
-newdat = create_dat(n.test)
-@
-
-We simulate a very simple dataset:
-
-$$y = x_1 \cdot x_2 + x_3^2 + \epsilon$$
-
-where $x_1, x_2, x_3, \epsilon \sim N(0,1)$
-
-We draw \Sexpr{n.train} points from this distribution.
-
-We fit 4 models:
-
-\begin{enumerate}
-\item A vanilla linear regression model
-\item A linear regression model with an additional interaction between $x_1$ and $x_2$ and a quadratic term for $x_3^2$.
-\item A Generalized Additive model (GAM) with a non-linear effect (using thin plate splines) for each feature, but no interaction terms.
-\item A GAM with a non-linear handling of $x_1$, $x_2$ and their interaction.
-\item GAM with non-linear interaction between all three features
-\end{enumerate}
-
-Apart from measuring the mean absolute error (based on \Sexpr{n.test} unseen samples), how would we traditionally compare the models?
-One commonly used complexity measure is the degrees of freedom and closely linked to this Akaikes Information criterion which gives a tradeoff between in-sample fit and degrees of freedom used by the model.
-
-<<lm-gam, results="asis">>=
-mod1 = lm(y ~ x1 + x2 + x3, data = dat)
-mod2 = lm(y ~ x1 * x2 + x3, data = dat)
-mod3 = gam(y ~ s(x1) + s(x2) + s(x3), data = dat)
-mod4 = gam(y ~ s(x1, x2) + s(x3), data = dat)
-mod5 = gam(y ~ s(x1, x2, x3), data = dat)
-
-analyze_lin_mod  = function(mod, fc, newdat) {
-  data.frame(
-    c = fc$c_wmean,
-    IA = 1 - fc$r2,
-    df = mod$rank,
-    aic = AIC(mod),
-    mae = mae(newdat$y, predict(mod, newdat)))
+#grid.arrange(p1, p2, p3, nrow = 1)
+n_terminal = function(tree) {
+  nrow(tree$frame[tree$frame$var == "<leaf>",])
 }
 
-res = lapply(list(mod1, mod2, mod3, mod4, mod5), function(mod) {
-  pred = Predictor$new(mod, newdat)
-  fc = FunComplexity$new(pred)
-  analyze_lin_mod(mod, fc, newdat)
-})
-
-xtable::xtable(rbindlist(res))
+tab = data.frame(
+  "Tree Depth" = c(1,2,3),
+  "Terminal nodes" = c(n_terminal(rp1), n_terminal(rp2),n_terminal(rp3)),
+  "ALE" = c(spark(fc1$approx_models$x),spark(fc2$approx_models$x),spark(fc3$approx_models$x)),
+  "Approximation" = c(
+    spark(fc1$approx_models$x, approx = TRUE),
+    spark(fc2$approx_models$x, approx = TRUE),
+    spark(fc3$approx_models$x, approx = TRUE)),
+  "AMEC" = c(fc1$c_wmean, fc2$c_wmean, fc3$c_wmean))
+print.xtable(xtable(tab), sanitize.text.function = as.is, booktabs = TRUE)
 @
 
-While the AIC is a good measure here for assessing the goodness of fit and complexity tradeoff.
-But IA and AMEC give us a more detailed view.
-One thing is that we are actually not adding much IA between model 5 and 6  and also the MAE stays roughly the same.
-Curiously while the degrees of model 3 are very low, the IA is extremely high.
+
 
 
 

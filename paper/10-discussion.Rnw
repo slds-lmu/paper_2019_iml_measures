@@ -23,7 +23,10 @@ This was outside of the scope of our research.
 These complexity measures can be directly used in research settings with user-surveys and correlated with user-reported outcomes and measure of how fast users where to grasp a model.
 As \citep{rudin2018please} argues, the interpretability depends on the application and the audience and the preferred tradeoff between performance, sparsity, additivity and interactions might vary between different appication and audience.
 We believe our measures are useful for user surveys, because these measures can always be computed for the models that are being compared and correlated with user feedback to see what the tradeoff between performance and the different dimensions of complexity are in this particular case.
-
+Based on study by \citep{friedler2019assessing}, we can directly translate measures into human interpretability (given the limitations of their study).
+The complexity, interactions and number of features can be translated into number of operations (at least approximately), even though it's not from true model interna, but from approximation outside the model.
+Between the model and a human is always the representation of the model, which our measures do not evaluate.
+A naturally ocurring representation from our approach is the ALE visualization of the main effects, but this is not necessarily the best representation for an end user.
 
 % =============================================================================
 % Areas to improve
@@ -31,6 +34,24 @@ We believe our measures are useful for user surveys, because these measures can 
 The proposed measure for the main effect complexity could be improved by considering shapes different from linear segments.
 For example quadratic components or seasonal components, which make sense when the feature is time, e.g. years and the main effect captures some seasonal effect.
 
+% =============================================================================
+% REmarks
+% =============================================================================
+The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
+All the three measures would also work with any other decomposition like fANOVA or PDP.
+It would even work with nonsensical decomposition, e.g.
+true model for two featuresis $\fh(x) = x_1$, but we decompose as $f_{nonsense}(x) = x_1 + x_2 + Rest$ and we show plots of $x_1$ and $x_2$.
+Complexity measure will not be so meaningful, but n.features would remain the same, and the R squared measure would be better for the first decomposition.
+As such the measures (IA and C) are intertwined between the model and the decomposition we choose, which makes sense.
+Problem with surrogate model: might approximate well, but not perfectly describe the model behaviour.
+e.g. x1, x2 strongly correlated, black box uses only x1.
+surrogate model uses x2.
+then perfect fidelity, but not true effects.
+All three measures would also work with surrogate models, because we can show how big their $R^2$ is for predicting the black box predictions and we can measure the complexity of the surrogate by using it's own C.
+For n.features we have now two options: we could use number of features in black box model or number of features in the surrogate model.
+What if the decomposition is bad?
+Well, for ALE we can show that it's a desirable decomposition.
+But for any other, the $R^2$ will be very bad if the approximation is unfaithful.
 
 % =============================================================================
 % Further research to build on top

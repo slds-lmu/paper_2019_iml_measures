@@ -19,7 +19,8 @@ Depends: OpenML,
          here,
          parallelMap,
          viridis,
-         ltxsparklines
+         ltxsparklines,
+         xtable
 Imports: checkmate,
          mlrMBO,
          rpart

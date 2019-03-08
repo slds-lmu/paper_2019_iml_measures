@@ -183,31 +183,19 @@ Set slopes to zero. For each segment $k \in 1,\ldots,K$:
 % =============================================================================
 % Different epsilons
 % =============================================================================
-<<fun-complex>>=
+
+<<epsilons,  fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
+
 n = 1000
 grid.size = 50
 dat1 = mlbench::mlbench.friedman2(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
-
-#dat1$V1 = cut(dat1$V1, breaks = 100 * c(0, 0.2, 0.4, 0.6, 0.8, 1), include.lowest = TRUE)
-#dat1$V2 = cut(dat1$V2, breaks = quantile(dat1$V2, probs = c(0, 0.2, 1)), include.lowest = TRUE)
-#dat1$V3 = cut(dat1$V3, breaks = quantile(dat1$V3, probs = c(0, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95, 1)), include.lowest = TRUE)
-#dat1$V4 = cut(dat1$V4, breaks = quantile(dat1$V4, probs = c(0, 0.2, 0.4, 0.6, 0.8, 1)), include.lowest = TRUE)
-
 tsk = makeRegrTask(data = dat1, target = "y")
 lrn = makeLearner("regr.ranger")
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
 fc = FunComplexity$new(pred.ksvm, epsilon = 0.01,grid.size = grid.size)
-#FeatureEffects$new(pred.ksvm, grid.size = grid.size)$plot(nrow = 1)
-plot(fc, nrow = 1)
-fc$approx_models$V1$plot()
-FeatureEffect$new(pred.ksvm, "V1")$plot()
-# Introduce second epsilon
-#fc$plot(fc$relevant_features, nrow = 1)
-@
 
-<<epsilons, depends = "fun-complex", fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
 eps1 = 0.05
 fc1 = FunComplexity$new(pred.ksvm, epsilon = eps1,  grid.size = grid.size)
 #p1 = plot(fc$approx_models$V3)
@@ -227,13 +215,63 @@ An ALE curve that looks like this \Sexpr{spark(fc1$approx_models$V3$ale)} can be
 
 
 % =============================================================================
-% Did not work out
+% AMEC ignores internal model complexity and uses external complexity
 % =============================================================================
-We tried a few alternatives to approximate the ALE plots for measuring their complexity, which turned out to be impractical.
-We tried approximation with cubic (overlapping) splines and measuring the complexity as degrees of freedom.
-The degrees of freedom exploded when the ALE plot was not quite linear, but almost, yielding an unintuitive measure.
-Tree splits did not work, like for example model based partitioning TODO: CITE mob.
-One reason is that the greedy approach did not work well and we found it better to search per number of splits.
+<<tree-increase-data>>=
+set.seed(42)
+library(rpart)
+n = 1000
+dat = data.frame(x = runif(n), x2 = rnorm(n))
+nsd = 0.4
+dat$y = 2 * dat$x + rnorm(n, sd = nsd)
+
+grid.size = 100
+epsilon = 0.05
+@
+The complexity measures ignores how complex the prediction process is within the model, e.g. it does not matter whether the linear relationship comes from a single linear model or a blend of hundreds of linear models.
+We demonstrate how the number of nodes and complexity measure C increase with increasing model performacne, but at some point the complexity C decreases again.
+For this example, \Sexpr{n} data points are drawn from  a uniform distribution between 0 and 1, and the target is simulated as $2 * x + \epsilon$, where $\epsilon \sim N(0,\Sexpr{nsd})$.
+We train a three different trees with different maximal depths, as shown in Table \ref{tab:tree}.
+
+<<tree-increase, dependson="tree-increase-data",results="asis">>=
+rp_width = function(rp) sum(rp$frame$var == "<leaf>")
+
+rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 1))
+pred1 = Predictor$new(rp1, data = dat)
+fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
+#p1 = fc1$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp1), fc1$c_wmean))
+
+rp2 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
+pred2 = Predictor$new(rp2, data = dat)
+fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
+#p2 = fc2$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp2), fc2$c_wmean))
+
+rp3 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 3))
+pred3 = Predictor$new(rp3, data = dat)
+fc3 = FunComplexity$new(pred3, grid.size = grid.size, epsilon = epsilon)
+#p3 = fc3$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp3), fc3$c_wmean))
+
+#grid.arrange(p1, p2, p3, nrow = 1)
+n_terminal = function(tree) {
+  nrow(tree$frame[tree$frame$var == "<leaf>",])
+}
+
+tab = data.frame(
+  "Tree Depth" = c(1,2,3),
+  "Terminal nodes" = c(n_terminal(rp1), n_terminal(rp2),n_terminal(rp3)),
+  "ALE" = c(spark(fc1$approx_models$x),spark(fc2$approx_models$x),spark(fc3$approx_models$x)),
+  "Approximation" = c(
+    spark(fc1$approx_models$x, approx = TRUE),
+    spark(fc2$approx_models$x, approx = TRUE),
+    spark(fc3$approx_models$x, approx = TRUE)),
+  "AMEC" = c(fc1$c_wmean, fc2$c_wmean, fc3$c_wmean))
+
+caption = "Increasing the tree depth always increases number of terminal nodes, but the complexity measure increases at some point because the prediction function can be approximated by a single linear function."
+print.xtable(xtable(tab), sanitize.text.function = as.is, booktabs = TRUE, caption = caption, label = "tab:tree")
+@
 
 
 
@@ -264,12 +302,20 @@ One reason is that the greedy approach did not work well and we found it better 
 % Both features main effects can be approximated with a linear segment.
 % The other two feature have a very low variance and get a low weight.
 
-<<spark-table, dependson="fun-complex", results="asis", eval=FALSE>>=
+<<spark-table, dependson="epsilons", results="asis", eval=FALSE>>=
 dat = data.frame(test = c(1,2), sp = c(spark(fc$approx_models$V1), spark(fc$approx_models$V2)), stringsAsFactors = FALSE)
 xtable::print.xtable(xtable::xtable(dat), sanitize.text.function = xtable::as.is)
 @
 
 
+% =============================================================================
+% Did not work out
+% =============================================================================
+% We tried a few alternatives to approximate the ALE plots for measuring their complexity, which turned out to be impractical.
+% We tried approximation with cubic (overlapping) splines and measuring the complexity as degrees of freedom.
+% The degrees of freedom exploded when the ALE plot was not quite linear, but almost, yielding an unintuitive measure.
+% Tree splits did not work, like for example model based partitioning TODO: CITE mob.
+% One reason is that the greedy approach did not work well and we found it better to search per number of splits.
 
 
 

@@ -16,7 +16,7 @@ wine = na.omit(wine)
 DEBUG_MODE = TRUE
 
 if(DEBUG_MODE) {
-  WINE_SAMPLE = sample(1:nrow(wine), size = 400)
+  WINE_SAMPLE = sample(1:nrow(wine), size = 500)
 } else {
   WINE_SAMPLE = sample(1:nrow(wine))
 }
@@ -35,9 +35,9 @@ task.dat = getTaskData(task)
 <<mo-setup>>=
 n.folds = 2
 surrogate.ntree = 200
-n.initial.design = 20L
+n.initial.design = 40L
 infill.criterion = crit.cb
-n.cores = 3
+n.cores = 1
 @
 
 
@@ -182,8 +182,6 @@ best.models = best.models[!dups,]
 # TODO: select based on params which duplicated to keep
 #       e.g. rpart with lowest max.depth
 
-# sometimes xgboost uses no features if alpha too small
-best.models = best.models[best.models$y_4 > 0,]
 @
 
 <<mo-results-rename, dependson="mo-run", results = "asis">>=

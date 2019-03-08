@@ -1,12 +1,12 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Related Work}
+\section{Related Work and Background}
 \label{sec:related}
+
+As related work we see other approaches for measuring model complexity for interpretability and methods for decomposing functions on which we build (which is the background).
 
 % TODO: Move more stuff from ALE plots to measures and specific measures
 
 \subsection{Measure Interpretability}
-
-
 
 % =============================================================================
 % Lack of definition of interpretability
@@ -21,15 +21,7 @@ This paper is concerned with model interpretability.
 We propose multiple measures to accomodate different notions of interpretability.
 
 
-% =============================================================================
-% Some taxonomy
-% =============================================================================
 
-\citep{bibal2016interpretability} distinguish between interprebaility on model level and on representation level.
-This adds to the taxonomy of \citep{doshi2017towards}
-Quantiative measurements of model: Either some heuristic of model (e.g. number of features in Lasso) or user-based surveys \citep{freitas2014comprehensible}.
-Quantiative heuristic measure model.
-User-based surveys measure representation
 
 
 % =============================================================================
@@ -74,38 +66,21 @@ AIC, BIC combine performance and number of parameters, but only for linear model
 % =============================================================================
 % Other approaches
 % =============================================================================
-TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. My critique: Always needs some baseline which might not exist. For example discovering new knowledge. Also, target model is fixed, can't decide accuracy interpretability tradeoff.  sparsity is not rewarded.
-What if interpretability needed for not yet known purporse? Like future proof for unknown problems.
-\citep{dhurandhar2017tip}
+TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. \citep{dhurandhar2017tip}
 % Measruing interpretability through users.
-\citep{friedler2019assessing} measure with users if models are intepretable.
+\citep{friedler2019assessing} measure with users if models are intepretable and proopose as objective measure the runtime operation count of the model.
+We take a different approach because we look at prediction function from the outside, not into the model structure and parameters.
 
 
 % =============================================================================
 % Need model-agnostic measures for comparison
 % =============================================================================
 Lack of model-agnostic measures of interpretability, which are needed to compare different model choices.
-Towards A rigourous sience ... \citep{doshi2017towards}
+Towards A rigourous science ... \citep{doshi2017towards}
 In this framework, we are at function level.
-All of the three measures can be motivated by Occams Razor.
-n.features favors less features used in the model.
-IA favors less interactions.
-C favors main effects that can be approximated with as little linear segments as possible.
 Not always is a strictly smaller model (in terms of nodes) more accepted by the user.
 \citep{lavravc1999selected} showed a case where medical experts preferred larger trees, since shor trees were not as informative for their decision making.
 
-
-
-% =============================================================================
-% Categorization of our method
-% =============================================================================
-According to \citep{bibal2016interpretability} we can distinguish measures of interpretability for following areas.
-\begin{itemize}
-\item model (specific, general)
-\item representation (specific, general)
-\end{itemize}
-Our method depends on representation and on the model of course.
-So something in between.
 
 
 % =============================================================================
@@ -126,7 +101,8 @@ We would not use ALE plot for the tree, but could still show the tree how you vi
 We can decompose the high-dimensional model prediction function $f(x)$ into a sum of functions describing feature and interaction effects.
 Let f be the model prediction function that maps from features to the prediction, $f(x): X \rightarrow \mathbb{R}$ where x is a p-dimenionsal feature vector: $x = (x_1, \ldots, x_p)$.
 
-\begin{eqnarray} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S) \\
+\begin{eqnarray} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}
+%\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S)
 \end{eqnarray}
 
 The decomposition contains a constant mean plus the feature first order effects, second order effects up to the p-th order effect.
@@ -184,10 +160,37 @@ Also ALE plots have software solutions, see \citep{iml,alepackage}.
 
 
 
-
+% =============================================================================
+% =============================================================================
 % =============================================================================
 % Material
 % =============================================================================
+% =============================================================================
+% =============================================================================
+
+
+
+% =============================================================================
+% Some taxonomy
+% =============================================================================
+% \citep{bibal2016interpretability} distinguish between interprebaility on model level and on representation level.
+% This adds to the taxonomy of \citep{doshi2017towards}
+% Quantiative measurements of model: Either some heuristic of model (e.g. number of features in Lasso) or user-based surveys \citep{freitas2014comprehensible}.
+% Quantiative heuristic measure model.
+% User-based surveys measure representation
+
+% =============================================================================
+% Categorization of our method
+% =============================================================================
+% According to \citep{bibal2016interpretability} we can distinguish measures of interpretability for following areas.
+% \begin{itemize}
+% \item model (specific, general)
+% \item representation (specific, general)
+% \end{itemize}
+% Our method depends on representation and on the model of course.
+% So something in between.
+
+
 
 % Pseudo-orthogonality > Orthogonality
 % True orthogonality is not desirable, as illustrated with this next example.

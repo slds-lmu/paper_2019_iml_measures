@@ -106,11 +106,13 @@ pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
 app3 = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
 p3 = plot(app3)  + scale_y_continuous(limits = c(-7,7))
-
-grid.arrange(p1, p2, p3, nrow  = 1)
+#grid.arrange(p1, p2, p3, nrow  = 1)
 @
 
 Let's consider 3 curves \Sexpr{spark(app1$ale, c(-6, 6), width = 5)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)}.
+The three ALE curves only differ by a scaling factor in  dicrection of the y-axis.
+All three need the same amount of segments to be approximated with R squared above 0.95:
+ \Sexpr{spark(app1, c(-6, 6), width = 5)}, \Sexpr{spark(app2, c(-6, 6), width = 5)} and \Sexpr{spark(app3, c(-6, 6), width = 5)}
 We are only interested in the average of the complexity.
 An alternative would be the sum, but we already capture the number of features.
 So we propose to weight each of the complexity measures by the variance of the corresponding ALE plot.
@@ -214,28 +216,39 @@ fc$approx_models$V1$plot()
 FeatureEffect$new(pred.ksvm, "V1")$plot()
 # Introduce second epsilon
 fc$plot(fc$relevant_features, nrow = 1)
+
 @
+
 Since the model relied the most on $x2$ and $x3$ as main effects, the weighted main effect complexity is \Sexpr{fc$c_wmean}.
 Both features main effects can be approximated with a linear segment.
 The other two feature have a very low variance and get a low weight.
 
+<<spark-table, dependson="fun-complex", results="asis">>=
 
 
-
+dat = data.frame(test = c(1,2), sp = c(spark(fc$approx_models$V1), spark(fc$approx_models$V2)), stringsAsFactors = FALSE)
+xtable::print.xtable(xtable::xtable(dat), sanitize.text.function = xtable::as.is)
+@
 
 % =============================================================================
 % Different epsilons
 % =============================================================================
-The effect of different values for $epsilon$, here on the piece-wise linear model:
 <<depends = "fun-complex", fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.05,  grid.size = grid.size)
-p1 = plot(fc$approx_models$V3)
+eps1 = 0.05
+fc1 = FunComplexity$new(pred.ksvm, epsilon = eps1,  grid.size = grid.size)
+#p1 = plot(fc$approx_models$V3)
 
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.001, grid.size = grid.size, max_seg_num = 10)
-p2 = plot(fc$approx_models$V3)
+eps2 = 0.005
+fc2 = FunComplexity$new(pred.ksvm, epsilon = eps2, grid.size = grid.size, max_seg_num = 10)
 
-gridExtra::grid.arrange(p1, p2, nrow = 1)
+eps3 = 0.001
+fc3 = FunComplexity$new(pred.ksvm, epsilon = eps3, grid.size = grid.size, max_seg_num = 10)
+#p2 = plot(fc$approx_models$V3)
+#gridExtra::grid.arrange(p1, p2, nrow = 1)
 @
+Different values for $\epsilon$ yield different measures of complexity:
+An ALE curve that looks like this \Sexpr{spark(fc1$approx_models$V3$ale)} can be approximated with a linear model \Sexpr{spark(fc1$approx_models$V3, approx = TRUE)} (\Sexpr{eps1}) and gets increasingly more complex when we allow less error, e.g. \Sexpr{spark(fc2$approx_models$V3, approx = TRUE)} (\Sexpr{eps2}) and  \Sexpr{spark(fc3$approx_models$V3, approx = TRUE)} (\Sexpr{eps3}).
+
 
 
 

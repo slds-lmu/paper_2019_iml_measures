@@ -1,0 +1,24 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Desiderata}
+\label{sec:desiderata}
+
+
+% =============================================================================
+% Desiderata for models
+% =============================================================================
+Throughout the literature, following desiderata for the complexity of models often come up, either explicitly or implictly.
+Those are sparsity, additivity and effect simplicity (TODO: Find better name).
+Sparsity means that as few as possible features should be used by a machine learning.
+TODO: Cite papers that call for sparsity and list approaches.
+
+Additivity means that as little interaction between the features as possible should be modeled.
+TODO: Talk about LMs, GAMS, ...
+
+Simplicity means that the functional form of the feature effects should be as simple as possible.
+TODO: Talk about LMs, GAMs, penalization. CITE aproaches.
+TODO: Cite monotonicity approaches
+
+All of the three measures can be motivated by Occams Razor.
+n.features favors less features used in the model.
+IA favors less interactions.
+C favors main effects that can be approximated with as little linear segments as possible.

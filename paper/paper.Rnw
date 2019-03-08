@@ -36,7 +36,7 @@ We propose model-agnostic measures of interpretability for machine learning mode
 These measures can be used to compare interpretability for different hyperparameter configurations and across different model classes.
 
 We show an application of these measures in multi-criteria optimization.
-We optimize model hyperparameters across different types of models for predictive performance and interpretability together, yielding a Pareto front of models with different tradeoffs between interpretability and accuracy.
+We optimize model hyperparameters across different types of models for predictive performance and interpretability together, yielding a Pareto front of models with different tradeoffs between interpretability and performance.
 \keywords{Interpretable Machine Learning \and Explainable AI \and Accumulated Local Effects.}
 \end{abstract}
 
@@ -45,6 +45,9 @@ We optimize model hyperparameters across different types of models for predictiv
 @
 
 <<03-related-work, child = "03-related-work.Rnw">>=
+@
+
+<<03-desiderata, child = "03-desiderata.Rnw">>=
 @
 
 <<measures, child = "measures.Rnw">>=

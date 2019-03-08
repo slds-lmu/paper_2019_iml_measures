@@ -13,6 +13,8 @@
 \usepackage{sparklines}
 % So that I can use the bars as interval visualizations
 \setlength{\sparkspikewidth}{0.1mm}
+\setlength{\sparklinethickness}{0.7pt}
+\renewcommand{\sparklineheight}{2}
 \usepackage[utf8]{inputenc}
 %\usepackage[T1]{fontenc}
 \usepackage{booktabs}

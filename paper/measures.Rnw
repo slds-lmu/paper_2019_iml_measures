@@ -2,23 +2,6 @@
 \section{Functional complexity}
 \label{sec:measures}
 
-
-% =============================================================================
-% Desiderata for models
-% =============================================================================
-Throughout the literature, following desiderata for the complexity of models often come up, either explicitly or implictly.
-Those are sparsity, additivity and effect simplicity (TODO: Find better name).
-Sparsity means that as few as possible features should be used by a machine learning.
-TODO: Cite papers that call for sparsity and list approaches.
-
-Additivity means that as little interaction between the features as possible should be modeled.
-TODO: Talk about LMs, GAMS, ...
-
-Simplicity means that the functional form of the feature effects should be as simple as possible.
-TODO: Talk about LMs, GAMs, penalization. CITE aproaches.
-TODO: Cite monotonicity approaches
-
-
 % =============================================================================
 % General idea in words
 % =============================================================================
@@ -31,11 +14,16 @@ With a decomposition, we can identify individual parts of the prediction functio
 % Decomposition and Simplification
 % =============================================================================
 We take the formula from (TODO:Ref formula from related-work) and sort the compoenents in the following way to emphasize how we are going to measure the complexity.
-\begin{eqnarray} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S}(x_S)}_{\text{Higher order effects}} \\
+\begin{eqnarray} f(x) % = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S}(x_S)}^{\text{Higher order effects}} \\
+=&\underbrace{f_0 + \sum_{j=1}^p \overbrace{f_j(x_j)}^\text{AMEC: How complex?} + \overbrace{IA(x)}^{\text{IA: How much interaction?}}}_{\text{NF: How many feature used?}}
 \end{eqnarray}
 
 This way of decomposing the function shows three parts:
 A constant term, the sum of main effects and the sum of all interaction effects (2nd and higher-order feature effects).
+% =============================================================================
+% Replace components with ALE
+% =============================================================================
+Based on the ALE decomposition, we estimate  the constant with the mean predictions $f_0 = \frac{1}{n}\sum_{i=1}^n \hat{f}(\xi)$ and the main effects with first order ALE plots $f_j(x_j) = f_{j, ALE}(x_j)$
 
 
 % =============================================================================
@@ -50,10 +38,6 @@ The second part is tougher to visualize or to grasp, as it contains arbitrary hi
 
 
 
-% =============================================================================
-% Replace components with ALE
-% =============================================================================
-$$f(x) = \underbrace{f_0}_{mean} + \underbrace{f_{1, ALE}(x_1) + \ldots f_{p, ALE}(x_p)}_\text{1st order effects} + \underbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S, ALE}(x_S)}_{\text{Higher order effects}}$$
 
 
 
@@ -65,37 +49,25 @@ $$f(x) = \underbrace{f_0}_{mean} + \underbrace{f_{1, ALE}(x_1) + \ldots f_{p, AL
 
 We use the ALE decomposition \citep{apley2016visualizing} for decomposing the prediction function $f(x)$ into its lower order effects.
 Uncentered ALE main effects are defined in the following way.
-$$\tilde{f}_{j,ALE}(x_j) = \int_{z_{0,j}}^{x_j}\int P_{-j|j}(x_{-j}|z_j)f^j(z_j, x_{-j})dx_{-j}dz_j$$
-where $f^j$ is the partial derivative of $f(x)$ with respect to $x_j$, defined as:
-$$f^j = \frac{\delta f(x_j, x_{-j})}{\delta x_j}$$
+\begin{eqnarray}
+\tilde{f}_{j,ALE}(x_j) = \int_{z_{0,j}}^{z_j}\int P_{-j|j}(x_{-j}|z_j)\frac{\delta f(z_j, x_{-j})}{\delta z_j}(z_j, x_{-j})dx_{-j}dz_j
+\end{eqnarray}
+
 j is the index of the feature for which to compute the main effect.
 $x_{-j}$ deontes the subset of the p features that excludes feature j.
-Let $z_0 = (z_{0,1}, z_{0,2}, \ldots, z_{0,d})$ be the approximate lower bounds for each element of the features X.
-The AL effects are centered so that the expected ALE value is zero:
-\begin{eqnarray*}
-f_{j,ALE}(x_j) = & \tilde{f}_{j,ALE}(x_j) - \mathbb{E}_{X_j}(\tilde{f}_{j,ALE}(X_j)) \\
-               = & \tilde{f}_{j,ALE}(x_j) - \int P_j(z_j)\tilde{f}_{j,ALE}(z_j)dz_j \\
-\end{eqnarray*}
 $X_j$ refers to the j-the feature as a random variable.
 $P_j$ is the distribution of the j-the feature.
+
+The AL effects are centered so that the expected ALE value is zero:
+\begin{eqnarray}
+f_{j,ALE}(x_j) = & \tilde{f}_{j,ALE}(x_j) - \mathbb{E}_{X_j}(\tilde{f}_{j,ALE}(X_j)) \\
+               = & \tilde{f}_{j,ALE}(x_j) - \int P_j(z_j)\tilde{f}_{j,ALE}(z_j)dz_j
+\end{eqnarray}
+
+
+
 The estimation of main ALE relies on discretizing the feature into intervals, e.g. by quantiles.
-This partition of the feature space is denoted by:
-$$N_j(k) = \left(z_\{k-1\},z_\{k,j\}\right], k=1,\ldots,K$$
-K is the number of intervals.
-Usually $z_{k,j}$ chosen as the $k/K$ quantile of empirical distriubtion of the j-th feature.
-$z_{0,j}$ just bellow smallest observation, $z_{K,j}$ as the largest observation.
-ALE also works when f is not differentiable because the estimation is based on discretization of input.
-We only need the main effects, so we refrain from showing how higher-order effects are defined and to be estimated here.
-
-The ALE decomposition can be estimated via:
-
-Uncentered:
-$$\hat{\tilde{f}}_{j,ALE}(x)=\sum_{k=1}^{k_j(x)}\frac{1}{n_j(k)}\sum_{i:x_{j}^{(i)}\in{}N_j(k)}\left[f(z_{k,j},x^{(i)}_{\setminus{}j})-f(z_{k-1,j},x^{(i)}_{\setminus{}j})\right]$$
-
-
-Centered:
-$$\hat{f}_{j,ALE}(x)=\hat{\tilde{f}}_{j,ALE}(x)-\frac{1}{n}\sum_{i=1}^{n}\hat{\tilde{f}}_{j,ALE}(x^{(i)}_{j})$$
-
+For the actual estimation we refer to \citep{apley2016visualizing}
 % Categorical features
 Categorical features require an ordering of the categories so that accumulated local effects can be estimated.
 Any ordering of the categories will yield a valid ALE, but the interpretation differs, because category effects are interpreted in terms of changes to the neighbouring categories.

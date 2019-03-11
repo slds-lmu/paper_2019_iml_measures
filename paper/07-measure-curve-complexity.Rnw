@@ -270,7 +270,7 @@ tab = data.frame(
   "AMEC" = c(fc1$c_wmean, fc2$c_wmean, fc3$c_wmean))
 
 caption = "Increasing the tree depth always increases number of terminal nodes, but the complexity measure increases at some point because the prediction function can be approximated by a single linear function."
-print.xtable(xtable(tab), sanitize.text.function = as.is, booktabs = TRUE, caption = caption, label = "tab:tree")
+print.xtable(xtable(tab, caption = caption), sanitize.text.function = as.is, booktabs = TRUE,  label = "tab:tree")
 @
 
 
@@ -304,7 +304,7 @@ print.xtable(xtable(tab), sanitize.text.function = as.is, booktabs = TRUE, capti
 
 <<spark-table, dependson="epsilons", results="asis", eval=FALSE>>=
 dat = data.frame(test = c(1,2), sp = c(spark(fc$approx_models$V1), spark(fc$approx_models$V2)), stringsAsFactors = FALSE)
-xtable::print.xtable(xtable::xtable(dat), sanitize.text.function = xtable::as.is)
+print.xtable(xtable(dat), sanitize.text.function = as.is)
 @
 
 

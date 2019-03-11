@@ -2,35 +2,31 @@
 \section{Introduction}
 \label{sec:introduction}
 
-% =============================================================================
-% Machine learing big, interpretability lacking
-% =============================================================================
-Machine learning is often considered to create black box models that don't provide any direct explanation for their predictions.
-Machine learning models often outperform models with more restrictive ways to model the relationship between features like linear models and decisions terms, especially in cases where the response is a non-linear function of the inputs with a lot of interactions.
+%==============================================================================
+% Two flawed ways of interpretability
+%==============================================================================
+Predictive models are optimized for predictive performance.
+Additionally it is often required that the models can be interpreted to make predictions actionable, gain trust, meet regulatory requirements, generate insights, etc..
+The two objectives of interpretability and predictive performance usually come in a trade-off.
+Black box machine learning models like gradient boosting and neural networks often achieve a high predictive performance compared to structurally simpler models like linear models and decision trees, but are usually opaque.
+To achieve interpretability, practitioners usually choose one of two approaches:
+Either they apriori select a model class that is deemed interpretable (e.g. linear regression models) as is common in fields like life sciences and social sciences \citep{Liption2016}, or they consider all kinds of possible models, select the one with the best predictive performance and apply post-hoc interpretation methods.
+These methods quantify the effects features have on the prediction  \citep{friedman2001greedy,goldstein2015peeking,apley2016visualizing}, compute feature importances  \citep{Fisher2018, casalicchio2018visualizing} or explain individual predictions  \citep{lundberg2017unified,vstrumbelj2014explaining,Ribeiro2016b}.
 %\citep{fernandez2014we}.
-
-
 % =============================================================================
-% Some for adding interpretability
+% Problems with post-hoc
 % =============================================================================
-Due to their better interpretability, linear regression models an decision trees are preferred in the life science and social sciences \citep{Lipton2016}.
-But also for black box models we have a lot of methods to explain some behaviors and explain individual predictions.
-Here we list foremost model-agnostic methods:
-There are methods to describe the effect features have on the predition \citep{friedman2001greedy,goldstein2015peeking,apley2016visualizing}.
-Other methods rank the importance of the features \citep{Fisher2018, casalicchio2018visualizing}.
-And there are many options for explaining individual predictions \citep{lundberg2017unified,vstrumbelj2014explaining,Ribeiro2016b}.
-Furthermore we can discover influential data points \citep{Datta2016} and prototypes and criticisms \citep{kim2016examples}.
+Model-agnostic post-hoc interpretation methods can be used with any model, regardless of how complex the model is.
+Yet the usefulness and reliability of these methods still is tied to properties of the model.
+A lack of sparseness, complex relationships between features and prediction and interactions cause a detoriation of post-hoc interpretations:
+Interpretations become more unmanageable, verbose and unreliable, when more features were used, when feature effects diverge from simple relationships (e.g. from linear to non-linear), when the prediction heavily relies on feature interactions.
 
 
+TODO: CONTINUE HERE
 
 % =============================================================================
 % Model selection as use case
 % =============================================================================
-There are many different models in machine learning.
-Usually the one is selected with the best performance.
-Or some model class is selected a priori because of some restrictions of the relationships it can model and because people claim they are interpretable.
-For example linear models for interpretation of parameters.
-Or decision trees for their simple structure.
 But even within those classes we have huge differences: A tree with 4 terminal nodes is very different from a tree with 40 terminal nodes.
 How do we compare the interpretability between a decision tree and a decision list or a linear model or a support vector machine?
 Little work has been done in comparing the complexity among models.
@@ -38,31 +34,18 @@ An xgboost model with a maximum depth of 1 fits an additive model and might be l
 Proposed measures have two immediate use cases:
 Comparison of multiple models and assesment of how well other interpretation methods will work.
 
-% =============================================================================
-% Problems with post-hoc
-% =============================================================================
-While in theory post-hoc interpretation methods can always be applied, their usefulness is influenced by properties of the model.
-A lack of sparseness, complex relationships between features and prediction and interactions cause a detoriation of post-hoc methods.
-The more features were used in the model, the more feature effect plots, feature importance values and so on the user has to look at.
-The more the feature effects diverge from a simple linear or step function relationship, the more numbers and words are needed to describe the effect.
-The more interactions, the less reliable global average of feature effects are, since interactions can lead to opposing mutually cancelling effects of subgroups.
-Also approximation like global surrogates or LIME with additive models will have a low fidelity.
-
 
 % =============================================================================
 % Need interpretability measures
 % =============================================================================
 We need model-agnostic measures says \citep{ruping2006learning}.
-Current formal complexity measures are either model-specific (or for one type of model) like the depth of a decision tree or the degrees of freedom in a GAM.
-Some only work for a specific class of models like AIC.
-Some are model-agnostic, but rather simplistic, like the number of features used.
 Tradeoff between accuracy and interpretability has to be decided by the user.
 Arguments for Multiobjective instead of weighted single objective.f \citep{freitas2004critical}
 \citep{bibal2016interpretability} authors suggest that we need to have interpretability across different models.
 
 
 % =============================================================================
-% Our solution
+% Our solution and novelty
 % =============================================================================
 We address this by using model-agnostic measures of model complexity that can be applied to the model.
 We suggest to measure the number of features used in the model, the non-linearity of the feature effects and the interaction effects.

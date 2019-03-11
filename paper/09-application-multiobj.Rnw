@@ -13,7 +13,7 @@ GRID.SIZE = 50
 wine = read.csv(here("./data/winequalityN.csv"))
 wine = na.omit(wine)
 
-DEBUG_MODE = TRUE
+DEBUG_MODE = FALSE
 
 if(DEBUG_MODE) {
   WINE_SAMPLE = sample(1:nrow(wine), size = 500)
@@ -33,9 +33,9 @@ task.dat = getTaskData(task)
 @
 
 <<mo-setup>>=
-n.folds = 2
+n.folds = 5
 surrogate.ntree = 200
-n.initial.design = 40L
+n.initial.design = 100L
 infill.criterion = crit.cb
 n.cores = 1
 @

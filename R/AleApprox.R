@@ -124,8 +124,14 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
 )
 
 
-
+#' Compute fit of step approximation
+#'
+#' @param par cutoff points
+#' @param dat data.frame with columns ale and n, number of instances
+#' @param SST sum of squares for ALE
+#' @return sum of squared errors
 step_fn = function(par, dat, SST){
+  expect_data_table(dat, any.missing = FALSE)
   breaks = unique(round(par, 0))
   dat$lvl = cut(1:nrow(dat), unique(c(0, breaks, nrow(dat))))
   dat2 = dat[,.(ale_mean = weighted.mean(ale, w = n), n = sum(n)),by = lvl]
@@ -236,18 +242,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
 segment_fn = function(par, ale, SST, x, ale_prediction){
   x_interval = cut(x, breaks = unique(c(min(x), par, max(x))), include.lowest = TRUE)
   dat = data.table(xv = x, interval = x_interval, alev = ale_prediction)
-  # TODO: First check whether step function would be enough
-  dat2 = dat[,.(ale_mean = mean(alev), n = .N), by = interval]
-  # punish empty intervals
-  if(any(dat2$n == 0)) {
-    print("empty interval")
-    return(1)
-  }
-  # ALE plots have mean zero
-  SSM = sum((dat2$ale_mean)^2 * dat2$n)
-  r2step = 1 - (SSM/SST)
   res = dat[, .(ssq(.lm.fit(cbind(rep.int(1, times = length(xv)),xv),alev)$residuals)), by = interval]
-  r2segment = sum(res$V1)/SST
-
-  return(min(r2step, r2segment))
+  error = sum(res$V1)/SST
+  return(error)
 }

@@ -20,19 +20,19 @@ sst.ale.x1 = var(ale.lm1$predict(dat$x.1))
 
 
 test_that("does not accept out of range pars", {
-  expect_error(segment_fn(-10, ale = ale, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale1$predict(dat$x.1)))
+  expect_error(segment_fn(-10, ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale1$predict(dat$x.1)))
 })
 
-test_that("cost always 0 for lm"{
-  expect_equal(0, segment_fn(2,                 ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale1$predict(dat$x.1)))
-  expect_equal(0, segment_fn(c(10, 20, 50, 88), ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale1$predict(dat$x.1)))
-  expect_equal(0, segment_fn(c(1, 99),          ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale1$predict(dat$x.1)))
+test_that("cost always 0 for lm", {
+  expect_equal(0, segment_fn(2,                 ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
+  expect_equal(0, segment_fn(c(10, 20, 50, 88), ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
+  expect_equal(0, segment_fn(c(1, 99),          ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
 })
 
 
 lrn2 = makeLearner("regr.ksvm")
 mod2 = train(lrn2, task)
-pred2 = Predictor$new(mod2, task.dat)
+pred2 = Predictor$new(mod2, dat)
 ale2 = FeatureEffect$new(pred2, feature = "x.1")
 sst2 = ssq(ale2$predict(dat$x.1))
 
@@ -85,11 +85,10 @@ dat = data.frame(mlbench::mlbench.friedman3(n))
 x2_continuous = dat$x.2
 dat$x.2 = cut(dat$x.2, breaks = c(min(dat$x.2), 200, 300, 500, 1000, 1200, max(dat$x.2)), include.lowest = TRUE)
 task = makeRegrTask(data = dat, target = "y")
-task.dat = dat
 
 lrn3 = makeLearner("regr.lm")
 mod3 = train(lrn3, task)
-pred3 = Predictor$new(mod3, task.dat)
+pred3 = Predictor$new(mod3, dat)
 ale3 = FeatureEffect$new(pred3, feature = "x.2")
 sst3 = ssq(ale3$predict(dat$x.2))
 

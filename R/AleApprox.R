@@ -15,7 +15,7 @@ AleApprox = R6::R6Class("AleApprox",
     # prediction function
     predict = NULL,
     # SST of ALE model
-    SST_ale = NULL,
+    ssq_ale = NULL,
     var = NULL,
     shapley_var = NULL,
     max_complex = FALSE,
@@ -31,9 +31,9 @@ AleApprox = R6::R6Class("AleApprox",
       self$feature = ale$feature.name
       private$x = self$ale$predictor$data$get.x()[,self$feature, with=FALSE][[1]]
       private$ale_values = self$ale$predict(private$x)
-      self$SST_ale = ssq(private$ale_values)
+      self$ssq_ale  = ssq(private$ale_values)
       # Variance of the ALE plot weighted by data density
-      self$var = self$SST_ale / length(private$x)
+      self$var = self$ssq_ale  / length(private$x)
     }
   ),
   private = list(
@@ -73,8 +73,8 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
           merge(dat, self$tab, by.x = self$feature, by.y = "x", sort = FALSE)[["pred_approx"]]
         }
         self$approx_values = self$predict(self$ale$predictor$data$get.x())
-        SSE = ssq(self$approx_values -  private$ale_values)
-        self$r2 = 1 - SSE / self$SST_ale
+        ssq_approx_error = ssq(self$approx_values -  private$ale_values)
+        self$r2 = 1 - ssq_approx_error / self$ssq_ale
       }
     },
     approximate = function(){
@@ -93,7 +93,7 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
 
         if(nrow(splits) > BREAK_SAMPLE_SIZE) splits = splits[sample(1:nrow(splits), BREAK_SAMPLE_SIZE),,drop = FALSE]
         ssms = apply(splits, 1, function(splitx) {
-          step_fn(as.numeric(splitx), df, SST = self$SST_ale)
+          step_fn(as.numeric(splitx), df, ssq_ale = self$ssq_ale )
         })
         min_ssms = min(ssms)
         best_split_index = which(ssms == min_ssms)[1]
@@ -128,16 +128,16 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
 #'
 #' @param par cutoff points
 #' @param dat data.frame with columns ale and n, number of instances
-#' @param SST sum of squares for ALE
+#' @param ssq_ale sum of squares for ALE
 #' @return sum of squared errors
-step_fn = function(par, dat, SST){
+step_fn = function(par, dat, ssq_ale){
   expect_data_table(dat, any.missing = FALSE)
   breaks = unique(round(par, 0))
   dat$lvl = cut(1:nrow(dat), unique(c(0, breaks, nrow(dat))))
   dat2 = dat[,.(ale_mean = weighted.mean(ale, w = n), n = sum(n)),by = lvl]
   # ALE plots have mean zero
-  SSM = sum((dat2$ale_mean)^2 * dat2$n)
-  1 - (SSM/SST)
+  ssq_approx = sum((dat2$ale_mean)^2 * dat2$n)
+  1 - (ssq_approx/ssq_ale)
 }
 
 AleNumApprox = R6::R6Class(classname = "AleNumApprox",
@@ -172,16 +172,16 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
           mx$intercept + mx$slope * mx$x
         }
         self$approx_values = self$predict(self$ale$predictor$data$get.x())
-        SSE = ssq(self$approx_values -  private$ale_values)
-        self$r2 = 1 - SSE / self$SST_ale
+        ssq_approx_error = ssq(self$approx_values -  private$ale_values)
+        self$r2 = 1 - ssq_approx_error / self$ssq_ale
       }
     },
     approximate = function(){
       x = private$x
       # test 0 breaks
       mod = lm(private$ale_values ~ x)
-      SSE = ssq(private$ale_values - predict(mod))
-      if(self$SST_ale == 0 || (SSE/self$SST_ale) < self$epsilon) {
+      ssq_approx_error = ssq(private$ale_values - predict(mod))
+      if(self$ssq_ale  == 0 || (ssq_approx_error/self$ssq_ale ) < self$epsilon) {
         if(any(is.na(predict(mod)))) browser()
         if(any(is.na(private$ale_values))) browser()
         self$r2 = get_r2(predict(mod), private$ale_values)
@@ -197,7 +197,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         upper = as.numeric(rep(max(x), times = n_breaks))
         init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
         opt_gensa = GenSA(par = init_breaks, segment_fn, lower, upper, ale = self$ale,
-          control = list(maxit = 100), self$SST_ale,
+          control = list(maxit = 100), self$ssq_ale ,
           x = x, ale_prediction = private$ale_values)
         pars = opt_gensa$par
         if(opt_gensa$value <= self$epsilon)  break()
@@ -239,10 +239,10 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
 #' Function to optimize for ALE approx
 #'
 #' @param par The breakpoints
-segment_fn = function(par, ale, SST, x, ale_prediction){
+segment_fn = function(par, ale, ssq_ale, x, ale_prediction){
   x_interval = cut(x, breaks = unique(c(min(x), par, max(x))), include.lowest = TRUE)
   dat = data.table(xv = x, interval = x_interval, alev = ale_prediction)
   res = dat[, .(ssq(.lm.fit(cbind(rep.int(1, times = length(xv)),xv),alev)$residuals)), by = interval]
-  error = sum(res$V1)/SST
+  error = sum(res$V1)/ssq_ale
   return(error)
 }

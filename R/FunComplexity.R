@@ -67,21 +67,21 @@ FunComplexity = R6::R6Class(
     # Feature matrix
     X = NULL,
     # SST of black box model
-    SST = NULL,
+    ssq_bb = NULL,
     # SSE of 1st-order ALE model
-    SSE = NULL,
+    ssq_1st_order_e = NULL,
     # The mean prediction of the black box predictor
     mean_pred = NULL,
     measure_r2_1st_ale = function(){
       if(is.null(private$multiClass) || !private$multiClass) {
         predictions = self$predictor$predict(private$X)[[1]]
         ale_predictions = self$predict(private$X)
-        private$SST = ssq(predictions - private$mean_pred)
-        if(private$SST == 0) {
+        private$ssq_bb = ssq(predictions - private$mean_pred)
+        if(private$ssq_bb == 0) {
           self$r2 = 1
         } else {
-          private$SSE = ssq(ale_predictions - predictions)
-          self$r2 = 1 - private$SSE/private$SST
+          private$ssq_1st_order_e = ssq(ale_predictions - predictions)
+          self$r2 = 1 - private$ssq_1st_order_e/private$ssq_bb
         }
       } else {
         stop("Does not work for multiClass")

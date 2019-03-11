@@ -20,13 +20,13 @@ sst.ale.x1 = var(ale.lm1$predict(dat$x.1))
 
 
 test_that("does not accept out of range pars", {
-  expect_error(segment_fn(-10, ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale1$predict(dat$x.1)))
+  expect_error(segment_fn(-10, ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale1$predict(dat$x.1)))
 })
 
 test_that("cost always 0 for lm", {
-  expect_equal(0, segment_fn(2,                 ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
-  expect_equal(0, segment_fn(c(10, 20, 50, 88), ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
-  expect_equal(0, segment_fn(c(1, 99),          ale = ale.lm1, SST=sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
+  expect_equal(0, segment_fn(2,                 ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
+  expect_equal(0, segment_fn(c(10, 20, 50, 88), ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
+  expect_equal(0, segment_fn(c(1, 99),          ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
 })
 
 
@@ -43,7 +43,7 @@ test_that("cost matches correct cost", {
   pred = ale2$predict(dat$x.1)
   mod = lm(pred ~ dat$x.1 * x.cut)
   eps = sum(ssq(mod$residuals)) / sst2
-  expect_equal(eps,segment_fn(pars, ale = ale2, SST=sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
+  expect_equal(eps,segment_fn(pars, ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
 
 
   pars = c(66)
@@ -51,7 +51,7 @@ test_that("cost matches correct cost", {
   pred = ale2$predict(dat$x.1)
   mod = lm(pred ~ dat$x.1 * x.cut)
   eps = sum(ssq(mod$residuals)) / sst2
-  expect_equal(eps,segment_fn(pars, ale = ale2, SST=sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
+  expect_equal(eps,segment_fn(pars, ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
 
 
   pars = 1:10
@@ -59,18 +59,18 @@ test_that("cost matches correct cost", {
   pred = ale2$predict(dat$x.1)
   mod = lm(pred ~ dat$x.1 * x.cut)
   eps = sum(ssq(mod$residuals)) / sst2
-  expect_equal(eps,segment_fn(pars, ale = ale2, SST=sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
+  expect_equal(eps,segment_fn(pars, ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
 })
 
 
 test_that("order of pars irrelevant", {
-  expect_equal(segment_fn(c(10, 50, 60), ale = ale2, SST=sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)),
-    segment_fn(c(50, 10, 60), ale = ale2, SST=sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
+  expect_equal(segment_fn(c(10, 50, 60), ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)),
+    segment_fn(c(50, 10, 60), ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
 
   ale2 = FeatureEffect$new(pred2, feature = "x.2")
   sst2 = var(ale2$predict(dat$x.2))
-  expect_equal(segment_fn(c(1000, 500, 600), ale = ale2, SST=sst2, x = dat$x.2, ale_prediction = ale2$predict(dat$x.2)),
-    segment_fn(c(500, 1000, 600), ale = ale2, SST=sst2, x = dat$x.2, ale_prediction = ale2$predict(dat$x.2)))
+  expect_equal(segment_fn(c(1000, 500, 600), ale = ale2, ssq_ale =sst2, x = dat$x.2, ale_prediction = ale2$predict(dat$x.2)),
+    segment_fn(c(500, 1000, 600), ale = ale2, ssq_ale =sst2, x = dat$x.2, ale_prediction = ale2$predict(dat$x.2)))
 })
 
 
@@ -97,7 +97,7 @@ colnames(tab3) = c("ale", "x.2", "type", "n")
 tab3 = data.table(tab3)
 
 test_that("does not accept out of range pars",{
-  expect_error(step_fn(-10, ale = ale3, SST=sst3, x = dat$x.2, ale_prediction = ale1$predict(dat$x.2)))
+  expect_error(step_fn(-10, ale = ale3, ssq_ale =sst3, x = dat$x.2, ale_prediction = ale1$predict(dat$x.2)))
 })
 
 

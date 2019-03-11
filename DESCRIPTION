@@ -21,7 +21,16 @@ Depends: OpenML,
          viridis,
          ltxsparklines,
          xtable,
-	 knitr
+	 knitr,
+	 testthat,
+	 Cairo,
+	mlbench,
+	ranger,
+	kernlab,
+	mco,
+	emoa,
+	kknn,
+	Cubist
 Imports: checkmate,
          mlrMBO,
          rpart

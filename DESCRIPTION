@@ -20,7 +20,8 @@ Depends: OpenML,
          parallelMap,
          viridis,
          ltxsparklines,
-         xtable
+         xtable,
+	 knitr
 Imports: checkmate,
          mlrMBO,
          rpart

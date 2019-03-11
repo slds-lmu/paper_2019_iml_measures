@@ -20,14 +20,22 @@ Depends: OpenML,
          parallelMap,
          viridis,
          ltxsparklines,
-         xtable
+         xtable,
+	 knitr,
+	 testthat,
+	 Cairo,
+	mlbench,
+	ranger,
+	kernlab,
+	mco,
+	emoa,
+	kknn,
+	Cubist
 Imports: checkmate,
          mlrMBO,
          rpart
 Suggests: xgboost,
-          randomForest,
-          svm,
-          ctree
+          randomForest
 License: MIT + file LICENSE
 RoxygenNote: 6.1.0
 VignetteBuilder: knitr

@@ -25,9 +25,7 @@ Imports: checkmate,
          mlrMBO,
          rpart
 Suggests: xgboost,
-          randomForest,
-          svm,
-          ctree
+          randomForest
 License: MIT + file LICENSE
 RoxygenNote: 6.1.0
 VignetteBuilder: knitr

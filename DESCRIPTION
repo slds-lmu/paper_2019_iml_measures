@@ -30,7 +30,9 @@ Depends: OpenML,
 	mco,
 	emoa,
 	kknn,
-	Cubist
+	Cubist,
+	tinytex,
+	mboost
 Imports: checkmate,
          mlrMBO,
          rpart

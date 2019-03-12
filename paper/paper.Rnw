@@ -47,9 +47,6 @@ We optimize model hyperparameters across different types of models for predictiv
 <<03-related-work, child = "03-related-work.Rnw">>=
 @
 
-<<03-desiderata, child = "03-desiderata.Rnw">>=
-@
-
 <<measures, child = "measures.Rnw">>=
 @
 

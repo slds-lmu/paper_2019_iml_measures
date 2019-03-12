@@ -23,7 +23,7 @@ For example a doctor might reject a short decision tree because it is too simpli
 % Model-specific or class-specific measures of interpretability
 % =============================================================================
 Current measures of model complexity or interpretability are usually model-specific, i.e. only models from the same class can be compared (e.g. compare decision trees with different depths, but not a linear model with decision trees).
-Model size is often used as heuristic \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable}} for quantifying how interpretable a model is (e.g. number of decision rules, tree depth, ...).
+Model size is often used as heuristic \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable} for quantifying how interpretable a model is (e.g. number of decision rules, tree depth, ...).
 
 But more concerned with representation of models, not with a number of interpretability that can be attached to a model.
 \citep{Ozhou2018measuring} propose a general form for model interpetability which includes the structural complexity of the model but again compare model-specific measures like number of leaves, average depth and maximum depth of a tree. 
@@ -33,6 +33,8 @@ They both rely on a way to estimate the degrees of freedom and a likelihood func
 Also the tradeoff between interpretability and performance is fixed and only one dimension of interpretability is considered.
 \citep{hauenstein2018computing} use the generalized degrees of freedom to extend the AIC to a model-agnostic measure, but it is computationally expensive as it requires refitting the model multiple times and does not give more granular insight into the complexity.
 
+
+TODO: CONTINUE HERE
 
 % =============================================================================
 % Other approaches

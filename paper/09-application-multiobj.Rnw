@@ -129,7 +129,7 @@ For the initial sample of models/hyperparameters we take a random Latin Hypercub
 % TODO : Create own design to ensure that we have each learner in there.
 %        Maybe it's enough to have a big enough sample
 
-<<mo-run, dependson=c("mo-data", "mo-learners", "mo-setup")>>=
+<<mo-run, dependson=c("mo-data", "mo-learners", "mo-setup"), results='hide'>>=
 resampDescr = makeResampleDesc(method = "CV", iters = n.folds)
 rin = makeResampleInstance(resampDescr, task)
 

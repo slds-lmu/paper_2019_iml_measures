@@ -1,6 +1,6 @@
 \Sexpr{set_parent('paper.Rnw')}
 \subsection{Number of Features}
-\label{sec:interaction}
+\label{sec:nfeatures}
 
 % =============================================================================
 % About sparsity

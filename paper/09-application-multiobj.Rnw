@@ -1,6 +1,6 @@
 \Sexpr{set_parent('paper.Rnw')}
 \section{Application: Multi-objective optimization}
-\label{sec:app2}
+\label{sec:multiobj}
 
 <<mo-data>>=
 devtools::load_all()

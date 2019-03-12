@@ -2,65 +2,36 @@
 \section{Related Work and Background}
 \label{sec:related}
 
-As related work we see other approaches for measuring model complexity for interpretability and methods for decomposing functions on which we build (which is the background).
+In this section we review related approaches for quantifying interpretability and summarize the background on functional decomposition based on which we developed the interpretability measures.
 
-% TODO: Move more stuff from ALE plots to measures and specific measures
-
-\subsection{Measure Interpretability}
+\subsection{Interpretability Measures}
 \label{sec:other}
 % =============================================================================
 % Lack of definition of interpretability
 % =============================================================================
-Interpretability is not well defined \citep{Lipton2016}.
-So we can't measure it really.
-Also other say that what Interpretability is depends on the domain \citep{rudin2018please, freitas2014comprehensible, huysmans2011empirical,ruping2006learning}.
-They implicitly say that we can't boil down interpretability to one specific model that is best in terms of interpretability for all use cases.
-Also we can't have a single number for interpretability, as \citep{askira1998knowledge} argues.
-Many papers rely on intuition in the use of interpretability, which leads to a focus on "white-boxes" (decision trees, decision rules, etc.) and a lack of consideration of "black-boxes" (SVM, neural networks, etc.). \citep{bibal2016interpretability}
-This paper is concerned with model interpretability.
-We propose multiple measures to accomodate different notions of interpretability.
-
-
-
-
-
-% =============================================================================
-% Concepts for interpretability
-% =============================================================================
-
-There are a few concepts of interpretability.
-Other suggested measures of interpretability is to constrain model form:
-Monotonicity constraints: CITE.
-Causality.CITE.
-Additivity. CITE.
-Sparsity. CITE.
-Linearity. CITE.
-
+Interpretability depends on the domain \citep{rudin2018please, freitas2014comprehensible, huysmans2011empirical,ruping2006learning} and is not a well defined property \citep{Lipton2016}.
+\citep{askira1998knowledge} argue that we can't summarize interpretability with a single metric. 
+Many researchers rely on intuition of what interpretability is, which leads to using  structurally simpler models (decision trees, decision rules, ...) instead of black-boxes like SVMs and neural networks \citep{bibal2016interpretability}.
+To address these shortcomings of the definition of interpretability, we propose multiple measures instead of a single one.
+Also, as we will demonstrate, the functional decomposition can also be a starting point for alternative measures, which can accomodate to the domain in which the models are used.
+By offering multiple measures, the tradeoff between them can be adapted in any applicaion.
 \citep{freitas2014comprehensible} says that acceptability and interpretability of a model might not be the same.
 For example a doctor might reject a short decision tree because it is too simplistic.
-According to him, following the medical example of [18], experts can be
-opposed to over-simplistic models.
-% Some directly measurable (e.g. sparsity)
 
 
 % =============================================================================
 % Model-specific or class-specific measures of interpretability
 % =============================================================================
-Existing measures are usuually only comparable within model classes, but not between model classes.
-E.g. you can compare number of leave nodes for trees with different depths.
-But how do you compare the complexity of a decision tree and an SVM?
+Current measures of model complexity or interpretability are usually model-specific, i.e. only models from the same class can be compared (e.g. compare decision trees with different depths, but not a linear model with decision trees).
+Model size is often used as heuristic \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable}} for quantifying how interpretable a model is (e.g. number of decision rules, tree depth, ...).
 
-Model size is often used as heuristic \citep{ruping2006learning,askira1998knowledge}
-For decision trees often the depth or number of nodes \citep{huysmans2011empirical} is reported as measure for interpretability.
-\citep{huysmans2011empirical} compared interpretability of decision trees, tables, ...
-Found that models with less depth worked better in their study.
 But more concerned with representation of models, not with a number of interpretability that can be attached to a model.
-In scalable bayesian rule lists \citep{yang2017scalable}, sparsity will be measured as the number of leaves in a decision tree or as the number of rules in a rule list.
-Other approach, but only for decision tree and logistic regression: "Measuring Interpretability for Different Types
-of Machine Learning Models" by Qing Zhou 1 , Fenglu Liao 1 , Chao Mou 1(and) , and Ping Wang 2
-AIC \citep{akaike1998information}, BIC \citep{schwarz1978estimating} are tradeoff measure between accuracy and interpretability.
-Both measures require to know the number of model parameters.
-AIC, BIC combine performance and number of parameters, but only for linear models.
+\citep{Ozhou2018measuring} propose a general form for model interpetability which includes the structural complexity of the model but again compare model-specific measures like number of leaves, average depth and maximum depth of a tree. 
+
+Akaikes Information Criterion (AIC)  \citep{akaike1998information} and the  Bayesian Information Criterion (BIC)  \citep{schwarz1978estimating} are more broadly applicable tradeoff measure between accuracy and interpretability.
+They both rely on a way to estimate the degrees of freedom and a likelihood function, which restricts the applicability to certain model classes (e.g. linear models).
+Also the tradeoff between interpretability and performance is fixed and only one dimension of interpretability is considered.
+\citep{hauenstein2018computing} use the generalized degrees of freedom to extend the AIC to a model-agnostic measure, but it is computationally expensive as it requires refitting the model multiple times and does not give more granular insight into the complexity.
 
 
 % =============================================================================
@@ -70,6 +41,17 @@ TIP: Typifying the Interpretability of Procedures => They suggest to measure imp
 % Measruing interpretability through users.
 \citep{friedler2019assessing} measure with users if models are intepretable and proopose as objective measure the runtime operation count of the model.
 We take a different approach because we look at prediction function from the outside, not into the model structure and parameters.
+
+% =============================================================================
+% Concepts for interpretability
+% =============================================================================
+%There are a few concepts of interpretability.
+%Other suggested measures of interpretability is to constrain model form:
+%Monotonicity constraints: CITE.
+%Causality.CITE.
+%Additivity. CITE.
+%Sparsity. CITE.
+%Linearity. CITE.
 
 
 % =============================================================================

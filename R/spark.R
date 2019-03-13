@@ -10,7 +10,6 @@ spark  = function(obj, ylim = c(NA, NA), approx = FALSE, color = "black",...){
   assert_numeric(ylim, len = 2, null.ok = TRUE)
   assert_multi_class(obj, c("AleNumApprox", "FeatureEffect"))
 
-
   if(inherits(obj, "AleApprox")) {
     # removes intervals at min and max
     xspikes = obj$breaks[-c(1,length(obj$breaks))]

@@ -17,6 +17,10 @@ Also, as we will demonstrate, the functional decomposition can also be a startin
 By offering multiple measures, the tradeoff between them can be adapted in any applicaion.
 \citep{freitas2014comprehensible} says that acceptability and interpretability of a model might not be the same.
 For example a doctor might reject a short decision tree because it is too simplistic.
+Not always is a strictly smaller model (in terms of nodes) more accepted by the user.
+\citep{lavravc1999selected} showed a case where medical experts preferred larger trees, since shor trees were not as informative for their decision making.
+Doshi et. al  \citep{doshi2017towards} propose different levels at which interpretation methods can be evaluated: application-grounded evaluation (real humans, real tasks), human-grounded (real humans, simple tasks, e.g. through mechanical turk) and functionally-grounded evaluation (no humans, proxy tasks).
+Our proposed measures evaluated the interpretability at the functional level.
 
 
 % =============================================================================
@@ -33,46 +37,19 @@ They both rely on a way to estimate the degrees of freedom and a likelihood func
 Also the tradeoff between interpretability and performance is fixed and only one dimension of interpretability is considered.
 \citep{hauenstein2018computing} use the generalized degrees of freedom to extend the AIC to a model-agnostic measure, but it is computationally expensive as it requires refitting the model multiple times and does not give more granular insight into the complexity.
 
-
-TODO: CONTINUE HERE
-
 % =============================================================================
 % Other approaches
 % =============================================================================
-TIP: Typifying the Interpretability of Procedures => They suggest to measure improvement in helping with some kind of task. \citep{dhurandhar2017tip}
-% Measruing interpretability through users.
-\citep{friedler2019assessing} measure with users if models are intepretable and proopose as objective measure the runtime operation count of the model.
-We take a different approach because we look at prediction function from the outside, not into the model structure and parameters.
-
-% =============================================================================
-% Concepts for interpretability
-% =============================================================================
-%There are a few concepts of interpretability.
-%Other suggested measures of interpretability is to constrain model form:
-%Monotonicity constraints: CITE.
-%Causality.CITE.
-%Additivity. CITE.
-%Sparsity. CITE.
-%Linearity. CITE.
-
-
-% =============================================================================
-% Need model-agnostic measures for comparison
-% =============================================================================
-Lack of model-agnostic measures of interpretability, which are needed to compare different model choices.
-Towards A rigourous science ... \citep{doshi2017towards}
-In this framework, we are at function level.
-Not always is a strictly smaller model (in terms of nodes) more accepted by the user.
-\citep{lavravc1999selected} showed a case where medical experts preferred larger trees, since shor trees were not as informative for their decision making.
-
-
-
+Other approaches involve measuring interpretability through surveys and experiments involving people.
+Dhurandhar et. al 2018 \citep{dhurandhar} propose to measure interpretability as improvement in the task the machine learning model originally tries to solve
+\citep{friedler2019assessing} measure whether models are intepretable in user studies and proopose as objective measure the runtime operation count of the model.
+Ribeiro et. 2017 \citep{Ribeiro2016b} al measured the interpretability of the LIME approach through user studies.
 % =============================================================================
 % Bridge to decomposition
 % =============================================================================
-This paper does not look at interpretability from a represntation level, but from the functional complexity of the decomposition.
-Representation is independent from that.
-We would not use ALE plot for the tree, but could still show the tree how you visualize trees, but use interpretability measures to compare with other trees.
+Our approach differs because we don't involve humans, but also because we don't measure the interpretability through how the model is represented, but rather how complex the components of the functional decomposition is.
+For example, a decision tree can be represented by a tree structure or a set of decision rules, yet the functional complexity remains the same.
+On the other hand, the representation of a tree can become more complex, while the functional complexity decreases (because the tree approximates a linear function).
 
 
 \subsection{Functional Decomposition}
@@ -151,6 +128,19 @@ Also ALE plots have software solutions, see \citep{iml,alepackage}.
 % =============================================================================
 % =============================================================================
 % =============================================================================
+
+% =============================================================================
+% Concepts for interpretability
+% =============================================================================
+%There are a few concepts of interpretability.
+%Other suggested measures of interpretability is to constrain model form:
+%Monotonicity constraints: CITE.
+%Causality.CITE.
+%Additivity. CITE.
+%Sparsity. CITE.
+%Linearity. CITE.
+
+
 
 
 

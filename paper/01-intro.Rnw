@@ -7,7 +7,7 @@
 %==============================================================================
 Predictive models are optimized for predictive performance.
 Additionally it is often required that the models can be interpreted to make predictions actionable, gain trust, meet regulatory requirements, generate insights, etc..
-The two objectives of interpretability and predictive performance usually come in a trade-off.
+Interpretability and predictive performance usually come in a trade-off.
 Black box machine learning models like gradient boosting and neural networks often achieve a high predictive performance compared to structurally simpler models like linear models and decision trees, but are usually opaque.
 %==============================================================================
 % Two flawed ways of increasing interpretability

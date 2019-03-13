@@ -74,7 +74,7 @@ base.learners.regr = list(
   makeLearner("regr.xgboost.mod"),
   makeLearner("regr.rpart"),
   makeLearner("regr.lm"),
-  makeLearner("regr.cubist"),
+  #makeLearner("regr.cubist"),
   makeLearner("regr.featureless", method = "median")
 )
 
@@ -82,8 +82,7 @@ lrn.regr = makeModelMultiplexer(base.learners.regr)
 
 ps.regr = makeModelMultiplexerParamSet(lrn.regr,
   regr.ksvm = makeParamSet(
-    makeNumericParam("C", lower = 0, upper = 100),
-    makeDiscreteParam("kernel", values = c("rbfdot", "vanilladot", "polydot"))
+    makeNumericParam("C", lower = 0, upper = 100)
   ),
   regr.kknn = makeParamSet(
     makeIntegerParam("k", lower = 1, upper = 10),
@@ -100,9 +99,6 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
   ),
   regr.rpart = makeParamSet(
     makeIntegerParam ("maxdepth" , lower = 1, upper = 6, requires = quote(booster == "gbtree"))
-  ),
-  regr.cubist = makeParamSet(
-    makeIntegerParam("rules", lower = 1, upper = 500)
   )
 )
 @
@@ -319,6 +315,60 @@ plot(fc, nrow = 2)
 @
 
 The selected model is a \Sexpr{best.model$selected.learner} using \Sexpr{best.model$y_4} features, an MAE of \Sexpr{best.model$y_1}, \Sexpr{best.model$y_3} variance explained due to interactions and average complexity of \Sexpr{best.model$y_2}.
+
+
+TODO: Implement following table for different tradeoffs: best performance, best NF, best IA, best AMEC, best 1:1 tradeoff, ...
+TODO: Properly set y limits (based on actual min and max)
+<<spark-table-multiobj, results='asis', dependson="mo-run">>=
+
+#' Compute model summary
+#'
+#' @param pred Predictor
+#' @param ylim the y-axis limits for the sparklines
+#' @return character vector with NF, IA, AMEC and sparklines for all features
+get_spark_col = function(pred, ylim = c(NA, NA)) {
+  fc = FunComplexity$new(pred)
+  sparklns = sapply(fc$effects, function(eff) {
+    if(all(eff$results$.ale == 0)) {
+      ""
+    } else {
+      spark(eff, width = 4, ylim = ylim)
+    }
+  })
+  res = c("NF" = fc$n_features,
+    "IA"= sprintf("%.2f", 1 - fc$r2),
+    "AMEC" = sprintf("%.2f", fc$c_wmean),
+    sparklns)
+  as.character(res)
+}
+
+#' Compute model summaries for subset off pareto set
+#'
+#' @param paretor_set the mbo pareto set
+#' @param indices the subset indices for which to compute the summaries
+#' @param ylim the y-axis limits for the sparklines
+#' @return data.frame with NF, IA, AMEC and sparklines for all features. columns are models
+get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA)) {
+  pareto_set = mbo_obj$pareto.set
+  pareto_front = mbo_obj$pareto.front
+  res = lapply(indices, function(i){
+    pp = pareto_set[[i]]
+    pp = pp[!is.na(pp)]
+    lrn = setHyperPars(lrn.regr, par.vals = pp)
+    mod = train(lrn, task)
+    pred = Predictor$new(mod, task.dat)
+    c(pareto_front[i, "y_1"], unlist(get_spark_col(pred, ylim = ylim)))
+  })
+  data.frame(res)
+}
+
+indices = c(1,2,3)
+tab = get_spark_table(mbo_obj = mbo.iml, indices = indices, ylim = c(-3, 3))
+colnames(tab) = best.models.print$descr[best.models.print$index %in% indices]
+rownames(tab) = c("MAE", "NF", "IA", "AMEC", setdiff(colnames(task.dat), "quality"))
+print.xtable(xtable(tab), sanitize.text.function = as.is)
+@
+
 
 % =============================================================================
 % Another interesting model

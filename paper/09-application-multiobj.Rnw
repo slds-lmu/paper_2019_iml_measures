@@ -299,26 +299,11 @@ ggplot(best.models.print,aes(x = performance, y = simplicity + additivity + spar
 % =============================================================================
 % Best performing model
 % =============================================================================
-Figure \ref{fig:mo-best-performance} shows the main effects of the best performing model.
-
-<<mo-best-performance, dependson="mo-run">>=
-## Extract parameters and refit best solutions
-best.model = best.models.print[best.models$y_1 == min(best.models$y_1), ][1,]
-best_index = best.model$index
-pp = mbo.iml$pareto.set[[best_index]]
-pp = pp[!is.na(pp)]
-lrn = setHyperPars(lrn.regr, par.vals = pp)
-mod = train(lrn, task)
-pred = Predictor$new(mod, task.dat)
-fc = FunComplexity$new(pred)
-plot(fc, nrow = 2)
-@
-
-The selected model is a \Sexpr{best.model$selected.learner} using \Sexpr{best.model$y_4} features, an MAE of \Sexpr{best.model$y_1}, \Sexpr{best.model$y_3} variance explained due to interactions and average complexity of \Sexpr{best.model$y_2}.
-
+TAble \ref{tab:spark-table-multiobj} shows the main effects of the best performing model.
 
 TODO: Implement following table for different tradeoffs: best performance, best NF, best IA, best AMEC, best 1:1 tradeoff, ...
 TODO: Properly set y limits (based on actual min and max)
+TODO: Caption which model is which
 <<spark-table-multiobj, results='asis', dependson="mo-run">>=
 
 #' Compute model summary
@@ -362,7 +347,22 @@ get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA)) {
   data.frame(res)
 }
 
-indices = c(1,2,3)
+best_index  = best.models.print$index[best.models$y_1 == min(best.models$y_1)][1]
+tradeoff_measure =  best.models.print$performance + (1/3) * (best.models.print$additivity + best.models.print$sparsity + best.models.print$simplicity)
+
+best_with_less7 = best.models %>%
+  filter(y_4 <= 7) %>%
+  filter(y_1 == min(y_1)) %>%
+  select(index)
+
+best_0IA_1C = best.models %>%
+  filter(y_2 == 1, y_3 == 0) %>%
+  filter(y_1 == min(y_1)) %>%
+  select(index)
+
+best_tradeoff_model = best.models.print$index[which(tradeoff_measure == max(tradeoff_measure))][1]
+
+indices = unlist(c(best_index[[1]], best_with_less7[[1]], best_0IA_1C[1], best_tradeoff_model))
 tab = get_spark_table(mbo_obj = mbo.iml, indices = indices, ylim = c(-3, 3))
 colnames(tab) = best.models.print$descr[best.models.print$index %in% indices]
 rownames(tab) = c("MAE", "NF", "IA", "AMEC", setdiff(colnames(task.dat), "quality"))
@@ -373,8 +373,6 @@ print.xtable(xtable(tab), sanitize.text.function = as.is)
 % =============================================================================
 % Another interesting model
 % =============================================================================
-Figure \ref{fig:mo-interesting-models} shows the main effects of another model of the pareto front.
-
 In general, each of the models optimizes a different tradeoff:
 
 $$\lambda_1 \text{Performance} + \lambda_2\text{Simplicity} + \lambda_3 \text{Additivity} + \lambda_4 \text{Sparsity}) $$
@@ -382,26 +380,5 @@ $$\lambda_1 \text{Performance} + \lambda_2\text{Simplicity} + \lambda_3 \text{Ad
 By fixing the $\lambda$'s we get certain single models that are optimal.\
 If we set $\lambda_1 = \frac{3}{6}, \lambda_2=\frac{1}{6}, \lambda_3=\frac{1}{6}, \lambda_4=\frac{1}{6}$, we weight performance as much as the three interpretability measures combined.
 And we get the following model as solution:
-
-<<mo-interesting-solution, dependson="mo-run">>=
-## Extract parameters and refit best solutions
-tradeoff_measure =  best.models.print$performance + (1/3) * (best.models.print$additivity + best.models.print$sparsity + best.models.print$simplicity)
-
-best.tradeoff.model = best.models.print[which(tradeoff_measure == max(tradeoff_measure)), ][1,]
-
-pareto_index = best.tradeoff.model$index
-pp = mbo.iml$pareto.set[[pareto_index]]
-pp = pp[!is.na(pp)]
-lrn = setHyperPars(lrn.regr, par.vals = pp)
-mod = train(lrn, task)
-pred = Predictor$new(mod, task.dat)
-fc = FunComplexity$new(pred)
-plot(fc, nrow = 1)
-@
-
-
-The selected model is a \Sexpr{best.tradeoff.model$selected.learner} using \Sexpr{best.tradeoff.model$y_4} features, an MAE of \Sexpr{best.tradeoff.model$y_1}, \Sexpr{best.tradeoff.model$y_3} variance explained due to interactions and average complexity of \Sexpr{best.tradeoff.model$y_2}.
-
-
 
 

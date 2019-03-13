@@ -13,6 +13,9 @@ GRID.SIZE = 20
 wine = read.csv(here("./data/winequalityN.csv"))
 wine = na.omit(wine)
 
+# only use white wine
+wine = wine[wine$type == "white", ]
+wine$type = NULL
 DEBUG_MODE = TRUE
 
 if(DEBUG_MODE) {
@@ -52,7 +55,7 @@ As one of the main application of the complexity and interpretability measures, 
 % Wine Data
 % =============================================================================
 For this we work with the wine quality data set \citep{cortez2009modeling}.
-This dataset contains physicochemical properties like alcohol and residual sugar of \Sexpr{nrow(wine)} red and white wines.
+This dataset contains physicochemical properties like alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
 The goal is to predict the quality of the wine which was assessed on a scale from 0 to 10 by three blind ratings and we have the median in the data.
 
 

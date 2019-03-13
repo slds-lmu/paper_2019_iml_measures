@@ -206,8 +206,6 @@ best.models.print$descr = apply(best.models.print, 1, function(row) {
   param_string = paste(param_string, collapse = ",")
   # When model has no parameters
   param_string = gsub("()", "", param_string, fixed = TRUE)
-  # Because I use as.is later with xtable
-  param_string = gsub("_","\_", param_string, fixed = TRUE)
   sprintf("%s (%s)", lrn_name, param_string)
 })
 
@@ -374,6 +372,9 @@ best_tradeoff_model = best.models.print$index[which(tradeoff_measure == max(trad
 indices = unlist(c(best_index[[1]], best_with_less7[[1]], best_0IA_1C[1], best_tradeoff_model))
 tab = get_spark_table(mbo_obj = mbo.iml, indices = indices, ylim = c(-3, 3))
 colnames(tab) = best.models.print$descr[best.models.print$index %in% indices]
+  # Because I use as.is later with xtable
+colnames(tab) = gsub("_","\\_", colnames(tab) , fixed = TRUE)
+
 rownames(tab) = c("MAE", "NF", "IA", "AMEC", setdiff(colnames(task.dat), "quality"))
 print.xtable(xtable(tab), sanitize.text.function = as.is)
 @

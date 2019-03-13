@@ -1,19 +1,19 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Application: Multi-objective optimization}
+\section{Optimization for Performance and Interpretability}
 \label{sec:multiobj}
 
 <<mo-data>>=
 devtools::load_all()
 set.seed(42)
 
-MAX_SEG_CAT = 9
-MAX_SEG_NUM = 5
+MAX_SEG_CAT = 3
+MAX_SEG_NUM = 3
 EPSILON = 0.05
-GRID.SIZE = 50
+GRID.SIZE = 20
 wine = read.csv(here("./data/winequalityN.csv"))
 wine = na.omit(wine)
 
-DEBUG_MODE = FALSE
+DEBUG_MODE = TRUE
 
 if(DEBUG_MODE) {
   WINE_SAMPLE = sample(1:nrow(wine), size = 500)
@@ -33,9 +33,9 @@ task.dat = getTaskData(task)
 @
 
 <<mo-setup>>=
-n.folds = 5
-surrogate.ntree = 200
-n.initial.design = 100L
+n.folds = 2
+surrogate.ntree = 30
+n.initial.design = 30L
 infill.criterion = crit.cb
 n.cores = 1
 @
@@ -308,7 +308,7 @@ TAble \ref{tab:spark-table-multiobj} shows the main effects of the best performi
 TODO: Implement following table for different tradeoffs: best performance, best NF, best IA, best AMEC, best 1:1 tradeoff, ...
 TODO: Properly set y limits (based on actual min and max)
 TODO: Caption which model is which
-<<spark-table-multiobj, results='asis', dependson="mo-run">>=
+<<spark-table-multiobj, results='asis', dependson=c("mo-run", "mo-results-rename")>>=
 
 #' Compute model summary
 #'

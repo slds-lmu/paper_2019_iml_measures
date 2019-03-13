@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Application: Minimizing complexity improves post-hoc methods}
+\section{Minimizing functional complexity improves post-hoc interpretation}
 \label{sec:post-hoc}
 
 

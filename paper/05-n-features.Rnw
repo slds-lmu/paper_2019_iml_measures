@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\subsection{Number of Features}
+\subsection{Number of Features (NF)}
 \label{sec:nfeatures}
 
 % =============================================================================

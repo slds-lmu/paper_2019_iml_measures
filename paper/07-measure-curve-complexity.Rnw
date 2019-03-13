@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\subsection{Measure ALE First Order Complexity}
+\subsection{Average Main Effect Complexity (AMEC)}
 \label{sec:curve}
 
 % =============================================================================

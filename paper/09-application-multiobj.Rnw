@@ -201,6 +201,8 @@ best.models.print$descr = apply(best.models.print, 1, function(row) {
   names(params) = gsub(sprintf("%s.", lrn_name), "", names(params), fixed = TRUE)
   param_string = sprintf("%s:%s", names(params), params)
   param_string = paste(param_string, collapse = ",")
+  # When model has no parameters
+  param_string = gsub("()", "", param_string, fixed = TRUE)
   sprintf("%s (%s)", lrn_name, param_string)
 })
 

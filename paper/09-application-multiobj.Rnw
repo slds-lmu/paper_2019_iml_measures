@@ -207,7 +207,7 @@ best.models.print$descr = apply(best.models.print, 1, function(row) {
   # When model has no parameters
   param_string = gsub("()", "", param_string, fixed = TRUE)
   # Because I use as.is later with xtable
-  param_string = gsub("_","\\_", param_string, fixed = TRUE)
+  param_string = gsub("_","\_", param_string, fixed = TRUE)
   sprintf("%s (%s)", lrn_name, param_string)
 })
 
@@ -311,6 +311,8 @@ TAble \ref{tab:spark-table-multiobj} shows the main effects of the best performi
 TODO: Implement following table for different tradeoffs: best performance, best NF, best IA, best AMEC, best 1:1 tradeoff, ...
 TODO: Properly set y limits (based on actual min and max)
 TODO: Caption which model is which
+TODO: Fix match between colname and model column
+
 <<spark-table-multiobj, results='asis', dependson=c("mo-run", "mo-results-rename")>>=
 
 #' Compute model summary

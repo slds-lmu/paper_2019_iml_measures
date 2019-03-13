@@ -62,7 +62,7 @@ We can decompose any high-dimensional prediction function of a model into a sum 
 Let $\fh(x)$ be the model prediction function that maps the feature $x$ to the prediction $\fh: \mathbb{R}^p \rightarrow \mathbb{R}$ where x is a p-dimensional feature vector: $x = (x_1, \ldots, x_p)$.
 
 We write the decomposition as:
-\begin{eqnarray} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}
+\begin{eqnarray}\label{eqn:decomp} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}
 %\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S)
 \end{eqnarray}
 
@@ -80,7 +80,7 @@ Hooker \citep{hooker2007generalized} defined centering, orthogonality and varian
 % =============================================================================
 % ALE decompositions
 % =============================================================================
-Another approach is the decomposition into Accumulated Local Effects \citep{apley2016visualizingapley2016visualizing} (ALE):
+Another approach is Accumulated Local Effects proposed by \cite{apley2016visualizingapley2016visualizing} (ALE) as a tool for visualizing feature effects, that also represents a decomposition.
 \begin{eqnarray} f(x)  = & f_0 + \sum_{j=1}^p \falej(x_j)+ sum_{j\neq k}^p f_{ALE,jk}(x_j, x_k) + \ldots + f_{ALE,1,\ldots,p}(x_1, \ldots, x_p)
 \end{eqnarray}
 

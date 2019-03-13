@@ -72,6 +72,8 @@ We optimize model hyperparameters across different types of models for predictiv
 <<10-discussion, child = "10-discussion.Rnw">>=
 @
 
+
+
 %
 % ---- Bibliography ----
 %
@@ -83,4 +85,9 @@ We optimize model hyperparameters across different types of models for predictiv
 %
 \bibliographystyle{splncs04}
 \bibliography{Bib}
+
+<<appendix, child = "appendix.Rnw">>=
+@
+
+
 \end{document}

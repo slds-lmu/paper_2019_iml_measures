@@ -6,32 +6,22 @@
 % About sparsity
 % =============================================================================
 We propose a model-agnostic heuristic for estimating the number of features that are used by a model for making predictions.
-Here we clearly distinguish between the number of features that the model was trained on and the features that actually ended up being used by the model.
-The exact method for each model class and implementation would be to inspect the model object and extract the information about which features were used.
-In L1 regularized linear models, we can extract the number of features with a non-zero weight.
-In trees we count the number of features that were used for splitting.
+We distinguish between the number of features the model was trained with and the number features effectively used by the model's prediction function.
 
 % =============================================================================
 % Why model-agnostic
 % =============================================================================\
-If available, model-specific methods for extracting the number of features used by the model are preferable over model-agnostic estimation heuristic.
-We still propose a model-agnostic method because of its generality.
-Model-specific methods have to be defined for each method, and when implementing a general-purpose machine learning interpretation library it's not future proof to create this for every machine learning model.
-In the case that you don't have access directly to a model, but only to the prediction method via API, only a model-agnostic heuristic for counting the number of features is needed.
-Also in cases where the features are transformed before being input into a machine learning model, e.g. sparse Principal Component Analysis or rule mining the model-specific feature-counter can only measure which of the transformed features were used, but not how many of the original features where effectively used for making predictions.
-e.g. you might have 100 features, apply sparse PCA and train a decision tree on the PCA components.
-The tree uses 5 of the components.
-To understand which of the original features are effectively used for the prediction, you would have to take the union of each of the components used features, only for the components used by the tree.
-In an ensemble of models, each of the models must have an exact method for determining the number of features used.
-If only one does not have a model-specific feature-counter, you have to rely on model-agnostic heuristics.
-
-
+If available, model-specific methods for extracting the number of features used by the model are preferable over model-agnostic estimation heuristic, like counting the number of non-zero weights in a sparse linear regression model.
+A model-agnostic heuristic is useful in scenarios where we only have access to the prediction function but not the model internals (e.g. a model provided via WebAPI) or when we can't rely on the availability of an extraction method (e.g. when allowing different models) or when multiple models and or preprocessing steps are combined in a pipeline (e.g. applying sparse principal component analysis to the features and training a decision tree on the components). 
 
 % =============================================================================
 % Feature-count heuristic: intuition
 % =============================================================================
 We propose a feature-permutation based approach to determine how many features are used by the model  for making predictions.
-The rough idea for computing whether an individual feature was used:
+We count a feature as "used" by the model, when changing a feature changes the prediction.
+The heuristic to compute whether a feature $x_j$ was used is described in Algorithm~\ref{algo:nfeat}.
+
+
 Take a sample from the data (can be training or test data), get the model predictions for the sample, replace the values for the feature in question with values randomly sampled from the data, get the predictions for the manipulated instances and measure the differences.
 If any of the differences is bigger than zero, the feature was used for the prediction
 We repeat the permutation step a couple of times to reduce the false negative rate.
@@ -43,81 +33,48 @@ The procedure is formally described in Algorithm~\ref{algo:nfeat}
 % =============================================================================
 The algorithm for computing if feature j was used:
 \begin{algorithm}
-\caption{Estimate whether feature was used}\label{algo:nfeat}
-\begin{enumerate}
-\item Choose number of sampled instance $M$ and number of shuffle $K$, dataset $\D$
-\item For $k=1,\ldots,K$:
-\begin{enumerate}
-\item Draw M instances from dataset D: $(x^{*^{(1)}},\ldots,x^{*^{(M)}})$
-\item For each instance, randomly select feature value $\xj$ from $\xjvec$
-\item Compute $d_j^{(i)} = \fh(x^{*^{(i)}}) - \fh(x_{-j}^{*^{(i)}}, x_j)$ for each $i \in \{1,\ldots,M\}$
-\item If any $d_j^{(i)} > 0$, feature was used by model. Break.
-\end{enumerate}
-\item If all difference were zero, return false
-\end{enumerate}
+\caption{NF: Number of features}\label{algo:nfeat}
+\KwInput{Number of samples $M$, number of permutations $K$, data $\D$}
+\KwOutput{Number of features used}
+NF = 0\;
+	\For{$j \in 1,\ldots,p$}{
+		\For{$k=1,\ldots,K$}{
+			Draw M instances from dataset D\;
+			For each instance, sample feature value $\xj$ from $\xjvec$\;
+			Compute $d_j^{(i)} = \fh(x^{*^{(i)}}) - \fh(x_{-j}^{*^{(i)}}, x_j)$ for each $i \in \{1,\ldots,M\}$\;
+			\lIf{$\exists i \in {1,\ldots,M} d_j^{(i)} \neq 0$}{$NF += 1$. Break.
+}
+		}
+		}
+\Return NF	
 \end{algorithm}
-
-
-
 
 % =============================================================================
 % False negatives
 % =============================================================================
-The false positive rate is zero, because when the method detects that a feature is used, then it is used for sure in model (assuming that the model is deterministic).
-Next we show an estimate for the false discovery rate.
-
-Let $z_j$ indicate whether at least one maninpulation of feature j would lead to a change in prediction.
-$$ z_j = \begin{cases}1 & \exists x, d \Rightarrow \hat{f}(x) - \hat{f}(x + d_j) \neq 0 \\0 & else\\\end{cases}$$
-where $d_j$ is a vector with zeroes that's only different from zero for feauture j.
-Let $\hat{z}_j$be our guess of $z_j$.
-We know that the false positive rate is zero for deterministic prediction functions:
-$$\mathbb{P}(\hat{z}_j = 1 | z_j = 0) = 0$$
-false negative rate depends on the model and data distribution.
-
-Let $p_j$ be the probability that for a randomly sampled instance from the data  we can find a change in feature $x_j$ that would lead to a change in the prediction.
-For linear models, this is always 1.
-Only in case of interactions will this value be less than zero.
-
-Let $r_{j}^{(i)}$ be the probability that for a given feature $x_j$ and an instance i for which we can find a value to change the prediction, that by randomly choosing a value (according to the marginal distribution of the feature) the prediction will not change.
-For linear models this probability is zero, because even the slightest change in a feature value will lead to a change in prediction.
-For a feature in a decision tree, with a split at the median of feature values $x_j$, the probability $r_j^{(i)}$ is 0.5, because we have a 50\% change to sample a feature value from the same interval.
-For a categorical feature with two categories it's the probability of staying within the same category, which is the same as the frequency of that category.
+The false positive rate is zero, because when the method detects a difference in the prediction given a feature permutation, according to our definition, the feature was used by the model.
 
 
-Then the probability of false negative is:
+It can happen that we overlook a feature that was used, but we don't count it with the heuristic.
+The probability of a false negative depends on the probability that we sample an instance for which a change in the feature affects the prediction and on the probability that a permutation of a feature changes the feature so that the prediction changes (given that the instance can be affected at all).
+
+Let $P_{fn}^j$ be the false negative probability for feature $x_j$ (feature was used by the model, the heuristic does not count it), $P_{aff}^j$ the probability that a random data instance's prediction can be affected at all by a change in $x_j$ and $P_{rng}^j$ the probability that, given an instance for which the prediction can be changed by permuting the feature, we sample a value for the feature that changes the prediction.
+
 \begin{eqnarray*}
-\mathbb{P}(\hat{z}_j = 0 | z_j = 1) &= \prod_{m=1}^M \left(\underbrace{1-p_j}_{\text{instance unchangeable by j}}  + \underbrace{p_j  \prod_{k=1}^K r_j^{(i)}}_{repeatedly unlucky} \right) \\
-&\underbrace{=}_{r_{j}^{(i)} = r_j} \left(1 - p_j + p_j (r_j)^K\right)^M
+	P_{fn}^j&=\left(1 - P_{aff}^j + P_{aff}^j (1 - P_{rng}^j)^K\right)^M
 \end{eqnarray*}
 
+The probability that we miss at least one feature is $1 - (1 - P_{fn})^p$ with the simplification that $P_{fn}^j = P_{fn} \forall j \in 1,\ldots,p$
 
-% =============================================================================
-% False negatives examples
-% =============================================================================
 For a linear model without interactions and only numerical features, the false negative rate is 0:
-$p_j=1$ and $r_j^{(i)} = r_j = 0$
-$$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (1 - 1 + 0^K)^M = 0$$
+$P_{aff}=1$ and $P_{rng}^j = 0$
+$$P_{fn}^j = (1 - 1 + 0^K)^M = 0$$
 
-
-Let's assume that only 1 percent of instances are affected by a change in a numerical feature $\xj$ ($p_j=0.01$), and for those the average probability that a change in the feature will change the prediction is 2 percent ($r_j=0.02$).
-This could happen when another feature $x_k$ is a categorical feature with 100 values (each has same frequency in data).
-Only for instances with one of those values does the prediction change when we change $x_j$ (interaction between $\xj$ and $x_k$), meaning if we only sample instances with one of the 99 other values, we will have a false negative.
-For instances with that special category in $x_k$, the probability that we sample a value for $x_j$ changes the prediction is 2\% (This varies per instance).
-Imagine a decision tree that splits once in $xj$ at 5 and $\xj$ ranges from 2 to 6.
-83\% of the data instance are have a value of $x_j$ below 5, 17\% have a value above 5.
-The average probability that a random sample changes the prediction is
-$0.83\cdot 0.17 + 0.17\cdot 0.83 \approx 0.02$, which is the probability that we randomly pick an instance from the left side of the split times the probability that we randomly replace its value with a value bigger than 5 plus the reversed case.
+Let's assume that only 1 percent of instances are affected by a change in a numerical feature $\xj$ ($P_{aff}=0.01$), and for those the average probability that a change in the feature will change the prediction is 2 percent ($P_{rng}=0.02$).
 When we use $M=100$, $K=10$:
 
-$$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01 * 0.01^10)^100 = 0.3660323$$
+$$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01 * 0.01^10)^100 = 0.3660$$
 
 In this case the false discovery rate is quite high due to a too low number of instances sampled.
-If we increase M to 500, the probability drops to  0.006570483.
-
-
-% =============================================================================
-% Summary of n.features measure
-% =============================================================================
-The n.features measure directly tells us how well we can interpret a model, regardless of whether it's an intrinsically interpretable model (linear regression model) or a black box model analyzed with post-hoc models (xgboost and feature importance).
-If n.features is 5, this means that to understand the model, we have to look at 5 coefficients in  a linear model or a list of 5 feature importances for the xgboost model.
+If we increase M to 500, the probability drops to  0.0066.
 

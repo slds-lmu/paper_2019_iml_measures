@@ -38,6 +38,9 @@
 %\setlength{\intextsep}{10pt plus 2pt minus 2pt}
 \usepackage{dsfont}
 \usepackage[ruled, vlined, linesnumbered]{algorithm2e}
+\DontPrintSemicolon                        % Don't print semicolon
+\SetKwInput{KwInput}{Input}                % Set the Input
+\SetKwInput{KwOutput}{Output}              % set the Output
 \let\oldnl\nl% Store \nl in \oldnl
 \newcommand{\nonl}{\renewcommand{\nl}{\let\nl\oldnl}}% Remove line number for one
 %\usepackage{algorithm}

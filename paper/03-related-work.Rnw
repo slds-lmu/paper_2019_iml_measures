@@ -55,68 +55,56 @@ On the other hand, the representation of a tree can become more complex, while t
 \subsection{Functional Decomposition}
 \label{sec:decomposition}
 
-
 % =============================================================================
 % General decomposition
 % =============================================================================
-We can decompose the high-dimensional model prediction function $f(x)$ into a sum of functions describing feature and interaction effects.
-Let f be the model prediction function that maps from features to the prediction, $f(x): X \rightarrow \mathbb{R}$ where x is a p-dimenionsal feature vector: $x = (x_1, \ldots, x_p)$.
+We can decompose any high-dimensional prediction function of a model into a sum of components with increasing dimensionality.
+Let $\fh(x)$ be the model prediction function that maps the feature $x$ to the prediction $\fh: \mathbb{R}^p \rightarrow \mathbb{R}$ where x is a p-dimensional feature vector: $x = (x_1, \ldots, x_p)$.
 
+We write the decomposition as:
 \begin{eqnarray} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}
 %\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S)
 \end{eqnarray}
 
 The decomposition contains a constant mean plus the feature first order effects, second order effects up to the p-th order effect.
-The notation of the j-th order effect can be simplified by using a multi-index notation: $S \subset \{1,\ldots,p\}$.
-
+We also call the components in this sum that depend on the main effects and higher-order effects interactions.
 
 % =============================================================================
 % Some useful decompositions
 % =============================================================================
-We need further constraints to get a unique decomposition.
+We need constraints for the components to get a unique decomposition.
 Multiple suggestions have been made in the literature.
 Stone \citep{stone1994use} suggest to approximate the function with weighted integrals and function orthogonality constraints.
-\citep{hooker2004discovering,hooker2007generalized} defined centering, orthogonality and variance decomposition as desirable properties, which results in hierarchically orthogonal components (in decomposition) under the correlation inner product.
-If the feature are uncorrelated, Partial Dependence  plots \citep{friedman2001greedy} can be used to describe main effects and other effects (minus some constant).
-But, as shown by \citep{hooker2007generalized} (TODO: Check citation), it does not work well when features are correlated and the effect estimates are biased.
-The partial dependence plot suffers from extrapolation into areas without data, which the ALE plots solve.
-TODO: Find paper with PDP decomposition
-
+Hooker \citep{hooker2007generalized} defined centering, orthogonality and variance decomposition as desirable properties, which results in hierarchically orthogonal components under the correlation inner product.
 
 % =============================================================================
 % ALE decompositions
 % =============================================================================
-% This means that higher order effects are uncorrelated with any lower-order effects that are subsets of the higher order effect: $f_{j,ANOVA}$ and $f_{S,ANOVA}$ are uncorrelated when $j\subset S$.
-% Any other combination of j and S are not in general uncorrelated.
-Another suggestion is a decomposition into Accumulated Local Effects \citep{apley2016visualizingapley2016visualizing} (ALE).
-Compared to partial dependence plots, ALE plots also work when features are correlated.
-Yields fundamentally different decomposition of $f(x)$, which is better for visualization of effects than Hooker decomp \citep{hooker2007generalized}.
-This is the solution used in this paper and is explained a bit in detail here:
-\citep{apley2016visualizingapley2016visualizing} show that this decomposition is unique, meaning that for any decomposition that fulfills the "pseudo-orthogonality" property, the only solution is the ALE component.
-A fitted supervised machine learning model $f$ can be decomposed as:
-$f(x) = \sum_{S\subseteq P} f_{S,ALE}(x_S)$
-where $f_{S,ALE}$ represents the $|S|$-order effect of feature(s) $x_S$ on $f$.
+Another approach is the decomposition into Accumulated Local Effects \citep{apley2016visualizingapley2016visualizing} (ALE):
+\begin{eqnarray} f(x)  = & f_0 + \sum_{j=1}^p \falej(x_j)+ sum_{j\neq k}^p f_{ALE,jk}(x_j, x_k) + \ldots + f_{ALE,1,\ldots,p}(x_1, \ldots, x_p)
+\end{eqnarray}
 
 
+Compared to \citep{hooker2007generalized}, ALE yields a fundamentally different decomposition of the model function $f(x)$.
+\citep{apley2016visualizingapley2016visualizing} show that this decomposition is unique because of what they call "pseudo-orthogonality".
+Pseudo-orthogonality means that for any component of the ALE decomposition, a repeated application of ALE computation yields zero or the same ALE component (if the same ALE effect is computed).
+For example, lets look at the 1st-order (=main) effect of $x_1$ $f_{ALE,1}$ and the second order effect between $x_1$ and $x_2$ $f_{ALE,1,2}$.
+If we tried to extract the main order effect for $x_1$ from $f_{ALE, 1,2}$ the result would be a constant function that is always 0.
 % =============================================================================
 % ALE property: Pseudo-orthogonality
 % =============================================================================
-Let $H_S(f_S)$ be a function that maps a function to its ALE function with features S.
-ALE defines the components in such a way that they are "pseudo-orthogonal", which is not true orthogonality, but a similar concept.
-"Pseudo-orthogonality": $H_j(f_j) = f_j$ and $H_u(f_j) = 0$ for each $j \subseteq D$ and $u \subseteq D$ with $u \neq j$.
-In words, pseudo-orthogonality is:
-The S-ALE of an S-ALE function is again S-ALE and the S-ALE function of u-ALE is 0 when S and u are not equal.
-
-
+%Let $H_S(f_S)$ be a function that maps a function to its ALE function with features S.
+%ALE defines the components in such a way that they are "pseudo-orthogonal", which is not true orthogonality, but a similar concept.
+%"Pseudo-orthogonality": $H_j(f_j) = f_j$ and $H_u(f_j) = 0$ for each $j \subseteq D$ and $u \subseteq D$ with $u \neq j$.
+%In words, pseudo-orthogonality is:
+%The S-ALE of an S-ALE function is again S-ALE and the S-ALE function of u-ALE is 0 when S and u are not equal.
 
 % =============================================================================
 % ALE is best
 % =============================================================================
-We decided to use ALE plots instead of the other approaches for the following reasons:
-ALE plots are easier to compute, because the can be computed sequentially (each main effect, then each 2nd-order and so on), do not require to estimate the data distribution as Hookers approach.
-fANOVA has to be computed all at once, involving a complex system of equations.
-Pseudo-orthogonality preferable over orthogonality, since when feature are correlated, the true additive structure is not reflected when effects have to be orthogonal.
-Other advantages are the superior computational efficiency and the more sytematic way to compute the decomposition.
+We decided to use the ALE decomposition, because ALE are relatively cheap to compute, can be computed sequentially instead of all together as in \citep{hooker2007generalized}, they don't require knowledge of the data distribution.
+We prefer pseudo-orthogonality over orthogonality, since when feature are correlated, the true additive structure is not reflected when effects have to be orthogonal.
+For example if the model is a linear model with $f(x) = x_1 + 2\cdot x_2$, with $x_1$ and $x_2$ being correlated, we prefer to recover $f_{1}(x_1) = 1$ and $f_{2}(x_2)$ which is the result under ALE decomposition, but not under the constraint of orthogonality.
 Also ALE plots have software solutions, see \citep{iml,alepackage}.
 
 

@@ -80,7 +80,7 @@ Hooker \citep{hooker2007generalized} defined centering, orthogonality and varian
 % =============================================================================
 % ALE decompositions
 % =============================================================================
-Another approach is Accumulated Local Effects proposed by \cite{apley2016visualizingapley2016visualizing} (ALE) as a tool for visualizing feature effects, that also represents a decomposition.
+Another approach is Accumulated Local Effects proposed by \cite{apley2016visualizingapley2016visualizing} (ALE) as a tool for visualizing feature effects (see e.g. Figure~\ref{fig:c-demo}), that also represents a decomposition.
 \begin{eqnarray} f(x)  = & f_0 + \sum_{j=1}^p \falej(x_j)+ sum_{j\neq k}^p f_{ALE,jk}(x_j, x_k) + \ldots + f_{ALE,1,\ldots,p}(x_1, \ldots, x_p)
 \end{eqnarray}
 

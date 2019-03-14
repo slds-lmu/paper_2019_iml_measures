@@ -7,77 +7,80 @@
 % =============================================================================
 % First order model
 % =============================================================================
-We propose to measure the level of additivity in the model by calculating the proportion of error for that is already covered by the main effects $\falej$, when we are predicting the outcome of the model.
-Important to note is that error here refers to the error for predicting the full model.
-
-The general idea is that we have three models that are nested from left to right.
-Baseline (e.g. mean of y), main effects model, full model.
-The training data error decreases from left to right.
-For the full model it is zero.
-
-Based on the ALE decomposition, we can define an additive model that is composed of only the main  effects:
+We propose to measure the interaction strength as the error between the ALE main effect model and the black box model $\fh$.
+Based on the ALE decomposition, the ALE main effect model is defined as:
 
 $$f_{1st,ALE}(x) = f_0 + f_{1,ALE}(x_1) + \ldots  + f_{p,ALE}(x_p)$$
 
-$f_0$ is estimated using $f_0 = \frac{1}{n}\sum_{i=1}^n x_i$
-The individual ALE components $f_{j,ALE}$ can be estimated as described in ALE section.
-We can see this main effects model as a prediction model that is nested within the more complex complete model.
-As common for linear models, we can analyze how much of the variance comes from certain components, here the main effects estimated with ALE.
-
+Here, $f_0$ is estimated using $f_0 = \frac{1}{n}\sum_{i=1}^n x_i$
+The individual ALE components $f_{j,ALE}$ can be estimated as described in Equation~\ref{eqn:ale}.
 
 % =============================================================================
 % PRE / PRL
 % =============================================================================
-We use the proportionate reduction of error (related to  Proportional Reduction in Expected Loss \citep{cooil1994reliability}) as measure for how well the first-order model predictions approximates $f(x)$.
-With some adaptions based on \citep{cooil1994reliability}, we define pre as:
+We propose the proportionate reduction of error (based on \citep{cooil1994reliability}) to measure well the first-order model predictions approximates $\fh$.
 
-$$pre(\fh, \fale, L) = 1 - \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}$$
+\begin{eqnarray}\label{eqn:pre}
+pre(\fh, \fale, L) = 1 - \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}
+\end{eqnarray}
 
-Where $c$ is a constant that optimizes the loss function $L$, which is the mean for the L2 loss, and the median for the L1 loss for example.
-
-If Interaction is 0, we can fully represent how the model works by showing the 1D-ALE plots.
-IA can be a better measure than to only look at model parameters.
-A decision tree might increase its depth, but interaction might not change or even decrease, because same feature is picked up again, or identical subtrees are fitted.
-
-While the decomoosition of variance does not work with correlated features (1st order correlated with higher order) it should be still ok to just describe the SSE I get when using first order ALE model.
-
-
-Making no assumptions, but simply describe how much residuals are left after modeling with first order ALE.
-Note that our interaction strength measure does not account for the complexity of the interaction, just how much the main effect model leaves to be explained by the interactions.
-It's not the depth of the interaction.
-E.g. a tree might have a low interaction depth, but a high interaction strength and another tree might have a high interaction depth, but the main effects model already explains a lot.
-
+Where $c$ is a meaningful upper baseline for the error, which should be chosen based on the prediction task.
+For a regression task that is evaluated using the L1 loss the median of the target would be a natural choice for the baseline.
 % =============================================================================
 % R2 special case
 % =============================================================================
-The $R^2$-measure is a special case of the PRL using the squared loss, which we estimate with:
+The $R^2$-measure is a special case of the pre using the squared loss, which we estimate with:
 
 $$R^2 = 1 - \frac{SSE}{SST} = \frac{\sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2}{\sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2}$$
 
-Using the R-squared measure, has the interpretation of the variance, so we use this further on and for the examples.
-When a model is optimized with a different loss, it might make sense to measure the PRL also with another loss to quantify how appropriate an approximation with a first order ALE model is.
+
+Based on the $pre \in [0,1]$ in Equation~\ref{eqn:pre}, we define the interaction strength as:
+
+\begin{eqnarray}\label{eqn:ias}
+IAS = 1  - pre(\fh, \fale, L)
+\end{eqnarray}
 
 % =============================================================================
-% pre algorithm
+% Interpretation of IAS
 % =============================================================================
-The estimation of the pre of the main effects ALE model is described with the following algorithm.
-\begin{algorithm}
-\caption{Estimate PRL of ALE main effects model}\label{algo:ale1st}
-\begin{enumerate}
-\item Given: model $\fh$, dataset $\D$, loss function $L$
-\item Estimate $\falej$ for all features $j\in\{1,\ldots,p\}$
-\item Estimate $\fzero = \sum_{i=1}^n \fh(\xi)$
-\item Define: $\fale(x) = \fzero + \sum_{j=1}^p \falej(x)$
-\item Calculate $PRL(L, \fh, \fale)$
-\end{enumerate}
-\end{algorithm}
+An IAS of 0 means that the prediction function is without interactions and can be fully expressed by the main effects of the features.
+An IAS of 0 also means that a visualization of all the ALE main effects covers the whole variety of the predictions.
+An IAS of 1 means that all main effects are constant at 0 and the model is only interaction.
+For example a model perfectly predicting the (class balanced) XOR problem would have a IAS of 1.
+IAS does not account for order or complexity of the interaction, just how much the main effect model leaves to be explained by the interactions.
+This means that two models can have the same IAS measure, but for one model there is only an interaction of two features, while the other model has a lot of high order interations between multiple features.
 
-
+% =============================================================================
+% =============================================================================
+% Further Material
+% =============================================================================
+% =============================================================================
 
 % =============================================================================
 % Further approaches
 % =============================================================================
-There are other ways to estimate the additivity of a model.
-One is via Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}.
-We decided against Sobol and Shapley since they were computationally expensive and varied a lot from run to run.
-Additonally it makes more sense to look at the PRL/PRE of the main effects of the decomposition, since then it is coherent with the plots that are shown and with the complexity, which is presented next.
+%There are other ways to estimate the additivity of a model.
+%One is via Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}.
+%We decided against Sobol and Shapley since they were computationally expensive and varied a lot from run to run.
+%Additonally it makes more sense to look at the PRL/PRE of the main effects of the decomposition, since then it is coherent with the plots that are shown and with the complexity, which is presented next.
+
+
+
+
+% =============================================================================
+% pre algorithm
+% =============================================================================
+%The estimation of the pre of the main effects ALE model is described with the following algorithm.
+%\begin{algorithm}
+%\caption{Estimate PRL of ALE main effects model}\label{algo:ale1st}
+%\begin{enumerate}
+%\item Given: model $\fh$, dataset $\D$, loss function $L$
+%\item Estimate $\falej$ for all features $j\in\{1,\ldots,p\}$
+%\item Estimate $\fzero = \sum_{i=1}^n \fh(\xi)$
+%\item Define: $\fale(x) = \fzero + \sum_{j=1}^p \falej(x)$
+%\item Calculate $PRL(L, \fh, \fale)$
+%\end{enumerate}
+%\end{algorithm}
+
+
+

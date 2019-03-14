@@ -15,7 +15,7 @@ These measures quantify the complexity of a machine learning model from an exter
 We arrange the terms of Equation \ref{eqn:decomp} and replace the main effects with their ALE definition:
 \begin{eqnarray} f(x) % = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S}(x_S)}^{\text{Higher order effects}} \\
 =&\underbrace{f_0 + \sum_{j=1}^p \overbrace{\falej(x_j)}^\text{AMEC: How complex?} + \overbrace{IA(x)}^{\text{IA: How much interaction?}}}_{\text{NF: How many feature used?}}
-\end{eqnarray}i
+\end{eqnarray}
 The constant term is estimated with the mean of the model prediction $f_0 = \frac{1}{n}\sum_{i=1}^n \hat{f}(\xi)$ and the main effects with Accumulated Local Effects.
 The remaining part with the interactions of the decomposition does not have to be computed for our proposed measures.
 This arrangement of components emphasizes the view of the model as the mixture of an additive main effect model and interactions between the features.
@@ -30,7 +30,7 @@ The average main effect complexity (AMEC) tries to capture how many parameters w
 % =============================================================================
 We compute the main effects using accumulated local effects proposed by \cite{apley2016visualizing}.
 The ALE main effect of a feature $x_j, j \in \{1,\ldots,p\}$ for a prediction function $\fh$ is defined as 
-\begin{eqnarray}
+\begin{eqnarray}\label{eqn:ale}
 f_{j,ALE}(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\delta \fh(X_1,\ldots,X_p)}{\delta X_j}|X_j = z_j\right]dz_j-c_j
 \end{eqnarray}
 Here, $X_j$ refers to the j-the feature as a random variable and $z_{0,j}$ is a lower bound of $X_j$ (usually estimated with the minimal observed value) and the expectation $\mathbb{E}$ is computed marginal on the distribution of all features conditioned on the value for $x_j$.

@@ -5,14 +5,7 @@
 % =============================================================================
 % Measure Intro
 % =============================================================================
-We propose a measure that, for each of the main effects $\falej$, approximates the ALE curve with linear segments and adds up the parameters needed if we were to model all those segments in a segmented linear regression model, which models the (approximate) ALE curve as a function of the single feature.
-When complexity measure is minimized, we get linear effects or binary split.
-
-
-% =============================================================================
-% Measure Intuition
-% =============================================================================
-<<c-demo, fig.cap = "An ALE curve (black line) approximated by two linear segments. Segments are vertical lines, approximation the doted lines.">>=
+<<c-demo-prepare>>=
 n = 300
 x = runif(n = n)
 y = log(x)
@@ -21,33 +14,40 @@ mod = mgcv::gam(y ~ s(x), data = dat)
 pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x")
 app = AleNumApprox$new(ale = fe, max_seg = 2, epsilon = 0.05)
-plot(app) + ggtitle("")
 @
 
-Before we dive into the algorithm we show an example.
-Figure \ref{fig:c-demo} shows an ALE plot and an approximation with linear segments.
-Throughout the paper we will often represent those main effect ALE curves with sparklines, e.g. Figure \ref{fig:c-demo} looks like this in-text \Sexpr{spark(app)}.
-The dots represent the start and end of the curve, the vertical bars -- if present -- the segments the curve was divided into.
-The ALE curve can be complex, only limited by the number of intervals used by the ALE method.
-The goal is to replace the ALE curve by something where we know how complex it is.
-We decided to use linear segments.
-Another goal is that if a curve is approximately linear but with some additional ups and downs, we would want to approximate the curve with only a linear function.
-Therefore we have to introduce some allowed error.
-To account for possible constant ALE plots (e.g. for a tree, where there might be only one jump between two constant pieces), we additionally have built in some ways to try to approximate the curve with constant segments.
-We measured the approximation with $R^2$ of the approximation vs. the full ALE curve.
+We propose MEC, a measure for the curve complexity of the ALE main effects $\falej$.
+For an individual ALE curve we measure complexity as the number of parameters we need to approximate the curve with linear segments.
+We compute the main effect complexity for the entire prediction function as the average main effect complexity, weighted by the variance of each curve.
+Figure~\ref{fig:c-demo} shows an exemplary ALE plot (= main effect) and an approximation with linear segments.
+Throughout the paper, we will represent main effect ALE curves with sparklines, e.g. Figure~\ref{fig:c-demo} looks like this in-text \Sexpr{spark(app)}.
+Vertical bars -- if present -- represent the segments the curve was divided into for approximation.
 
 
-%TODO: Fix max_seg = 1 only alllowed to spit out one segment
+<<epsilons,  fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
 
+n = 1000
+grid.size = 50
+dat1 = mlbench::mlbench.friedman2(n)
+dat1 = data.frame(cbind(dat1$x, y = dat1$y))
+tsk = makeRegrTask(data = dat1, target = "y")
+lrn = makeLearner("regr.ranger")
+mod = train(lrn, tsk)
+pred.ksvm = iml::Predictor$new(mod, dat1)
+fc = FunComplexity$new(pred.ksvm, epsilon = 0.01,grid.size = grid.size)
 
-% =============================================================================
-% Measure Sum Up and Fix
-% =============================================================================
-For computing the complexity per feature, we only look at this feature.
-But we have to aggregate these measures over all feature got get one number.
-Looking only at one feature at a time has one problem:
-The features might have different overall impact on prediction (some close to none), but the complexity measures don't reflect this and tend to be higher the lower the variance of the ALE plot is.
+eps1 = 0.05
+fc1 = FunComplexity$new(pred.ksvm, epsilon = eps1,  grid.size = grid.size)
+#p1 = plot(fc$approx_models$V3)
 
+eps2 = 0.005
+fc2 = FunComplexity$new(pred.ksvm, epsilon = eps2, grid.size = grid.size, max_seg_num = 10)
+
+eps3 = 0.001
+fc3 = FunComplexity$new(pred.ksvm, epsilon = eps3, grid.size = grid.size, max_seg_num = 10)
+#p2 = plot(fc$approx_models$V3)
+#gridExtra::grid.arrange(p1, p2, nrow = 1)
+@
 
 <<c-demo2, fig.cap = "Two identical ALE curves with the difference that one has a jump at 0.5. The measures complexity is higher for the left curve, since we need more segments to describe the variance of the curve. Both have an R squared above 0.95">>=
 n = 3000
@@ -73,9 +73,6 @@ p2 = plot(app2) + scale_y_continuous(limits = c(-7,7))
 #grid.arrange(p1, p2, nrow = 1)
 @
 
-Two identical ALE curves \Sexpr{spark(app1$ale, c(-7, 7), width = 5)} and \Sexpr{spark(app2$ale, c(-7, 7), width = 5)} with the difference that one has a jump at 0.5. The measures complexity is higher for the left curve, since we need more segments to describe the variance of the curve. Both have an R squared above 0.95
-
-Also at what point would we decide between "this is a noisy ALE plot" and "we have to approximate this"?
 
 <<c-demo3, fig.cap = "Three ALE curves that only differ by a scaling factor in  dicrection of the y-axis. All three need the same amount of segments to be approximated with R squared above 0.95">>=
 n = 3000
@@ -109,73 +106,73 @@ p3 = plot(app3)  + scale_y_continuous(limits = c(-7,7))
 #grid.arrange(p1, p2, p3, nrow  = 1)
 @
 
-Let's consider 3 curves \Sexpr{spark(app1$ale, c(-6, 6), width = 5)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)}.
-The three ALE curves only differ by a scaling factor in  dicrection of the y-axis.
-All three need the same amount of segments to be approximated with R squared above 0.95:
+
+<<c-demo, fig.cap = "ALE curve (black line) approximated by two linear segments. Segments are vertical lines, approximation the doted lines.", out.height ="4cm", out.width="10cm", fig.height=4, fig.width=10, fig.align="center", dependson="c-demo-prepare">>=
+plot(app) + ggtitle("") + scale_y_continuous("ALE")
+@
+
+% =============================================================================
+% Measure Intuition
+% =============================================================================
+The procedure to compute MEC is described in Algorithm~\ref{algo:AMEC}.
+The motivation behind approximating the ALE curves is to replace the curve with a function of known complexity, in this case measured as the number of parameters needed to describe the curve with linear segments, a similar concept as the degrees of freedom often used in linear regression models.
+Another goal was to allow the approximation to have some error, so that a curve that wiggles around a straight line to be approximated by a straight line, e.g. we would like the curve \Sexpr{spark(fc1$approx_models$V3$ale)} be approximated with a single linear segment.
+We measured the approximation with $R^2$ of the approximation vs. the full ALE curve and allow the $R^2$ be 1 - $\epsilon$ as defined by the user.
+% =============================================================================
+% Measure Sum Up and Fix
+% =============================================================================
+First we compute the main effect complexity for each feature individually and then average the results.
+If we average the main effect complexities without weighting, we run into the problem that some effects might be very complex, but don't contribute much to the prediction and we visually interpret the feature effect as having no impact and being wiggly around effect of zero.
+For example, the two ALE curves  \Sexpr{spark(app1$ale, c(-7, 7), width = 5)} and \Sexpr{spark(app2$ale, c(-7, 7), width = 5)} are identical except for the jump at 0.5 in the second curve.
+We need more linear segments to get the same approximation $R^2$ as for the second curve.
+One way to mitigate the problem of getting high AMEC estimates through wiggly main effects that are irrelevant for the prediction is to weight each main effect by its variance.
+Let's consider 3 main effect curves \Sexpr{spark(app1$ale, c(-6, 6), width = 5)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)}, which only differ by a scaling factor in the y-axis.
+All three curves need the five segments to be approximated with  $R^2 >= 0.95$:
  \Sexpr{spark(app1, c(-6, 6), width = 5)}, \Sexpr{spark(app2, c(-6, 6), width = 5)} and \Sexpr{spark(app3, c(-6, 6), width = 5)}
-We are only interested in the average of the complexity.
-An alternative would be the sum, but we already capture the number of features.
-So we propose to weight each of the complexity measures by the variance of the corresponding ALE plot.
-In our example if the three curves were ALE plots from three different features,  \Sexpr{spark(app1$ale, c(-6, 6), width = 5)} would get a weight of \Sexpr{sprintf("%.2f", app1$var)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app2$var)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app3$var)}.
-If all features in the data are uncorrelated, this has the nice interpretation that each feature main effect complexity (MEC) is weighted by the percentage it contributed to the variance of the complete main effects model.
-In case of correlated features, it's more complicated.
-If we were to fairly assign to each feature the share of the first order model variance, we would need an attribution method such as the Shapley value.
-The big problem is that the contribution can be negative when features are correlated and one of the correlated features has a much stronger effect.
-This can happen when the covariance is negative.
-The interpretation is not very intuitive then.
-An advantage of weighting by the individual variances is that it has a visual connection:
-The smaller the variance, the lower the amplitude of the curve in y-direction.
-And we want that weighted by the data distribution, so taking the minimum and maximu for scaling is not an option.
+When weighted by the variance,  \Sexpr{spark(app1$ale, c(-6, 6), width = 5)} gets a weight of \Sexpr{sprintf("%.2f", app1$var)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app2$var)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app3$var)}.
 
 % =============================================================================
 % Algorithm for complexity
 % =============================================================================
-The following algorithm describes our procedure for determining the average main effect complexity (AMEC).
-
-TODO: Iterate over the description of the algorithm to improve it
 \begin{algorithm}
-\caption{Estimate average main effect complexity (AMEC).}\label{algo:ale-complexity}
-\begin{enumerate}
-\item Input: Model $\fh$, PRL-bound $\epsilon$, complexity limit $max_{seg}$
-\item Output: Weighted average complexity $C$
-\item For each $j \in \pset$ do:
-\begin{enumerate}
-\item Estimate ALE $\falej$
-\item If $\falej(x_j) = 0$ for all $x$, stop and return $\galej(x) = 0$
-\item Set $K=0$ and $\galej = 0$
-\item While $K < max_{seg}$ AND $PRL(\falej, \galej, L) < 1- \epsilon$:
-\begin{itemize}
-\item $\galej = FindBestSplits(K, \falej, \epsilon)$
-\end{itemize}
-\item $C_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_k > 0}$
-\item ALE variance $V_j = \frac{1}{n}\sum_{i=1}^n \hat{f}^{ALE}_j(x^{(i)})$
-\end{enumerate}
-\item $C = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jc_j$.
-\end{enumerate}
+\caption{Average main effect complexity (AMEC).}\label{algo:AMEC}
+	\KwInput{$\fh$, allowed error $\epsilon$, segments limit $max_{seg}$, features $x_j,j\in \pset$}
+	\KwOutput{Average Main Effect Complexity AMEC}
+	\For{$j \in \pset$}{
+Estimate ALE $\falej$\;
+	%\If{$\falej(x_j) = 0$ for all $x$}{
+	%	$MEC_j = 0, V_j=0$\;
+	%	Continue with next feature\;
+	%	}
+	Approximate $\falej$ with $g_j(x_j) = \beta_0 + \beta_1 x_j$\;
+	Compute $R^2$ of $g_j(x_j)$\;
+	Set $K=0$\;
+	\While{$K \leq max_{seg}$ AND $R^2 < (1- \epsilon)$}{
+		Set $K = K+1$\;
+		\tcp{Optimize intervals $Z_k$ via generalized simulated annealing, $\beta$'s per segment with ordinary least squares}
+		\tcp{For categorical feature, fix slope to zero} 
+		$g_j = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$
+
+		Compute $R^2$ of $g_j$
+	}
+	\tcp{Post-processing of slopes}
+	\For{$k \in 1,\ldots,K$}{
+		Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\falej(\xij)$ and $\beta_{j1}^k = 0$ in $g_j$\;
+		\lIf{$R^2(g_j) > (1-\epsilon)$}
+		{
+			Use new $\beta_{j0}^k$, $\beta_{j1}^k$ in $g_j$
+		}
+		\lElse{
+			Keep old $\beta_{j0}^k$, $\beta_{j1}^k$ in $g_j$	
+			}
+			}
+$MEC_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_k > 0}$\;
+$V_j = \frac{1}{n}\sum_{i=1}^n \left(\hat{f}^{ALE}_j(x^{(i)})\right)^2$\;
+}
+	\Return{$AMEC = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jMEC_j$\;}
 \end{algorithm}
 
 
-
-% =============================================================================
-% Find best splits
-% =============================================================================
-\begin{algorithm}
-\caption{FindBestSplits for given K.}\label{algo:ale-complexity-splits}
-Input: K, $\falej$, $\epsilon$, Number of samples $m$
-
-$\hat{z}_1,\ldots, \hat{z}_K = argmin_{z_1,\ldots,z_K} \sum_{k=1}^{K+1} \sum_{\xi\in Z_k}\left(\falej(\xij) - (\beta_{j0}^k + \beta_{j1}^k\xij)\right)^2$ where $Z_1 = [min(\xj), z_1], \ldots, Z_k = [z_{k-1}, z_k],\ldots,Z_{K+1} = [z_K,max(\xj)]$ and $\beta_{j0}^k$ and $\beta_{j1}^k$ are the least square estimates. If $K=0$, then $Z_1 = [min(\xj), max(\xj)]$.
-
-Optimize with Generalized Simulated annealing.
-
-$\galej(\xj) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$.
-Set slopes to zero. For each segment $k \in 1,\ldots,K$:
-\begin{itemize}
-\item Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\falej(\xij)$ and $\beta_{j1}^k$ = 0
-\item If still $R^2 > 1 - \epsilon$, overwrite both $\beta$.
-\end{itemize}
-
-* If the feature is numeric, fix all $\beta_{j1}^k$ at zero and we applied random search of break points instead of GenSA.
-\end{algorithm}
 
 
 
@@ -183,33 +180,8 @@ Set slopes to zero. For each segment $k \in 1,\ldots,K$:
 % =============================================================================
 % Different epsilons
 % =============================================================================
-
-<<epsilons,  fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
-
-n = 1000
-grid.size = 50
-dat1 = mlbench::mlbench.friedman2(n)
-dat1 = data.frame(cbind(dat1$x, y = dat1$y))
-tsk = makeRegrTask(data = dat1, target = "y")
-lrn = makeLearner("regr.ranger")
-mod = train(lrn, tsk)
-pred.ksvm = iml::Predictor$new(mod, dat1)
-fc = FunComplexity$new(pred.ksvm, epsilon = 0.01,grid.size = grid.size)
-
-eps1 = 0.05
-fc1 = FunComplexity$new(pred.ksvm, epsilon = eps1,  grid.size = grid.size)
-#p1 = plot(fc$approx_models$V3)
-
-eps2 = 0.005
-fc2 = FunComplexity$new(pred.ksvm, epsilon = eps2, grid.size = grid.size, max_seg_num = 10)
-
-eps3 = 0.001
-fc3 = FunComplexity$new(pred.ksvm, epsilon = eps3, grid.size = grid.size, max_seg_num = 10)
-#p2 = plot(fc$approx_models$V3)
-#gridExtra::grid.arrange(p1, p2, nrow = 1)
-@
-Different values for $\epsilon$ yield different measures of complexity:
-An ALE curve that looks like this \Sexpr{spark(fc1$approx_models$V3$ale)} can be approximated with a linear model \Sexpr{spark(fc1$approx_models$V3, approx = TRUE)} (\Sexpr{eps1}) and gets increasingly more complex when we allow less error, e.g. \Sexpr{spark(fc2$approx_models$V3, approx = TRUE)} (\Sexpr{eps2}) and  \Sexpr{spark(fc3$approx_models$V3, approx = TRUE)} (\Sexpr{eps3}).
+The choice of $\epsilon$ affects the complexity measures:
+This ALE main effect \Sexpr{spark(fc1$approx_models$V3$ale)} can be approximated with a linear model \Sexpr{spark(fc1$approx_models$V3, approx = TRUE)} when $\epsilon = \Sexpr{eps1}$ but needs \Sexpr{(fc3$approx_models$V3$n_coefs + 1) / 2} segments when $\epsilon$ is decreased to \Sexpr{eps3}: \Sexpr{spark(fc3$approx_models$V3, approx = TRUE)}.
 
 
 
@@ -228,10 +200,10 @@ dat$y = 2 * dat$x + rnorm(n, sd = nsd)
 grid.size = 100
 epsilon = 0.05
 @
-The complexity measures ignores how complex the prediction process is within the model, e.g. it does not matter whether the linear relationship comes from a single linear model or a blend of hundreds of linear models.
+The complexity measures ignores how complex the internal structure of the model is, e.g. it does not matter whether the linear relationship comes from a single linear model or a blend of hundreds of linear models.
 We demonstrate how the number of nodes and complexity measure C increase with increasing model performacne, but at some point the complexity C decreases again.
-For this example, \Sexpr{n} data points are drawn from  a uniform distribution between 0 and 1, and the target is simulated as $2 * x + \epsilon$, where $\epsilon \sim N(0,\Sexpr{nsd})$.
-We train a three different trees with different maximal depths, as shown in Table \ref{tab:tree}.
+For this example, \Sexpr{n} data points were drawn from a uniform distribution between 0 and 1, and the target is simulated as $2 * x + \epsilon$, where $\epsilon \sim N(0,\Sexpr{nsd})$.
+We trained three trees with different maximal depths, as shown in Table \ref{tab:tree}.
 
 <<tree-increase, dependson="tree-increase-data",results="asis">>=
 rp_width = function(rp) sum(rp$frame$var == "<leaf>")
@@ -282,6 +254,41 @@ print.xtable(xtable(tab, caption = caption), sanitize.text.function = as.is, boo
 % =============================================================================
 % =============================================================================
 % =============================================================================
+
+%If all features in the data are uncorrelated, this has the nice interpretation that each feature main effect complexity (MEC) is weighted by the percentage it contributed to the variance of the complete main effects model.
+%In case of correlated features, it's more complicated.
+%If we were to fairly assign to each feature the share of the first order model variance, we would need an attribution method such as the Shapley value.
+%The big problem is that the contribution can be negative when features are correlated and one of the correlated features has a much stronger effect.
+%This can happen when the covariance is negative.
+%The interpretation is not very intuitive then.
+%An advantage of weighting by the individual variances is that it has a visual connection:
+%The smaller the variance, the lower the amplitude of the curve in y-direction.
+%And we want that weighted by the data distribution, so taking the minimum and maximu for scaling is not an option.
+
+
+% =============================================================================
+% Find best splits
+% =============================================================================
+%\begin{algorithm}
+%\caption{ApproxLinearSegments}\label{algo:aleapprox}
+%	\KwInput{K, $\falej$, $\epsilon$}
+%	\KwOutput{$\beta \in \mathbb{R}^k, R^2$}
+%	Define equidistant initial breakpoints: $\hat{z}_1,\ldots, \hat{z}_K$\;
+%	Define segments $Z_1 = [min(\xj), z_1], \ldots, Z_k = [z_{k-1}, z_k],\ldots,Z_{K+1} = [z_K,max(\xj)]$ \\
+%If $K=0$, then $Z_1 = [min(\xj), max(\xj)]$\;
+%
+%	Optimize break points: $\hat{z}_1,\ldots, \hat{z}_K = argmin_{z_1,\ldots,z_K} \sum_{k=1}^{K+1} \sum_{\xi\in Z_k}\left(\falej(\xij) - (\beta_{j0}^k + \beta_{j1}^k\xij)\right)^2$ where and $\beta_{j0}^k$ and $\beta_{j1}^k$ are the least square estimates. 
+%Optimize with Generalized Simulated annealing.
+%
+%$\galej(\xj) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$.
+%Set slopes to zero. For each segment $k \in 1,\ldots,K$:
+%\begin{itemize}
+%\item Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\falej(\xij)$ and $\beta_{j1}^k$ = 0
+%\item If still $R^2 > 1 - \epsilon$, overwrite both $\beta$.
+%\end{itemize}
+%
+%* If the feature is numeric, fix all $\beta_{j1}^k$ at zero and we applied random search of break points instead of GenSA.
+%\end{algorithm}
 
 
 % =============================================================================

@@ -47,7 +47,8 @@
 %\usepackage[noend]{algpseudocode}
 %\usepackage[none]{hyphenat}
 \usepackage{cleveref}
-\usepackage{autonum}
+%Makes problems on Ubuntu
+%\usepackage{autonum}
 %
 % \usepackage{mathptmx}      % use Times fonts if available on your TeX system
 %
@@ -118,7 +119,9 @@ opts_chunk$set(size = "small",
 ## ggplot black and white
 theme_set(ggplot2::theme_bw() +
     ggplot2::theme(strip.text = ggplot2::element_text(face = "bold"),
-      strip.background = ggplot2::element_rect(fill = "white",
-        colour = "white")))
+		   strip.background = ggplot2::element_rect(fill = "white",colour = "white"),
+		   text = element_text(size=23)
+		   )
+    )
 
 @

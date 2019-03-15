@@ -1,39 +1,25 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Minimizing functional complexity improves post-hoc interpretation}
+\section{Improving post-hoc interpretation}
 \label{sec:post-hoc}
 
+We demonstrate that minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (AMEC) improves readability, reliability and summarizability of post-hoc interpretation methods like partial dependence plots, feature importance, interaction effects, local surrogate models, etc..
 
-% Datasets:
-%
-% Biodegradability
-% https://www.openml.org/d/1494
-%
-% Wind and Solar energy based on wheather
-% https://github.com/hugorcf/Renewable-energy-weather/blob/master/renewable.ipynb
-
-
-We demonstrate how minimizing NF, IA and AMEC improves the readability, reliability and summarizability of post-hoc explanation methods like partial dependence plots, feature importance, interaction effects and Shapley Values.
-
-
-All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2016}.
-The source code for all experiments is available online
-
-\subsubsection{Less features, better post-hoc}
+\subsubsection{The less features, the less verbose the interpretations.}
 Minimizing the number of features improves the manageability of post-hoc analysis results.
-The number of feature importance values, feature importance plots to look at (PDP, ICE, ALE), the number of feature in Shapley Values all scale linearly with the number of features that were used by the model.
+The computational time and output size of most interpretation methods scales with $O(\text{NF})$, like feature effect plots \citep{apley2016visualizing,friedman2001greedy} or feature importance \citep{fisher2018all,casalicchio2018visualizing}.
 If 100 features  were used, 100 feature effect plots have to be looked at to make a sanity check of what the mdoel does.
+Interpretation methods that analyze the interactions between features, e.g. when analyzing 2-way interactions, scale with $O(\text{NF}^2)$ and if you were to do a full functional decomposition be it either through the approach by Hooker \citep{hooker2007generalized} or Apley \citep{apley2016visualizing}, the computation time and output size scales with $O(\text{NF}!)$.
 
+\subsubsection{The less features, the less severe the curse of dimensionality.}
+Some interpretation methods like SHAP \citep{lundberg2017unified} or LIME \citep{ribeiro2016should} create sparse interpretations by selecting relevant features.
+The more high-dimensional the feature features space (high NF), the more difficult it can become to find the most relevant features and the fidelity of an explanation suffers the higher the divergence between the number of features used by the black box model and the number used by the explanation.
+SHAP and LIME also rely on distance measures between instances, which is also affected by the curse of dimensionality and with increasing number of features distance loose their usefulness (lower signal to noise ratio).
 
-\subsubsection{Interaction Effects render Partial Dependence Plots unreliable}
-
-In this section we show how the interaction measure directly affects the reliability of a post-hoc interpretation method, the partial dependence plot.
-The partial dependence plots, as well as the Accumulated Effect plots show the marginal relationship between a feature and the prediction.
-Usually the curves are mean estimates of the effects, since the individual effects of features per instance can vary greatly, even take on a different direction.
+\subsubsection{The less interactions, the more reliable feature effect plots.}
+Feature effect plots, like partial dependence plots and accumulated local effect plots visualize the marginal relationship between a feature and the prediction.
+The estimated effects are averages over the instances and the effects of features per instance can vary greatly, even take on a different direction when the model incorporates interactions
 For example a feature might show a positive effect on the prediction, but for some instances the effect might be negative.
-This heterogeniety of effects is due to interactions with other features.
-The partial dependence plot has a counterpart, the individual conditional expectation curve TODO: CITE, which shows the relationship between input and outcome for an individual instance.
-We are using a PDP here because, unlike ALE, they have a pendant for individual observations:ICE curves, which visualize heterogeneity of feature effects.
-But also the ALE plot is affected by averaging heterogenous effects and hiding complexity.
+
 
 <<prepare-pdp-unreliable, out.height="3cm", cache=FALSE>>=
 set.seed(123)
@@ -57,37 +43,40 @@ y_limit = c(-200, 1200)
 grid.size = 100
 feature = "x2"
 @
-In the following example, we show a data simulation that is approximated with different models that have a differently strong capabilities for modeling interactions in the data.
 
-We simulated 500 data points with 4 features as a regression problem \citep{friedman1991multivariate}.
+In the following simulated example we trained three models with different capabilities of modeling interactions between features: a linear regression model, a random forest and a k-nearest-neighbors model.
+We simulated 500 data points with 4 features and a continuous target to be predicted \citep{friedman1991multivariate}.
 The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
 The regression target was simulated as:
 
 $$y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$$
 where $ e \sim N(0,125)$.
 
-We first sample \Sexpr{n} data points for training a gamboost model, a random forest and a k-nearest neighbors model (k = 3) all with otherwise default settings.
-Then we compute the partial dependence plots for feature $x_2$
-
-<<pdp-unreliable, fig.cap="Comparing PDP+ICE for models with different interaction strengths. The higher the interaction strength, the less reliable the PDP information. ICE shows high variance of feature effects. Here x3 is shown, x1 x2 and x4 look similar. The plots are centered at x= 0">>=
-lrn = makeLearner("regr.gamboost")
+<<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increasing from left to right), the more less accurate the main effect plot for feature x2 becomes (here, partial dependence plots), as the feature effect vary more between instances as visualized with individual conditional expectation curves.", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm">>=
+lrn = makeLearner("regr.lm")
 mod.gamboost = train(lrn, task)
 pred = Predictor$new(mod.gamboost, datx2, class = 1)
+
+ylim = c(-10, 1300)
 fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_gamboost = 1 - fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
 p_gamboost = plot(fe$effects[[feature]], ylim = y_limit) +
-  ggtitle(sprintf("gamboost, IA=%.2f", r2_gamboost))
+	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_gamboost), size = 10) + 
+  ggtitle("Linear Model") + 
+  scale_y_continuous("Prediction (centered at x=0)", limits = ylim)
 
 
-lrn = makeLearner("regr.ranger")
+lrn = makeLearner("regr.randomForest")
 mod.ranger = train(lrn, task)
 pred = Predictor$new(mod.ranger, datx2)
 fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_ksvm = 1- fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
 p_ksvm = plot(fe$effects[[feature]], ylim = y_limit) +
-  ggtitle(sprintf("ranger (random forest), IA=%.2f", r2_ksvm))
+	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_ksvm), size = 10) + 
+  ggtitle("Random Forest") + 
+  scale_y_continuous("", limits = ylim)
 
 
 lrn = makeLearner("regr.kknn", k = 3)
@@ -97,7 +86,9 @@ fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_kknn = 1- fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
 p_kknn = plot(fe$effects[[feature]], ylim = y_limit) +
-  ggtitle(sprintf("kknn, IA=%.2f", r2_kknn))
+	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_kknn), size = 10) + 
+  ggtitle("knn (k=3)") + 
+  scale_y_continuous("", limits = ylim)
 
 mae.gamboost = measureMAE(datx2$y, getPredictionResponse(predict(mod.gamboost, task2)))
 mae.ranger = measureMAE(datx2$y, getPredictionResponse(predict(mod.ranger, task2)))
@@ -107,18 +98,18 @@ grid.arrange(p_gamboost, p_ksvm, p_kknn, nrow = 1)
 @
 
 Figure \ref{fig:pdp-unreliable} shows an increasing interaction strength depending on the model used.
-The higher the interaction measure, the less reliable the aggegrated partial dependence plot become.
 This means that we prefer models with less interactions when using feature effect plots.
 
 
 
-\subsubsection{Less complex relationships, new possibilities}
+\subsubsection{The less complex the main effects, the better summarizable.}
 In linear models, the relationship between a feature and the predicted outcome can be expressed with a single number: the regression coefficient or weight.
-In non-linear, additive models (e.g. logistic regression) we can still use a single number to describe the relationship between a feature and the output, but have to rely on Average Marginal Effects.
-In non-additive models, the interactions make it even harder to express the marginal effects meaningfully as we showed in Figure \ref{fig:pdp-unreliable}.
-The lower IA (ideally 0), the more reliable average marginal effects become.
-Additionally with our proposed approximation of the AL effects, we can propose meaningful segments in the feature ranges for which the effect has a constant slope.
-And the lower the average main effect complexity, the less numbers are needed to describe the relevant main effects with words and tables.
+Summarizing feature effects of non-linear models (e.g. logistic regression, neural networks) with a single number (average marginal effect) can be misleading, since effect directions can cancel each other out.
+Our proposed MEC measure quantifies how many numbers we would need to describe a main effect up to a certain approximation error.
+Minimizing MEC means preferring models with main effects that can be described with less numbers.
+As a by-product of AMEC, we get for each feature a proposal how to optimally bin the feature into intervals with similar effect direction and strength.
+
+
 
 
 

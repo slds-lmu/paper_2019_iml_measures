@@ -71,7 +71,9 @@ With the feature.used approach we can omit computation of ALE plots of features 
 % =============================================================================
 % Implementation Note
 % =============================================================================
+The source code is available along with the paper on Github: LINK.
 The measure are implemented in the iml package \citep{iml2018} which is available on CRAN.
+All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2016}.
 
 
 

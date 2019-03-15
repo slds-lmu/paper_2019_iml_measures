@@ -58,8 +58,8 @@ dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
 mod = mgcv::gam(y ~ s(x), data = dat)
 pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
-app1 = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
-p1 = plot(app1)  + scale_y_continuous(limits = c(-7,7))
+app1_wiggle = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
+#p1 = plot(app1)  + scale_y_continuous(limits = c(-7,7))
 
 # add
 dat2 = dat
@@ -68,8 +68,8 @@ dat2$y = 0.5 * sin(20 * dat$x) + 10 * as.numeric(dat$x >0.5)
 mod = mgcv::gam(y ~ s(x) + I(x >0.5), data = dat2)
 pred = Predictor$new(mod, dat2)
 fe = FeatureEffect$new(pred, "x", grid.size = grid.size)
-app2 = AleNumApprox$new(ale = fe, max_seg = 5, epsilon = 0.05)
-p2 = plot(app2) + scale_y_continuous(limits = c(-7,7))
+app2_jump = AleNumApprox$new(ale = fe, max_seg = 5, epsilon = 0.05)
+#p2 = plot(app2) + scale_y_continuous(limits = c(-7,7))
 #grid.arrange(p1, p2, nrow = 1)
 @
 
@@ -123,7 +123,7 @@ We measured the approximation with $R^2$ of the approximation vs. the full ALE c
 % =============================================================================
 First we compute the main effect complexity for each feature individually and then average the results.
 If we average the main effect complexities without weighting, we run into the problem that some effects might be very complex, but don't contribute much to the prediction and we visually interpret the feature effect as having no impact and being wiggly around effect of zero.
-For example, the two ALE curves  \Sexpr{spark(app1$ale, c(-7, 7), width = 5)} and \Sexpr{spark(app2$ale, c(-7, 7), width = 5)} are identical except for the jump at 0.5 in the second curve.
+For example, the two ALE curves  \Sexpr{spark(app1_wiggle$ale, c(-7, 7), width = 5)} and \Sexpr{spark(app2_jump$ale, c(-7, 7), width = 5)} are identical except for the jump at 0.5 in the second curve.
 We need more linear segments to get the same approximation $R^2$ as for the second curve.
 One way to mitigate the problem of getting high AMEC estimates through wiggly main effects that are irrelevant for the prediction is to weight each main effect by its variance.
 Let's consider 3 main effect curves \Sexpr{spark(app1$ale, c(-6, 6), width = 5)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)}, which only differ by a scaling factor in the y-axis.

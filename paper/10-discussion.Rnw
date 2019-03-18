@@ -4,94 +4,86 @@
 
 
 % =============================================================================
-% Results summary
+% Key findings
 % =============================================================================
-We proposed three model-agnostic measures of the functional complexity of a machine learning model: a heuristic for numbers of features used, the average main effect complexity, and the interaction strength.
-All of those measures were motivated by the functional decomposition of the model prediction function and we demonstrated their usefulness in various examples.
-As these measures are model-agnostic, one application of these measure is the comparison of interpretability across different model classes and even within a certain model class when different configurations / hyperparameter settings strongly affect the model structure (e.g. adding interactions into linear models or changing the kernel in a support vector machine).
-The measures can be directly optimized in a multi-objective optimization setting.
-It also allows to tune complete pipeline with feature selection \citep{guyon2003introduction} to improve interpetability
+In this paper, we proposed three model-agnostic measures of prediction function complexity based on functional decomposition: number of features, interaction strength and main effect complexity.
+The measures allow model comparison across different model classes due to their model-agnostic nature.
+We argued that minimizing the number of features, interaction strength and main effect complexity improves the post-hoc interpretation.
+We demonstrated that these measures can be explicitly optimized with multi-objective optimization, to make the trade-off between interpretability and performance explicit and allow practitioners to select a model that is optimal for their application.
+
 
 % =============================================================================
-% Limitations
+% Strengths and Limitations
 % =============================================================================
-The measures as we proposed the come with a few limitations.
-The measures favor sparse linear models without interaction terms.
-In the end, will a user also find models that minimize our notions of complexity more useful?
-We did not test whether optimizing those measures improves the interpretability of the models for humans, which ideally should be tested in a user-survey.
-This was outside of the scope of our research.
-These complexity measures can be directly used in research settings with user-surveys and correlated with user-reported outcomes and measure of how fast users where to grasp a model.
-As \citep{rudin2018please} argues, the interpretability depends on the application and the audience and the preferred tradeoff between performance, sparsity, additivity and interactions might vary between different appication and audience.
-We believe our measures are useful for user surveys, because these measures can always be computed for the models that are being compared and correlated with user feedback to see what the tradeoff between performance and the different dimensions of complexity are in this particular case.
-Based on study by \citep{friedler2019assessing}, we can directly translate measures into human interpretability (given the limitations of their study).
-The complexity, interactions and number of features can be translated into number of operations (at least approximately), even though it's not from true model interna, but from approximation outside the model.
-Between the model and a human is always the representation of the model, which our measures do not evaluate.
-A naturally ocurring representation from our approach is the ALE visualization of the main effects, but this is not necessarily the best representation for an end user.
+\subsubsection{Strengths.}
+Our proposed measures can be applied for many models since they are model-agnostic, work for regression and binary classification (based on probabilities) and work for categorical and numerical features.
+\subsubsection{Limitations.}
+The way we decomposed the prediction function and defined the complexity measures will not be suitable for every situation.
+For example all higher order effects are combined into a single interaction strength measure, but we don't distinguish whether a model models only a single 2-way interaction or more complex ones.
+Also the main effect complexity measure is limited, because we only regard linear segments, but don't check for seasonal components or other structures. 
+Furthermore, the complexity measures quantify the prediction function from outside, ignoring the way a model is represented.
+While this allows these measures to be model-agnostic, which is a strength, it also ignores how the model can be represented and how well humans can understand it.
 
 % =============================================================================
-% Areas to improve
+% What's next
 % =============================================================================
-The proposed measure for the main effect complexity could be improved by considering shapes different from linear segments.
-For example quadratic components or seasonal components, which make sense when the feature is time, e.g. years and the main effect captures some seasonal effect.
+\subsubsection{The bigger picture.}
+The proposed measures do not all-encompassingly define interpretability, but are a step forward in providing quantifiable properties of machine learning models towards more rigorous science in interpretable machine learning, as \citep{doshi2017towards,Lipton2016} urge.
+We believe that interpretability can't be measured with a single number, but is a high-dimensional concept (sparsity, additivity, fidelity, human simulatability, ...) and we need many ways to measure interpretability.
+An example for such a measure that complements our work is \citep{friedler2019assessing} who propose the number of computational steps necessary for a human to emulate the model prediction as measure for interpretability.
+This matches \citep{rudin2018please} notion that interpretability depends on the application and the audience and we think this can be seen as putting different weights on the different interpretability dimension.
+In some situations we might prefer sparseness and a lack of interactions, in other it's important that we can represent the model as a decision list.
+As \citep{doshi2017towards} mentions this quantification has to happen on different levels: on the functional level (what we did), with humans and with experts.
 
-% =============================================================================
-% REmarks
-% =============================================================================
-The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
-All the three measures would also work with any other decomposition like fANOVA or PDP.
-It would even work with nonsensical decomposition, e.g.
-true model for two featuresis $\fh(x) = x_1$, but we decompose as $f_{nonsense}(x) = x_1 + x_2 + Rest$ and we show plots of $x_1$ and $x_2$.
-Complexity measure will not be so meaningful, but n.features would remain the same, and the R squared measure would be better for the first decomposition.
-As such the measures (IA and C) are intertwined between the model and the decomposition we choose, which makes sense.
-Problem with surrogate model: might approximate well, but not perfectly describe the model behaviour.
-e.g. x1, x2 strongly correlated, black box uses only x1.
-surrogate model uses x2.
-then perfect fidelity, but not true effects.
-All three measures would also work with surrogate models, because we can show how big their $R^2$ is for predicting the black box predictions and we can measure the complexity of the surrogate by using it's own C.
-For n.features we have now two options: we could use number of features in black box model or number of features in the surrogate model.
-What if the decomposition is bad?
-Well, for ALE we can show that it's a desirable decomposition.
-But for any other, the $R^2$ will be very bad if the approximation is unfaithful.
-
-% =============================================================================
-% Further research to build on top
-% =============================================================================
-Instead of looking at the proposed measure, the view of a machine learning model through the lens of functional decomposition, it is possible to propose more measures:
-For example a measure that only checks whether the main effects are linear.
-Or a measure for the monotonicity of the main effects that detects whether a function is monotonuous or not.
-Or a measure that differently weights the interaction based on the depth:
-Two-way interactions might be okay, but everything with higher-order is penalized.
-
-This measure also enhances ALE plots even when not used to measure model.
-For cheap cost, because we might already have ALE plots.
-For example we can compute Average Marginal Effects from the approximation and report those.
-We can sort ALE plots by complexity c and show the ones with similar complexity ("first row shows the plots with linear relationships, second with complexity of two, ...").
-With the feature.used approach we can omit computation of ALE plots of features that are not used.
+We believe that a plethora of measurements for interpretability are necessary to solve the lack of definition of interpretability.
+This allows researchers to make quantified, verifyable claims when proposing "interpretable" models or methods.
 
 % =============================================================================
 % Implementation Note
 % =============================================================================
+\subsubsection{Implementation.}
 The source code is available along with the paper on Github: LINK.
 The measure are implemented in the iml package \citep{iml2018} which is available on CRAN.
 All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2016}.
-
-
-
 % =============================================================================
 % Funding
 % =============================================================================
-This work is funded by the Bavarian State Ministry of Science and the Arts in the framework of the Centre Digitisation.Bavaria (ZD.B)
-
+\subsubsection{Funding.}
+This work is funded by the Bavarian State Ministry of Science and the Arts in the framework of the Centre Digitisation.Bavaria (ZD.B)<
 
 
 
 % =============================================================================
-% Further chapter material
+% =============================================================================
+% Further material
+% =============================================================================
 % =============================================================================
 
+% =============================================================================
+% REmarks
+% =============================================================================
+% The approach we take (functional decomposition) is flexible enough to adapt to different desideratea (e.g. favor different functional forms over others).
+% All the three measures would also work with any other decomposition like fANOVA or PDP.
+% It would even work with nonsensical decomposition, e.g.
+% true model for two featuresis $\fh(x) = x_1$, but we decompose as $f_{nonsense}(x) = x_1 + x_2 + Rest$ and we show plots of $x_1$ and $x_2$.
+% Complexity measure will not be so meaningful, but n.features would remain the same, and the R squared measure would be better for the first decomposition.
+% As such the measures (IA and C) are intertwined between the model and the decomposition we choose, which makes sense.
+% Problem with surrogate model: might approximate well, but not perfectly describe the model behaviour.
+% e.g. x1, x2 strongly correlated, black box uses only x1.
+% surrogate model uses x2.
+% then perfect fidelity, but not true effects.
+% All three measures would also work with surrogate models, because we can show how big their $R^2$ is for predicting the black box predictions and we can measure the complexity of the surrogate by using it's own C.
+% For n.features we have now two options: we could use number of features in black box model or number of features in the surrogate model.
+% What if the decomposition is bad?
+% Well, for ALE we can show that it's a desirable decomposition.
+% But for any other, the $R^2$ will be very bad if the approximation is unfaithful.
+
+% =============================================================================
+% Areas to improve
+% =============================================================================
+% The proposed measure for the main effect complexity could be improved by considering shapes different from linear segments.
+% For example quadratic components or seasonal components, which make sense when the feature is time, e.g. years and the main effect captures some seasonal effect.
 
 %Problems:
-%- For tree based methods and other models with step curves, the ale fanova decomp never goes to perfectly zero, because it interpolates a little bit between the steps.
-%When true marginal function is step function, then it adds to the SSE unecessarily
 %- Unclear how many intervals
 %- Weighted by data sensity (can be unintuitive when looking at plot) or all plot point same weight (probably very wrong). Solution: Make clear in ALE plot where most data is with rug or alpha.

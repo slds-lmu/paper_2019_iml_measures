@@ -23,11 +23,14 @@ Model-agnostic post-hoc interpretation methods can be used with any model, regar
 Yet the usefulness and reliability of these methods is still tied to properties of the model.
 A lack of sparseness, complex relationships between features and prediction and interactions cause a detoriation of post-hoc interpretations:
 Interpretations become more unmanageable, verbose and unreliable, when more features were used, when feature effects diverge from simple relationships (e.g. from linear to non-linear), when the prediction heavily relies on feature interactions.
-
+% =============================================================================
+% Interpretability not defined
+% =============================================================================
+Also it's not clear what interpretability really means.
 % =============================================================================
 % Model selection as use case
 % =============================================================================
-Either way, the interpretability / performance tradeoff between different models is unquantified.
+This means we can't quantify the tradeoff between interpretability and performance tradeoff especially across different model.
 For example how do we compare the interpretability of a decision tree and a decision list or of a linear model and a support vector machine?
 % =============================================================================
 % Need interpretability measures

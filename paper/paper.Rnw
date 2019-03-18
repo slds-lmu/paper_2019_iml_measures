@@ -63,7 +63,7 @@ We optimize model hyperparameters across different types of models for predictiv
 @
 
 
-<<interpretability, child = "interpretability.Rnw">>=
+<<interpretability, child = "interpretability.Rnw", eval=FALSE>>=
 @
 
 <<09-application-multiobj, child = "09-application-multiobj.Rnw">>=

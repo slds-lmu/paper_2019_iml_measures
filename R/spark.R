@@ -6,7 +6,7 @@
 #' @param ylim The y limits, can be set to NA
 #' @param approx Should the approximation be plotted instead of real ALE curve?
 #' @param ... Further arguments for ltxsparklines::sparline
-spark  = function(obj, ylim = c(NA, NA), approx = FALSE, color = "black",...){
+spark  = function(obj, ylim = c(NA, NA), approx = FALSE, color = "black", height = 2,...){
   assert_numeric(ylim, len = 2, null.ok = TRUE)
   assert_multi_class(obj, c("AleNumApprox", "FeatureEffect"))
 
@@ -43,5 +43,54 @@ spark  = function(obj, ylim = c(NA, NA), approx = FALSE, color = "black",...){
   stopifnot(!any(is.na(c(x,y))))
   sparkline_string = sparkline(x = x, y = y,
     xspikes = xspikes, yspikes = yspikes, ylim = c(ymin, ymax),...)
-  sprintf("{\\definecolor{sparklinecolor}{named}{%s}%s}", color, sparkline_string)
+  sprintf("{\\renewcommand{\\sparklineheight}{%s}\\definecolor{sparklinecolor}{named}{%s}%s}",
+    height, color, sparkline_string)
+}
+
+
+
+#' Compute model summary
+#'
+#' @param pred Predictor
+#' @param ylim the y-axis limits for the sparklines
+#' @return character vector with NF, IA, AMEC and sparklines for all features
+get_spark_col = function(pred, ylim = c(NA, NA), width = 5, ...) {
+  assert_class(pred, "Predictor")
+  assert_numeric(ylim, len = 2)
+  fc = FunComplexity$new(pred)
+  sparklns = sapply(fc$effects, function(eff) {
+    if(all(eff$results$.ale == 0)) {
+      ""
+    } else {
+      spark(eff, width = width, ylim = ylim, ...)
+    }
+  })
+  res = c("NF" = fc$n_features,
+    "IA"= sprintf("%.2f", 1 - fc$r2),
+    "AMEC" = sprintf("%.2f", fc$c_wmean),
+    sparklns)
+  as.character(res)
+}
+
+#' Compute model summaries for subset off pareto set
+#'
+#' @param paretor_set the mbo pareto set
+#' @param indices the subset indices for which to compute the summaries
+#' @param ylim the y-axis limits for the sparklines
+#' @return data.frame with NF, IA, AMEC and sparklines for all features. columns are models
+get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA), ...) {
+  assert_class(mbo_obj, "MBOMultiObjResult")
+  assert_numeric(indices, any.missing = FALSE)
+  assert_numeric(ylim, len = 2)
+  pareto_set = mbo_obj$pareto.set
+  pareto_front = mbo_obj$pareto.front
+  res = lapply(indices, function(i){
+    pp = pareto_set[[i]]
+    pp = pp[!is.na(pp)]
+    lrn = setHyperPars(lrn.regr, par.vals = pp)
+    mod = train(lrn, task)
+    pred = Predictor$new(mod, task.dat)
+    c(pareto_front[i, "MAE"], unlist(get_spark_col(pred, ylim = ylim, ...)))
+  })
+  data.frame(res)
 }

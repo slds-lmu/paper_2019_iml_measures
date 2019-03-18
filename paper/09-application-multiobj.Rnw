@@ -1,81 +1,48 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Optimization for Performance and Interpretability}
+\section{Optimization Performance and Interpretability}
 \label{sec:multiobj}
-% Datasets:
-%
-% Biodegradability
-% https://www.openml.org/d/1494
-%
-% Wind and Solar energy based on wheather
-% https://github.com/hugorcf/Renewable-energy-weather/blob/master/renewable.ipynb
 
+<<params>>=
+### Set parameters for application
+DEBUG_MODE = FALSE
+set.seed(42)
+# Parameters for functional complexity
+MAX_SEG_CAT = 9
+MAX_SEG_NUM = 4
+EPSILON = 0.05
+GRID.SIZE = 50
+
+# Parameters for mbo
+n.folds = 3
+surrogate.ntree = 200
+n.initial.design = 100L
+infill.criterion = crit.cb
+n.cores = 1
+n.augment = 20
+@
 
 <<mo-data>>=
-devtools::load_all()
-set.seed(42)
-
-MAX_SEG_CAT = 3
-MAX_SEG_NUM = 3
-EPSILON = 0.05
-GRID.SIZE = 20
 wine = read.csv(here("./data/winequalityN.csv"))
 wine = na.omit(wine)
 
 # only use white wine
 wine = wine[wine$type == "white", ]
 wine$type = NULL
-DEBUG_MODE = TRUE
 
 if(DEBUG_MODE) {
-  WINE_SAMPLE = sample(1:nrow(wine), size = 500)
+  WINE_SAMPLE = sample(1:nrow(wine), size = 1500)
 } else {
   WINE_SAMPLE = sample(1:nrow(wine))
 }
 
-
 if(length(WINE_SAMPLE) < nrow(wine)) {
   warning("Not using all data points")
 }
-
 wine = wine[WINE_SAMPLE, ]
 
 task = makeRegrTask(data = wine, target = "quality")
 task.dat = getTaskData(task)
 @
-
-<<mo-setup>>=
-n.folds = 2
-surrogate.ntree = 30
-n.initial.design = 30L
-infill.criterion = crit.cb
-n.cores = 1
-@
-
-
-
-% =============================================================================
-% Motivation for application
-% =============================================================================
-As one of the main application of the complexity and interpretability measures, we demonstrate how we can minimize functional complexity along with prediction error in a multi-object optimization application.
-
-
-% =============================================================================
-% Wine Data
-% =============================================================================
-For this we work with the wine quality data set \citep{cortez2009modeling}.
-This dataset contains physicochemical properties like alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
-The goal is to predict the quality of the wine which was assessed on a scale from 0 to 10 by three blind ratings and we have the median in the data.
-
-
-
-% =============================================================================
-% Why like this?
-% =============================================================================
-The usual approach to instill interpretability into a prediction model is to a priori narrow done the possible models (e.g. only try out decision trees and decision rules) and find the best performing model within  that class.
-We suggest to simultanously optimize for performance AND interpretability to find the best tradeoff.
-As \citep{freitas2014comprehensible} points out, it is difficult to define a priori how the tradeoff between accuracy and comprehensibility should look like and suggest a to follow a multi-objective aproach based on Pareto dominance or optimization.
-Our goal is to search over a wide spectrum of different models and different parameter settings for models that optimize performance and also interpretability.
-The result will be the Pareto front of optimal models with different interpretability / performance tradeoffs.
 
 <<mo-learners>>=
 base.learners.regr = list(
@@ -85,7 +52,6 @@ base.learners.regr = list(
   makeLearner("regr.xgboost.mod"),
   makeLearner("regr.rpart"),
   makeLearner("regr.lm"),
-  #makeLearner("regr.cubist"),
   makeLearner("regr.featureless", method = "median")
 )
 
@@ -98,7 +64,6 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
   regr.kknn = makeParamSet(
     makeIntegerParam("k", lower = 1, upper = 10),
     makeIntegerParam("distance", lower = 1, upper = 2)
-
   ),
   regr.xgboost.mod = makeParamSet(
     makeIntegerParam ("max_depth" , lower = 1, upper = 10),
@@ -115,36 +80,58 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
 @
 
 % =============================================================================
+% Motivation for application
+% =============================================================================
+As one of the main application of the functional complexity  measures, we demonstrate with the wine quality dataset how to optimize performance and interpretability in a multi-object optimization application.
+
+
+% =============================================================================
+% Wine Data
+% =============================================================================
+\subsubsection{Predicting Wine Quality.}
+We used the wine quality dataset \citep{cortez2009modeling}, which contains physicochemical properties like alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
+The goal is to predict the quality of the wineon a scale from 0 to 10, assessed by the median of three blind ratings.
+The data is freely available online.
+
+% =============================================================================
+% Why like this?
+% =============================================================================
+\subsubsection{Motivation.}
+As \citep{freitas2014comprehensible} points out, it is difficult to know before model what the tradeoffs between interpretability and performance are and suggests multi-objective optimization based on Pareto dominance.
+This stands in contrast to apriori selecting an interpretable model class (e.g. decision rules)  and optimizing within this class or exclusively optimizing performance and applying post-hoc interpretations.
+We suggest to search over a wide spectrum of different models and hyper parameters, present the set of Pareto optimal models and let the practitioner choose a suitable tradeoff between interpretability and performance.
+Since we offer three measures of interpretability, we provide a more in-depth characterization of the model's behavior, allowing practitioners to make more informed decisions (e.g. how much does performance suffer when we use model with interactions?).
+
+% =============================================================================
 % Objectives and Models
 % =============================================================================
-We apply the model-based optimization framework \citep{mlrMBO} to find the best model based on the following 4 objectives: number of features (NF), main effect complexity (MEC), interaction strength (IA) and the performance measured as the mean absolute error (MAE).
-We compare the following models: linear regression model, CART (tuning maximum tree-depth), weighted k-nearest neighbor classifier (tuning number of neighbors k and the distance function), a support vector machine (tuning complexity parameter C and the type of kernel), sparse linear models glmnet (tuning alpha and s??), xgboost (tuning the maximum depth and number of rounds) and cubist (tuning the number of rules)
+\subsubsection{Objectives and Models.}
+We apply the model-based optimization framework \citep{mlrMBO} to find the best model based on the following 4 objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) of the prediction.
+We compare the following models: linear regression model, CART (tuning maximum tree-depth), weighted k-nearest neighbor classifier (tuning number of neighbors k and the distance function), a support vector machine (tuning complexity parameter C), sparse linear models glmnet (tuning alpha and s??), xgboost (tuning the maximum depth and number of rounds).
 
 
 % =============================================================================
 % MBO Setup
 % =============================================================================
+\subsubsection{Model-based Optimization Setup.}
 We use the ParEGO algorithm \citep{knowles2006parego} for the multi-objective optimization.
-As surrogate model we use a random forest with \Sexpr{surrogate.ntree} trees.
-The infill criterion is the confidence bound with lambda automatically chosen.
-The fitness function is 4-dimensional, including MAE, NF, MEC, IA.
-Within the fitness function call, MAE is estimated using \Sexpr{n.folds}-fold cross-validation.
+We use a random forest with \Sexpr{surrogate.ntree} trees as a surrogate model to suggest new model/hyperparameter configurations to test with the confidence bound (automatically chosen lambda) as infill criterion.
+The fitness function is the 4-dimensional vector  $(MAE, NF, MEC, IAS)$.
+Within the fitness function,the MAE is estimated using \Sexpr{n.folds}-fold cross-validation.
 The other measures (NF, MEC, IA) are estimated in-sample.
 For the initial sample of models/hyperparameters we take a random Latin Hypercube sample of \Sexpr{n.initial.design}.
 
-% TODO: Stop criterion
-% TODO : Create own design to ensure that we have each learner in there.
-%        Maybe it's enough to have a big enough sample
+% Question: What is the stop criterion? Could not find out with the help files.
+% TODO: Write about stop criterion
+% Question: Would it makes sense to have a stratified initial design to ensure that we sample each learner for sure?
 
-<<mo-run, dependson=c("mo-data", "mo-learners", "mo-setup"), results='hide'>>=
-resampDescr = makeResampleDesc(method = "CV", iters = n.folds)
-rin = makeResampleInstance(resampDescr, task)
 
+<<mo-run, dependson=c("mo-data", "mo-learners", "params"), results='hide'>>=
 fn = function(x){
   # removes unused params
   x = x[!is.na(x)]
   lrn = setHyperPars(lrn.regr, par.vals = x)
-  perf = resample(learner = lrn, show.info = FALSE,
+  mae_loss = resample(learner = lrn, show.info = FALSE,
     task = task , resampling = rin ,
     measures = list(mlr::mae))$aggr
   mod = train(lrn, task)
@@ -152,46 +139,45 @@ fn = function(x){
   pred = Predictor$new(mod, task.dat, y = task$task.desc$target)
   imeasure = FunComplexity$new(pred, max_seg_cat = MAX_SEG_CAT, max_seg_num = MAX_SEG_NUM, epsilon = EPSILON, grid.size = GRID.SIZE)
   cat(".")
-  c(round(perf, 2),
-    round(imeasure$c_wmean, 2),
+  c(round(mae_loss, 2),
+    round(imeasure$c_wmean, 1),
     round(1 - imeasure$r2, 2),
     imeasure$n_features)
 }
 
+# Setup MBO
+resampDescr = makeResampleDesc(method = "CV", iters = n.folds)
+rin = makeResampleInstance(resampDescr, task)
 obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = ps.regr, n.objectives = 4, has.simple.signature = FALSE)
-
-ctrl = makeMBOControl(n.objectives = 4L)
+measure_names = c("MAE", "MEC", "IAS", "NF")
+ctrl = makeMBOControl(n.objectives = 4L, y.name = measure_names)
 ctrl = setMBOControlInfill(ctrl, crit = infill.criterion)
 ctrl = setMBOControlMultiObj(ctrl, method = "parego")
-
 mbo.lrn = makeLearner("regr.randomForest", predict.type = "se", ntree = surrogate.ntree)
 mbo.lrn = makeImputeWrapper(mbo.lrn, classes = list(numeric = imputeMax(2), factor = imputeConstant("__miss__")))
+design = generateDesign(n = n.initial.design, par.set = ps.regr, fun = lhs::randomLHS, augment = n.augment)
 
-design = generateDesign(n = n.initial.design, par.set = ps.regr, fun = lhs::randomLHS, augment = 20)
-
-
+# Start MBO
 parallelStartMulticore(cpus = n.cores, show.info = TRUE)
 mbo.iml = mbo(fun = obj.fun, design = design, learner = mbo.lrn, control = ctrl)
 parallelStop()
+saveRDS(mbo.iml, file = "mbo-results.RDS")
 
 
 pareto.set = rbindlist(lapply(mbo.iml$pareto.set, data.frame))
 best.models = data.frame(cbind(round(mbo.iml$pareto.front, 2), pareto.set))
+
 # Remember the index so that models can later be retrieved from mbo object
 best.models$index = 1:nrow(best.models)
-measure_names = c("y_1", "y_2", "y_3", "y_4")
 
 # Some duplicates, because sometimes paramter changes, but all criteria remain the same.
 # Only keep one of those solutions
 dups = duplicated(best.models[,c("selected.learner", measure_names)])
 best.models = best.models[!dups,]
-
-# TODO: select based on params which duplicated to keep
-#       e.g. rpart with lowest max.depth
-
 @
 
 <<mo-results-rename, dependson="mo-run", results = "asis">>=
+# mbo.iml = readRDS("paper/mbo-results.RDS")
 # Improves the naming of the learners
 best.models.print = best.models
 colnames(best.models.print) = gsub("regr.", "", colnames(best.models.print), fixed = TRUE)
@@ -217,55 +203,131 @@ best.models.print$descr = apply(best.models.print, 1, function(row) {
   sprintf("%s (%s)", lrn_name, param_string)
 })
 
-tab.cap = "Pareto front of models minimizing mean absolute error (MAE), number of features (NF), main effect complexity (MEC) and interaction strength (IA)."
 
+# Table of Pareto set + objective values
+tab.cap = "Pareto front of models minimizing mean absolute error (MAE), number of features (NF), main effect complexity (MEC) and interaction strength (IA)."
 to.print = best.models.print[c("descr", measure_names)]
 rownames(to.print) = NULL
 xtable::xtable(to.print, caption = "tab.cap", label = "tab:pareto")
 
-best.model.index = which(best.models.print$y_1 == min(best.models.print$y_1))[1]
-best.model = best.models.print[best.model.index,]
-@
 
+# Compute scaled version of measures
+baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
+best_performance = min(best.models.print$MAE)
+best.models.print$sMAE = (best.models.print$MAE - best_performance) / (baseline_performance - best_performance)
+best.models.print$sNF  = best.models.print$NF / sum(task$task.desc$n.feat)
+best.models.print$sIAS  = best.models.print$IAS / max(best.models.print$IAS)
+best.models.print$sMEC  = (best.models.print$MEC - 1) / (max(best.models.print$MEC) - 1)
+# Because of featureless learner
+best.models.print$sMEC = pmax(0, best.models.print$sMEC)
+smeasure_names = c("sMAE", "sMEC", "sIAS", "sNF")
+@
 
 
 % =============================================================================
 % Pareto Front Table
 % =============================================================================
-Table \ref{tab:pareto} shows the Pareto front of models with different tradeoffs between complexity and performance, and an even more granular tradeoffs between different aspects of interpretability.
-TODO: Interpretation updaten
-The best performing model is the \Sexpr{best.model$selected.learner} model, which uses \Sexpr{best.model$y_4} of \Sexpr{sum(task$task.desc$n.feat)} features, has an average main complexity of \Sexpr{best.model$y_2} and the interactions explain \Sexpr{best.model$y_3} of the variance.
+\subsubsection{Results.}
+Table \ref{tab:pareto} shows the set of Pareto optimal models along with their MAE, NF, IAS and MEC measures.
+For a more informative visualization, we propose to visualize the main effects along with the measures for a selection of models in Table~\ref{tab:spark-table-multiobj}.
+To get an interesting selection of models, we chose XXX models with different tradeoffs between the 4 measures.
+First we scaled all measures to the range of $[0,1]$ by scaling each measure with meaningful upper and lower bounds:
+$$M_{scaled}(M) = \frac{M - M_{inf}}{M_{sup} - M_{inf}}$$
+
+For MAE, we set $M_{inf}$ to the lowest MAE observed among all models and $M_{sup} = \sum_{i=1}^n|y_i - median(y)|$.
+For NF, we set $M_{inf}=0$ and $M_{sup}=p$.
+For MEC, we set $M_{inf}=1$ and $M_{sup}$ to the highest observed MEC among all models.
+For IAS, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed IAS among all models.
 
 
+$$\lambda_{MAE} MAE_{scaled} + \lambda_{NF} NF_{scaled} + \lambda_{MEC} MEC_{scaled} + \lambda_{IAS} IAS_{scaled}$$
 
+By choosing values for $\lambda$'s the multi-objective function collapses to a single objective and we can select the model from the Pareto set that optimizes it.
+Table~\ref{tab:spark-table-multiobj} shows different tradeoffs.
+% =============================================================================
+% Best performing model
+% =============================================================================
+
+TODO: Properly set y limits (based on actual min and max)
+TODO: Fix match between colname and model column
+
+<<spark-table-multiobj, results='asis', dependson=c("mo-run", "mo-results-rename")>>=
+single_obj = function(measure_df, lambdas){
+  assert_numeric(lambdas, len = 4, null.ok = FALSE)
+  assert_data_frame(measure_df, ncols = 4)
+  rowSums(as.matrix(measure_df) %*% lambdas)
+}
+
+lambda_perf = c(1,0,0,0)
+best_perf = which.min(single_obj(best.models.print[smeasure_names], lambda_perf))
+lambda_sparse = c(1,0.5,0,0)
+best_sparse = which.min(single_obj(best.models.print[smeasure_names], lambda_sparse))
+lambda_int = c(0.5,1,1,1)
+best_int = which.min(single_obj(best.models.print[smeasure_names], lambda_int))
+lambda_half = c(3,1,1,1)
+best_half = which.min(single_obj(best.models.print[smeasure_names], lambda_half))
+
+indices = c(best_perf, best_sparse, best_int, best_int)
+mbo_indices = best.models.print[indices,"index"]
+
+tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-1, 1), height = 5, width=7)
+colnames(tab) = best.models.print$descr[indices]
+# Because I use as.is later with xtable
+colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)
+colnames(tab) = gsub("()", "",colnames(tab), fixed = TRUE)
+rownames(tab) = c("MAE", "NF", "IA", "AMEC", setdiff(colnames(task.dat), "quality"))
+
+cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models optimize performance only (%s) performance and sparseness (%s), focus on interpretability (%s), more focus on performance (%s).",
+  length(indices),
+  paste(lambda_perf, collapse = ","),
+  paste(best_sparse, collapse = ","),
+  paste(lambda_int, collapse = ","),
+  paste(lambda_half, collapse = ","))
+xtab = xtable(tab)
+align(xtab) <- "l|p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}"
+print.xtable(xtab, sanitize.text.function = as.is)
+@
 
 % =============================================================================
 % Visualization of Pareto Front
 % =============================================================================
-We suggest a visualizion of the Pareto front, but instead of the loss minimization we show invert the measures (interpretability instead of complexity and performance instead of loss) and scale them between 0 and 1 for better comparison between the metrics.
-All metrics are scaled to the interval of $[0,1]$, the higher the better (better performing or better interpretability)
-The following scalings are proposed
-\begin{itemize}
-\item Performance as PRL, where we set constant baseline as supremum and the best model as supremum
-\item $\text{Sparsity} = 1 - \frac{n.features - 1}{p - 1}$ (the -1 in nominator and denominator is because model with one feature should have sparsity 1)
-\item $\text{Addditivity} = 1 R^2$ of first order model
-\item $\text{Simplicty} = C_{max} - C + 1$
-\end{itemize}
+\subsubsection{Performance-Interpretability Tradeoff}
+The measures allow us to study how model classes and parameter settings trade off interpretebility and performance.
+Figure~\ref{fig:perf-interpret-tradeoff} shows each model with hyperparameter configuration from the Pareto set.
+We combine the three functional complexity measure and invert it, so that it can be interpreted as "Interpretability", with 3 being the theoretical interpretability maximum:
 
-<<plot-best-mbo, dependson="mo-results-rename", fig.cap = "Comparing models with different interpretability and performance tradeoffs.">>=
-baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
-best_performance = min(best.models.print$y_1)
-best.models.print$performance = (best.models.print$y_1 - baseline_performance) / (best_performance - baseline_performance)
+$$Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$$
 
-best.models.print$sparsity  = 1 - best.models.print$y_4/ sum(task$task.desc$n.feat)
-best.models.print$additivity  = 1 - best.models.print$y_3 / max(best.models.print$y_3)
-best.models.print$simplicity  = 1 - ((best.models.print$y_2 - 1 ) / (max(best.models.print$y_2) - 1))
+This weights all three (scaled) measures equally.
+The theoretical maximal interpretability is 3 for a model predicting a constant value.
+The theoretical minimal interpretability is 0 for a model that uses all features and has the highest interaction strength and main effect complexity measure among all Pareto optimal models.
 
-measure_names = c("performance", "sparsity", "additivity", "simplicity")
-plot.dat = melt(best.models.print, measure.vars = measure_names)
+<<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. Interpretability tradeoff for predicting wine quality.">>=
+ggplot(best.models.print,aes(x = 1 - sMAE, y = 3 - (sNF + sMEC + sIAS))) +
+  geom_label(aes(label = descr)) +
+  scale_x_continuous("Performance", limits = c(NA, 1)) +
+  scale_y_continuous("Interpretability", limits = c(0, 3))
+@
 
+
+
+% =============================================================================
+% =============================================================================
+% Further Material
+% =============================================================================
+% =============================================================================
+
+% Datasets:
+%
+% Biodegradability
+% https://www.openml.org/d/1494
+%
+% Wind and Solar energy based on wheather
+% https://github.com/hugorcf/Renewable-energy-weather/blob/master/renewable.ipynb
+
+<<plot-best-mbo, dependson="mo-results-rename", fig.cap = "Comparing models with different interpretability and performance tradeoffs.", eval = FALSE>>=
 #param_cols = setdiff(colnames(best.models), c(measure_names, "selected.learner"))
-
+plot.dat = melt(best.models.print, measure.vars = measure_names)
 plot.dat = unique(plot.dat)
 p = ggplot(plot.dat) +
   geom_col(aes(x = variable, y = value)) +
@@ -282,121 +344,14 @@ p  = ggplot(mapping = aes(y = variable, x = descr, color = value)) +
   scale_color_viridis(option = "plasma") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   geom_label(data = plot.dat[plot.dat$variable == "simplicity",],
-    aes(label = sprintf("C:%.2f", y_2)), nudge_y = nudge_y, color = "black") +
+    aes(label = sprintf("C:%.2f", MEC)), nudge_y = nudge_y, color = "black") +
   geom_label(data = plot.dat[plot.dat$variable == "additivity",],
-    aes(label = sprintf("IA:%.2f", y_3)), nudge_y = nudge_y, color = "black") +
+    aes(label = sprintf("IA:%.2f", IAS)), nudge_y = nudge_y, color = "black") +
   geom_label(data = plot.dat[plot.dat$variable == "sparsity",],
-    aes(label = sprintf("P:%.0f", y_4)), nudge_y = nudge_y, color = "black") +
+    aes(label = sprintf("P:%.0f", NF)), nudge_y = nudge_y, color = "black") +
   geom_label(data = plot.dat[plot.dat$variable == "performance",],
-    aes(label = sprintf("MAE:%.3f", y_1)), nudge_y = nudge_y, color = "black")
+    aes(label = sprintf("MAE:%.3f", MAE)), nudge_y = nudge_y, color = "black")
 print(p)
 @
-
-
-% =============================================================================
-% Visualization of Pareto Front
-% =============================================================================
-We aim to create the infamous "Accuracy vs. Interpretability" figure that shows the tradeoff between the two.
-It's seen in many presentations, but was never really produced except for model-specific measures.
-For the wine quality prediction task, we create a simple version of this figure using the pareto set as the models that appear as points in the plot.
-We combine the three interpretability measures into one by simply adding them up, so that the theoretical maximum interpretability is 3 for a model with one feature with complexity one (and no interactions).
-An interpretability of close to 0 would mean that all features were used, the main effect complexity is very high and it is the model with the most interactions compared with the other models in the pareto set.
-
-<<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. Interpretability tradeoff for predicting wine quality.">>=
-ggplot(best.models.print,aes(x = performance, y = simplicity + additivity + sparsity)) +
-  geom_label(aes(label = descr)) +
-  scale_x_continuous("Performance", limits = c(NA, 1)) +
-  scale_y_continuous("Interpretability", limits = c(0, 3))
-@
-
-% =============================================================================
-% Best performing model
-% =============================================================================
-TAble \ref{tab:spark-table-multiobj} shows the main effects of the best performing model.
-
-TODO: Implement following table for different tradeoffs: best performance, best NF, best IA, best AMEC, best 1:1 tradeoff, ...
-TODO: Properly set y limits (based on actual min and max)
-TODO: Caption which model is which
-TODO: Fix match between colname and model column
-
-<<spark-table-multiobj, results='asis', dependson=c("mo-run", "mo-results-rename")>>=
-
-#' Compute model summary
-#'
-#' @param pred Predictor
-#' @param ylim the y-axis limits for the sparklines
-#' @return character vector with NF, IA, AMEC and sparklines for all features
-get_spark_col = function(pred, ylim = c(NA, NA)) {
-  fc = FunComplexity$new(pred)
-  sparklns = sapply(fc$effects, function(eff) {
-    if(all(eff$results$.ale == 0)) {
-      ""
-    } else {
-      spark(eff, width = 4, ylim = ylim)
-    }
-  })
-  res = c("NF" = fc$n_features,
-    "IA"= sprintf("%.2f", 1 - fc$r2),
-    "AMEC" = sprintf("%.2f", fc$c_wmean),
-    sparklns)
-  as.character(res)
-}
-
-#' Compute model summaries for subset off pareto set
-#'
-#' @param paretor_set the mbo pareto set
-#' @param indices the subset indices for which to compute the summaries
-#' @param ylim the y-axis limits for the sparklines
-#' @return data.frame with NF, IA, AMEC and sparklines for all features. columns are models
-get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA)) {
-  pareto_set = mbo_obj$pareto.set
-  pareto_front = mbo_obj$pareto.front
-  res = lapply(indices, function(i){
-    pp = pareto_set[[i]]
-    pp = pp[!is.na(pp)]
-    lrn = setHyperPars(lrn.regr, par.vals = pp)
-    mod = train(lrn, task)
-    pred = Predictor$new(mod, task.dat)
-    c(pareto_front[i, "y_1"], unlist(get_spark_col(pred, ylim = ylim)))
-  })
-  data.frame(res)
-}
-
-best_index  = best.models.print$index[best.models$y_1 == min(best.models$y_1)][1]
-tradeoff_measure =  best.models.print$performance + (1/3) * (best.models.print$additivity + best.models.print$sparsity + best.models.print$simplicity)
-
-best_with_less7 = best.models %>%
-  filter(y_4 <= 7) %>%
-  filter(y_1 == min(y_1)) %>%
-  select(index)
-
-best_0IA_1C = best.models %>%
-  filter(y_2 == 1, y_3 == 0) %>%
-  filter(y_1 == min(y_1)) %>%
-  select(index)
-
-best_tradeoff_model = best.models.print$index[which(tradeoff_measure == max(tradeoff_measure))][1]
-
-indices = unlist(c(best_index[[1]], best_with_less7[[1]], best_0IA_1C[1], best_tradeoff_model))
-tab = get_spark_table(mbo_obj = mbo.iml, indices = indices, ylim = c(-3, 3))
-colnames(tab) = best.models.print$descr[best.models.print$index %in% indices]
-  # Because I use as.is later with xtable
-colnames(tab) = gsub("_","\\_", colnames(tab) , fixed = TRUE)
-
-rownames(tab) = c("MAE", "NF", "IA", "AMEC", setdiff(colnames(task.dat), "quality"))
-print.xtable(xtable(tab), sanitize.text.function = as.is)
-@
-
-
-% =============================================================================
-% Another interesting model
-% =============================================================================
-In general, each of the models optimizes a different tradeoff:
-
-$$\lambda_1 \text{Performance} + \lambda_2\text{Simplicity} + \lambda_3 \text{Additivity} + \lambda_4 \text{Sparsity}) $$
-
-By fixing the $\lambda$'s we get certain single models that are optimal.\
-If we set $\lambda_1 = \frac{3}{6}, \lambda_2=\frac{1}{6}, \lambda_3=\frac{1}{6}, \lambda_4=\frac{1}{6}$, we weight performance as much as the three interpretability measures combined.
-And we get the following model as solution:
 
 

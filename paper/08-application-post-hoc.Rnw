@@ -47,10 +47,7 @@ feature = "x2"
 In the following simulated example we trained three models with different capabilities of modeling interactions between features: a linear regression model, a random forest and a k-nearest-neighbors model.
 We simulated 500 data points with 4 features and a continuous target to be predicted \citep{friedman1991multivariate}.
 The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
-The regression target was simulated as:
-
-$$y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$$
-where $ e \sim N(0,125)$.
+The regression target was simulated as: $y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$, where $ e \sim N(0,125)$.
 
 <<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increasing from left to right), the more less accurate the main effect plot for feature x2 becomes (here, partial dependence plots), as the feature effect vary more between instances as visualized with individual conditional expectation curves.", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm">>=
 lrn = makeLearner("regr.lm")

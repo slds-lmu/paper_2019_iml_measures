@@ -203,7 +203,7 @@ epsilon = 0.05
 The complexity measures ignores how complex the internal structure of the model is, e.g. it does not matter whether the linear relationship comes from a single linear model or a blend of hundreds of linear models.
 We demonstrate how the number of nodes and complexity measure C increase with increasing model performacne, but at some point the complexity C decreases again.
 For this example, \Sexpr{n} data points were drawn from a uniform distribution between 0 and 1, and the target is simulated as $2 * x + \epsilon$, where $\epsilon \sim N(0,\Sexpr{nsd})$.
-We trained three trees with different maximal depths, as shown in Table \ref{tab:tree}.
+We trained three trees with different maximal depths, as shown in Table~\ref{tab:tree}.
 
 <<tree-increase, dependson="tree-increase-data",results="asis">>=
 rp_width = function(rp) sum(rp$frame$var == "<leaf>")
@@ -242,7 +242,7 @@ tab = data.frame(
   "AMEC" = c(fc1$c_wmean, fc2$c_wmean, fc3$c_wmean))
 
 caption = "Increasing the tree depth always increases number of terminal nodes, but the complexity measure increases at some point because the prediction function can be approximated by a single linear function."
-print.xtable(xtable(tab, caption = caption), sanitize.text.function = as.is, booktabs = TRUE,  label = "tab:tree")
+print.xtable(xtable(tab, caption = caption), sanitize.text.function = as.is, booktabs = TRUE, label = "tab:tree")
 @
 
 

@@ -67,14 +67,10 @@ Let $P_{fn}^j$ be the false negative probability for feature $x_j$ (feature was 
 The probability that we miss at least one feature is $1 - (1 - P_{fn})^p$ with the simplification that $P_{fn}^j = P_{fn} \forall j \in 1,\ldots,p$
 
 For a linear model without interactions and only numerical features, the false negative rate is 0:
-$P_{aff}=1$ and $P_{rng}^j = 0$
-$$P_{fn}^j = (1 - 1 + 0^K)^M = 0$$
+$P_{aff}=1$ and $P_{rng}^j = 0$, so that $P_{fn}^j = (1 - 1 + 0^K)^M = 0$.
 
 Let's assume that only 1 percent of instances are affected by a change in a numerical feature $\xj$ ($P_{aff}=0.01$), and for those the average probability that a change in the feature will change the prediction is 2 percent ($P_{rng}=0.02$).
-When we use $M=100$, $K=10$:
-
-$$\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01 * 0.01^10)^100 = 0.3660$$
-
+When we use $M=100$, $K=10$, then $\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01 * 0.01^{10})^{100} = 0.3660$.
 In this case the false discovery rate is quite high due to a too low number of instances sampled.
 If we increase M to 500, the probability drops to  0.0066.
 

@@ -8,17 +8,17 @@ DEBUG_MODE = FALSE
 set.seed(42)
 # Parameters for functional complexity
 MAX_SEG_CAT = 9
-MAX_SEG_NUM = 4
+MAX_SEG_NUM = 5
 EPSILON = 0.05
 GRID.SIZE = 50
 
 # Parameters for mbo
-n.folds = 3
+n.folds = 5
 surrogate.ntree = 200
-n.initial.design = 100L
+n.initial.design = 200L
 infill.criterion = crit.cb
 n.cores = 1
-n.augment = 20
+n.augment = 30
 @
 
 <<mo-data>>=
@@ -262,9 +262,9 @@ lambda_perf = c(1,0,0,0)
 best_perf = which.min(single_obj(best.models.print[smeasure_names], lambda_perf))
 lambda_sparse = c(1,0.5,0,0)
 best_sparse = which.min(single_obj(best.models.print[smeasure_names], lambda_sparse))
-lambda_int = c(0.5,1,1,1)
+lambda_int = c(0.5,0.5,1,1)
 best_int = which.min(single_obj(best.models.print[smeasure_names], lambda_int))
-lambda_half = c(3,1,1,1)
+lambda_half = c(3,0.5,1,1)
 best_half = which.min(single_obj(best.models.print[smeasure_names], lambda_half))
 
 indices = c(best_perf, best_sparse, best_int, best_int)

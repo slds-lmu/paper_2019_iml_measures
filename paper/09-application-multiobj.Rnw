@@ -62,8 +62,7 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
     makeNumericParam("C", lower = 0, upper = 100)
   ),
   regr.kknn = makeParamSet(
-    makeIntegerParam("k", lower = 1, upper = 10),
-    makeIntegerParam("distance", lower = 1, upper = 2)
+    makeIntegerParam("k", lower = 1, upper = 10)
   ),
   regr.xgboost.mod = makeParamSet(
     makeIntegerParam ("max_depth" , lower = 1, upper = 10),

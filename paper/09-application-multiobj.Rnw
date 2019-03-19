@@ -248,9 +248,6 @@ Table~\ref{tab:spark-table-multiobj} shows different tradeoffs.
 % Best performing model
 % =============================================================================
 
-TODO: Properly set y limits (based on actual min and max)
-TODO: Fix match between colname and model column
-
 <<spark-table-multiobj, results='asis', dependson=c("mo-run", "mo-results-rename")>>=
 single_obj = function(measure_df, lambdas){
   assert_numeric(lambdas, len = 4, null.ok = FALSE)

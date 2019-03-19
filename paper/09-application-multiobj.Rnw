@@ -47,7 +47,6 @@ task.dat = getTaskData(task)
 <<mo-learners>>=
 base.learners.regr = list(
   makeLearner("regr.ksvm"),
-  makeLearner("regr.kknn"),
   makeLearner("regr.glmnet"),
   makeLearner("regr.xgboost.mod"),
   makeLearner("regr.rpart"),
@@ -61,19 +60,15 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
   regr.ksvm = makeParamSet(
     makeNumericParam("C", lower = 0, upper = 100)
   ),
-  regr.kknn = makeParamSet(
-    makeIntegerParam("k", lower = 1, upper = 10)
-  ),
   regr.xgboost.mod = makeParamSet(
     makeIntegerParam ("max_depth" , lower = 1, upper = 10),
     makeIntegerParam("nrounds", lower = 1, upper = 1000)
   ),
   regr.glmnet = makeParamSet(
-    makeNumericParam("alpha", lower = 0, upper = 1),
-    makeNumericParam("s", lower = 0, upper = 10)
+    makeNumericParam("alpha", lower = 0, upper = 1)
   ),
   regr.rpart = makeParamSet(
-    makeIntegerParam ("maxdepth" , lower = 1, upper = 6, requires = quote(booster == "gbtree"))
+    makeIntegerParam("maxdepth", lower = 1, upper = 7)
   )
 )
 @
@@ -254,7 +249,8 @@ single_obj = function(measure_df, lambdas){
   rowSums(as.matrix(measure_df) %*% lambdas)
 }
 
-
+# Best models first
+best.models.print = best.models.print[order(best.models.print$MAE),]
 measure_df = best.models.print[smeasure_names]
 
 get_fn = function(model_i){
@@ -274,32 +270,35 @@ get_best_lambdas = function(model_i){
 
 lambda_perf = c(1,0, 0, 0)
 best_perf = which.min(single_obj(measure_df, lambda_perf))
-#lambda_sparse = c(1,0,0,1)
-lambda_2 = get_best_lambdas(13)
+# MAE-best model with bounded MEC
+ind_2 = which(best.models.print$MEC <= 2)[1]
+lambda_2 = get_best_lambdas(ind_2)
 best_2 = which.min(single_obj(measure_df, lambda_2))
-lambda_int = get_best_lambdas(24)
-#lambda_int = c(0.5,0.5,1,1)
+# MAE-best model that models few interactions
+ind_3 = which(best.models.print$IA <= 0.1)[1]
+lambda_3 = get_best_lambdas(ind_3)
 best_3 = which.min(single_obj(measure_df, lambda_3))
-#lambda_half = c(3,0.5,1,1)
-lambda_4 = get_best_lambdas(1)
+# Best model that does not use all features
+ind_4 = which(measure_df$NF <  sum(task$task.desc$n.feat))[1] 
+lambda_4 = get_best_lambdas(ind_4)
 best_4 = which.min(single_obj(measure_df, lambda_4))
 
 indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
 
-tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-1, 1), height = 5, width=7)
+tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 4, width=9)
 colnames(tab) = best.models.print$descr[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)
 colnames(tab) = gsub("()", "",colnames(tab), fixed = TRUE)
 rownames(tab) = c("MAE", "NF", "IA", "AMEC", setdiff(colnames(task.dat), "quality"))
 
-cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models optimize performance only (%s) performance and sparseness (%s), focus on interpretability (%s), more focus on performance (%s).",
+cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models with best MAE (%s), best MAE when MEC <=2 (%s), best MAE when IA <= 0.1 (%s), best MAE with NF < 7 (%s).",
   length(indices),
-  paste(lambda_perf, collapse = ","),
-  paste(lambda_2, collapse = ","),
-  paste(lambda_3, collapse = ","),
-  paste(lambda_4, collapse = ","))
+  paste(sprintf("%.0f", lambda_perf), collapse = ","),
+  paste(sprintf("%.2f", lambda_2), collapse = ","),
+  paste(sprintf("%.2f", lambda_3), collapse = ","),
+  paste(sprintf("%.2f", lambda_4), collapse = ","))
 xtab = xtable(tab, caption = cap)
 align(xtab) <- "l|p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}"
 print.xtable(xtab, sanitize.text.function = as.is, )

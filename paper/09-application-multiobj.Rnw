@@ -62,8 +62,7 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
     makeNumericParam("C", lower = 0, upper = 100)
   ),
   regr.kknn = makeParamSet(
-    makeIntegerParam("k", lower = 1, upper = 10),
-    makeIntegerParam("distance", lower = 1, upper = 2)
+    makeIntegerParam("k", lower = 1, upper = 10)
   ),
   regr.xgboost.mod = makeParamSet(
     makeIntegerParam ("max_depth" , lower = 1, upper = 10),
@@ -260,11 +259,11 @@ single_obj = function(measure_df, lambdas){
 
 lambda_perf = c(1,0,0,0)
 best_perf = which.min(single_obj(best.models.print[smeasure_names], lambda_perf))
-lambda_sparse = c(1,0.5,0,0)
+lambda_sparse = c(1,0,0,0.5)
 best_sparse = which.min(single_obj(best.models.print[smeasure_names], lambda_sparse))
-lambda_int = c(0.5,0.5,1,1)
+lambda_int = c(2.6,1,1,3)
 best_int = which.min(single_obj(best.models.print[smeasure_names], lambda_int))
-lambda_half = c(3,0.5,1,1)
+lambda_half = c(1.6,1,1,0)
 best_half = which.min(single_obj(best.models.print[smeasure_names], lambda_half))
 
 indices = c(best_perf, best_sparse, best_int, best_int)

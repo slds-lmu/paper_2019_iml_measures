@@ -208,7 +208,7 @@ best.models.print$descr = apply(best.models.print, 1, function(row) {
 tab.cap = "Pareto front of models minimizing mean absolute error (MAE), number of features (NF), main effect complexity (MEC) and interaction strength (IA)."
 to.print = best.models.print[c("descr", measure_names)]
 rownames(to.print) = NULL
-xtable::xtable(to.print, caption = "tab.cap", label = "tab:pareto")
+xtable::xtable(to.print, caption = tab.cap, label = "tab:pareto")
 
 
 # Compute scaled version of measures
@@ -255,16 +255,37 @@ single_obj = function(measure_df, lambdas){
   rowSums(as.matrix(measure_df) %*% lambdas)
 }
 
-lambda_perf = c(1,0,0,0)
-best_perf = which.min(single_obj(best.models.print[smeasure_names], lambda_perf))
-lambda_sparse = c(1,0.5,0,0)
-best_sparse = which.min(single_obj(best.models.print[smeasure_names], lambda_sparse))
-lambda_int = c(0.5,0.5,1,1)
-best_int = which.min(single_obj(best.models.print[smeasure_names], lambda_int))
-lambda_half = c(3,0.5,1,1)
-best_half = which.min(single_obj(best.models.print[smeasure_names], lambda_half))
 
-indices = c(best_perf, best_sparse, best_int, best_int)
+measure_df = best.models.print[smeasure_names]
+
+get_fn = function(model_i){
+	model_i = model_i
+	fn = function(par) {
+	obj = single_obj(measure_df, par)	
+	as.numeric(sum(obj < obj[model_i]))
+	}
+}
+
+get_best_lambdas = function(model_i){
+	fn = get_fn(model_i)
+	res = GenSA(c(0.5,0.5,0.5,0.5), fn = fn, lower = c(0,0,0,0), upper = c(1,1,1,1),
+		    control = list("threshold.stop" = 0))
+	res$par / sum(res$par)
+}
+
+lambda_perf = c(1,0, 0, 0)
+best_perf = which.min(single_obj(measure_df, lambda_perf))
+#lambda_sparse = c(1,0,0,1)
+lambda_2 = get_best_lambdas(13)
+best_2 = which.min(single_obj(measure_df, lambda_2))
+lambda_int = get_best_lambdas(24)
+#lambda_int = c(0.5,0.5,1,1)
+best_3 = which.min(single_obj(measure_df, lambda_3))
+#lambda_half = c(3,0.5,1,1)
+lambda_4 = get_best_lambdas(1)
+best_4 = which.min(single_obj(measure_df, lambda_4))
+
+indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
 
 tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-1, 1), height = 5, width=7)
@@ -277,12 +298,12 @@ rownames(tab) = c("MAE", "NF", "IA", "AMEC", setdiff(colnames(task.dat), "qualit
 cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models optimize performance only (%s) performance and sparseness (%s), focus on interpretability (%s), more focus on performance (%s).",
   length(indices),
   paste(lambda_perf, collapse = ","),
-  paste(best_sparse, collapse = ","),
-  paste(lambda_int, collapse = ","),
-  paste(lambda_half, collapse = ","))
-xtab = xtable(tab)
+  paste(lambda_2, collapse = ","),
+  paste(lambda_3, collapse = ","),
+  paste(lambda_4, collapse = ","))
+xtab = xtable(tab, caption = cap)
 align(xtab) <- "l|p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}"
-print.xtable(xtab, sanitize.text.function = as.is)
+print.xtable(xtab, sanitize.text.function = as.is, )
 @
 
 % =============================================================================

@@ -129,7 +129,6 @@ fn = function(x){
     task = task , resampling = rin ,
     measures = list(mlr::mae))$aggr
   mod = train(lrn, task)
-  cat(".")
   pred = Predictor$new(mod, task.dat, y = task$task.desc$target)
   imeasure = FunComplexity$new(pred, max_seg_cat = MAX_SEG_CAT, max_seg_num = MAX_SEG_NUM, epsilon = EPSILON, grid.size = GRID.SIZE)
   cat(".")

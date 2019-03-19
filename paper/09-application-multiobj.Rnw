@@ -268,7 +268,7 @@ get_fn = function(model_i){
 get_best_lambdas = function(model_i){
 	fn = get_fn(model_i)
 	res = GenSA(c(0.5,0.5,0.5,0.5), fn = fn, lower = c(0,0,0,0), upper = c(1,1,1,1),
-		    control = list("threshold.stop" = 0))
+		    control = list("threshold.stop" = 0, maxit = 200))
 	res$par / sum(res$par)
 }
 
@@ -283,14 +283,14 @@ ind_3 = which(best.models.print$IA <= 0.1)[1]
 lambda_3 = get_best_lambdas(ind_3)
 best_3 = which.min(single_obj(measure_df, lambda_3))
 # Best model that does not use all features
-ind_4 = which(measure_df$NF <  sum(task$task.desc$n.feat))[1] 
+ind_4 = which(best.models.print$NF <  sum(task$task.desc$n.feat))[1] 
 lambda_4 = get_best_lambdas(ind_4)
 best_4 = which.min(single_obj(measure_df, lambda_4))
 
 indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
 
-tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-1, 1), height = 5, width=7)
+tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 5, width=10)
 colnames(tab) = best.models.print$descr[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)
@@ -322,9 +322,10 @@ This weights all three (scaled) measures equally.
 The theoretical maximal interpretability is 3 for a model predicting a constant value.
 The theoretical minimal interpretability is 0 for a model that uses all features and has the highest interaction strength and main effect complexity measure among all Pareto optimal models.
 
-<<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. Interpretability tradeoff for predicting wine quality.">>=
+<<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. Interpretability tradeoff for predicting wine quality.",  fig.height=7, fig.width=12, fig.align="center", out.height="7cm", out.width="12cm">>=
 ggplot(best.models.print,aes(x = 1 - sMAE, y = 3 - (sNF + sMEC + sIAS))) +
-  geom_label(aes(label = descr)) +
+  geom_point(size = 4) + 
+  geom_text_repel(aes(label = descr), size = 6) +
   scale_x_continuous("Performance", limits = c(NA, 1)) +
   scale_y_continuous("Interpretability", limits = c(0, 3))
 @

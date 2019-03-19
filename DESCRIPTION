@@ -32,7 +32,8 @@ Depends: OpenML,
 	kknn,
 	Cubist,
 	tinytex,
-	mboost
+	mboost,
+	ggrepel
 Imports: checkmate,
          mlrMBO,
          rpart

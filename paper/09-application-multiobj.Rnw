@@ -119,8 +119,7 @@ For the initial sample of models/hyperparameters we take a random Latin Hypercub
 % TODO: Write about stop criterion
 % Question: Would it makes sense to have a stratified initial design to ensure that we sample each learner for sure?
 
-
-<<mo-run, dependson=c("mo-data", "mo-learners", "params"), results='hide'>>=
+<<mo-setup, dependson=c("params", "mo-learners", "mo-data")>>=
 fn = function(x){
   # removes unused params
   x = x[!is.na(x)]
@@ -149,14 +148,20 @@ ctrl = setMBOControlMultiObj(ctrl, method = "parego")
 mbo.lrn = makeLearner("regr.randomForest", predict.type = "se", ntree = surrogate.ntree)
 mbo.lrn = makeImputeWrapper(mbo.lrn, classes = list(numeric = imputeMax(2), factor = imputeConstant("__miss__")))
 design = generateDesign(n = n.initial.design, par.set = ps.regr, fun = lhs::randomLHS, augment = n.augment)
+@
 
+
+
+<<mo-run, dependson=c("mo-setup"), results='hide'>>=
 # Start MBO
 parallelStartMulticore(cpus = n.cores, show.info = TRUE)
 mbo.iml = mbo(fun = obj.fun, design = design, learner = mbo.lrn, control = ctrl)
 parallelStop()
 saveRDS(mbo.iml, file = "mbo-results.RDS")
+@
 
-
+<<mo-results, dependson="mo-run">>=
+mbo.iml = readRDS("mbo-results.RDS")
 pareto.set = rbindlist(lapply(mbo.iml$pareto.set, data.frame))
 best.models = data.frame(cbind(round(mbo.iml$pareto.front, 2), pareto.set))
 
@@ -169,8 +174,8 @@ dups = duplicated(best.models[,c("selected.learner", measure_names)])
 best.models = best.models[!dups,]
 @
 
-<<mo-results-rename, dependson="mo-run", results = "asis">>=
-# mbo.iml = readRDS("paper/mbo-results.RDS")
+
+<<mo-results-rename, dependson="mo-results", results = "asis">>=
 # Improves the naming of the learners
 best.models.print = best.models
 colnames(best.models.print) = gsub("regr.", "", colnames(best.models.print), fixed = TRUE)
@@ -285,7 +290,7 @@ best_4 = which.min(single_obj(measure_df, lambda_4))
 indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
 
-tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 4, width=9)
+tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-1, 1), height = 5, width=7)
 colnames(tab) = best.models.print$descr[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)

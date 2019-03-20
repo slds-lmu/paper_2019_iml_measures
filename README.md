@@ -1,3 +1,13 @@
-# Automatic interpretable machine learning
+# Measuring and optimizing machine learning interpretability
 
-Optimize for interpretability and predictive performance
+
+## Abstract
+
+## Citation
+
+
+## Reproduce
+
+Install required R packages via:
+TODO
+

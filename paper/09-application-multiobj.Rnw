@@ -13,12 +13,12 @@ EPSILON = 0.05
 GRID.SIZE = 50
 
 # Parameters for mbo
-n.folds = 5
-surrogate.ntree = 200
-n.initial.design = 200L
+n.folds = 2
+surrogate.ntree = 20
+n.initial.design = 30L
 infill.criterion = crit.cb
 n.cores = 1
-n.augment = 30
+n.augment = 20
 @
 
 <<mo-data>>=

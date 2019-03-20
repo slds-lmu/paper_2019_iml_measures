@@ -1,8 +1,9 @@
+#' Approximate ALE curve
 AleApprox = R6::R6Class("AleApprox",
   public = list(
     # ALE to be approximated
     ale = NULL,
-    # R-squared
+    # R-squared of first order ale model
     r2 = NULL,
     # Number of coefficients
     n_coefs = NULL,
@@ -21,15 +22,19 @@ AleApprox = R6::R6Class("AleApprox",
     max_complex = FALSE,
     feature_used = TRUE,
     approx_values = NULL,
+    #' @param ale A FeatureEffet object
+    #' @param epsilon The allowed approximation error
+    #' @param max_breaks The maximum number of segments allowed
     initialize = function(ale, epsilon, max_breaks){
       assert_class(ale, "FeatureEffect")
-      assert_numeric(epsilon, lower = 0, upper = 1, len = 1, any.missing = FALSE)
+      assert_numeric(epsilon, lower = 0, upper = 1, len = 1,
+                     any.missing = FALSE)
       assert_numeric(max_breaks, len = 1)
       self$ale = ale
       self$epsilon = epsilon
       self$max_breaks = max_breaks
       self$feature = ale$feature.name
-      private$x = self$ale$predictor$data$get.x()[,self$feature, with=FALSE][[1]]
+      private$x = self$ale$predictor$data$X[, self$feature, with = FALSE][[1]]
       private$ale_values = self$ale$predict(private$x)
       self$ssq_ale  = ssq(private$ale_values)
       # Variance of the ALE plot weighted by data density
@@ -87,7 +92,6 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
       max_breaks = min(self$max_breaks, nlevels(x) - 1)
       for(n_breaks in 1:max_breaks) {
         BREAK_SAMPLE_SIZE = 30
-        # TODO: Brainstorm and test greedy aproach like tree:
         # keep splits from before and try all additional splits.
         splits = t(combn(1:(nlevels(x) - 1), n_breaks))
 
@@ -134,10 +138,10 @@ step_fn = function(par, dat, ssq_ale){
   expect_data_table(dat, any.missing = FALSE)
   breaks = unique(round(par, 0))
   dat$lvl = cut(1:nrow(dat), unique(c(0, breaks, nrow(dat))))
-  dat2 = dat[,.(ale_mean = weighted.mean(ale, w = n), n = sum(n)),by = lvl]
+  dat2 = dat[, .(ale_mean = weighted.mean(ale, w = n), n = sum(n)), by = lvl]
   # ALE plots have mean zero
-  ssq_approx = sum((dat2$ale_mean)^2 * dat2$n)
-  1 - (ssq_approx/ssq_ale)
+  ssq_approx = sum( (dat2$ale_mean) ^ 2 * dat2$n)
+  1 - (ssq_approx / ssq_ale)
 }
 
 AleNumApprox = R6::R6Class(classname = "AleNumApprox",
@@ -156,7 +160,6 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       super$initialize(ale, epsilon, max_breaks)
       if(!private$is_null_ale()) {
         self$approximate()
-        # TODO: Create function count_coefs w th alpha as param and tests
         # Don't count the intercept
         n_coefs = nrow(self$segments) + sum(self$segments$slope != 0) - 1
         self$n_coefs = min(max_seg * 2, n_coefs)
@@ -181,7 +184,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       # test 0 breaks
       mod = lm(private$ale_values ~ x)
       ssq_approx_error = ssq(private$ale_values - predict(mod))
-      if(self$ssq_ale  == 0 || (ssq_approx_error/self$ssq_ale ) < self$epsilon) {
+      if( self$ssq_ale  == 0 || (ssq_approx_error/self$ssq_ale ) < self$epsilon) {
         if(any(is.na(predict(mod)))) browser()
         if(any(is.na(private$ale_values))) browser()
         self$r2 = get_r2(predict(mod), private$ale_values)
@@ -192,7 +195,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         self$segments = extract_segments(model, self$breaks, levels(x_interval))
         return()
       }
-      for(n_breaks in 1:self$max_breaks) {
+      for( n_breaks in 1:self$max_breaks) {
         lower = as.numeric(rep(min(x), times = n_breaks))
         upper = as.numeric(rep(max(x), times = n_breaks))
         init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]

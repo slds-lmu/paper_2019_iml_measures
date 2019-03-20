@@ -14,7 +14,7 @@ $$f_{1st,ALE}(x) = f_0 + f_{1,ALE}(x_1) + \ldots  + f_{p,ALE}(x_p)$$
 
 Here, $f_0$ is estimated using $f_0 = \frac{1}{n}\sum_{i=1}^n x_i$
 The individual ALE components $f_{j,ALE}$ can be estimated as described in Equation~\ref{eqn:ale}.
-
+The measure can also be interpreted as the fidelity of the main effect models for approximating the black box model.
 % =============================================================================
 % PRE / PRL
 % =============================================================================

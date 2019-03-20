@@ -13,12 +13,9 @@ EPSILON = 0.05
 GRID.SIZE = 50
 
 # Parameters for mbo
-n.folds = 2
-surrogate.ntree = 20
-n.initial.design = 30L
-infill.criterion = crit.cb
+n.folds = 3
 n.cores = 1
-n.augment = 20
+max.iters = 500
 @
 
 <<mo-data>>=
@@ -50,25 +47,36 @@ base.learners.regr = list(
   makeLearner("regr.glmnet"),
   makeLearner("regr.xgboost.mod"),
   makeLearner("regr.rpart"),
-  makeLearner("regr.lm"),
-  makeLearner("regr.featureless", method = "median")
+  makeLearner("regr.ranger", num.trees = 1000),
+  makeLearner("regr.featureless", method = "median"),
+  makeLearner("regr.gamboost")
 )
 
+# TODO: Add compboost learner
+# tune: mstop
+# TODO: Set set iteration 40 * d bis 200 * d 
 lrn.regr = makeModelMultiplexer(base.learners.regr)
 
 ps.regr = makeModelMultiplexerParamSet(lrn.regr,
   regr.ksvm = makeParamSet(
-    makeNumericParam("C", lower = 0, upper = 100)
+    makeNumericParam("C", lower = -15, upper = 15, trafo = function(x) 2^x),
+    makeNumericParam("sigma", lower = -15, upper = 15, trafo = function(x) 2^x)
   ),
   regr.xgboost.mod = makeParamSet(
     makeIntegerParam ("max_depth" , lower = 1, upper = 10),
-    makeIntegerParam("nrounds", lower = 1, upper = 1000)
+    makeIntegerParam("nrounds", lower = 1, upper = 1000),
+    makeNumericParam("eta", lower = -10, upper = -2, trafo = function(x) 2^x)
   ),
   regr.glmnet = makeParamSet(
-    makeNumericParam("alpha", lower = 0, upper = 1)
+    makeNumericParam("alpha", lower = 0, upper = 1),
+    makeNumericParam("lambda", lower = -15, upper = 15, trafo = function(x) 2^x)
   ),
   regr.rpart = makeParamSet(
-    makeIntegerParam("maxdepth", lower = 1, upper = 7)
+    makeIntegerParam("maxdepth", lower = 1, upper = 20),
+    makeNumericParam("cp", lower = 0, upper = 1)
+  ),
+  regr.gamboost = makeParamSet(
+    makeIntegerParam("mstop", lower = 1, upper = 500)
   )
 )
 @
@@ -101,7 +109,7 @@ Since we offer three measures of interpretability, we provide a more in-depth ch
 % =============================================================================
 \subsubsection{Objectives and Models.}
 We apply the model-based optimization framework \citep{mlrMBO} to find the best model based on the following 4 objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) of the prediction.
-We compare the following models: linear regression model, CART (tuning maximum tree-depth), weighted k-nearest neighbor classifier (tuning number of neighbors k and the distance function), a support vector machine (tuning complexity parameter C), sparse linear models glmnet (tuning alpha and s??), xgboost (tuning the maximum depth and number of rounds).
+We compare the following models: linear regression model, CART (tuning maximum tree-depth), a support vector machine (tuning C and sigma), sparse linear models (tuning alpha and lambda), gradient boosted trees (gbt) (tuning maximum depth and number of rounds) and gradient boosted gam (tuning mstop).
 
 
 % =============================================================================
@@ -109,11 +117,13 @@ We compare the following models: linear regression model, CART (tuning maximum t
 % =============================================================================
 \subsubsection{Model-based Optimization Setup.}
 We use the ParEGO algorithm \citep{knowles2006parego} for the multi-objective optimization.
-We use a random forest with \Sexpr{surrogate.ntree} trees as a surrogate model to suggest new model/hyperparameter configurations to test with the confidence bound (automatically chosen lambda) as infill criterion.
 The fitness function is the 4-dimensional vector  $(MAE, NF, MEC, IAS)$.
 Within the fitness function,the MAE is estimated using \Sexpr{n.folds}-fold cross-validation.
 The other measures (NF, MEC, IA) are estimated in-sample.
-For the initial sample of models/hyperparameters we take a random Latin Hypercube sample of \Sexpr{n.initial.design}.
+We set the maximum iterations to \Sexpr{max.iters}.
+For the parameters of the multi-objective optimization, we relied on the sensitive defaults provided by \citep{mlrMBO}.
+TODO: We used sensible default setting from mbo author
+TODO: Save package versions of all packages
 
 % Question: What is the stop criterion? Could not find out with the help files.
 % TODO: Write about stop criterion
@@ -143,19 +153,16 @@ rin = makeResampleInstance(resampDescr, task)
 obj.fun = makeMultiObjectiveFunction(fn = fn, par.set = ps.regr, n.objectives = 4, has.simple.signature = FALSE)
 measure_names = c("MAE", "MEC", "IAS", "NF")
 ctrl = makeMBOControl(n.objectives = 4L, y.name = measure_names)
-ctrl = setMBOControlInfill(ctrl, crit = infill.criterion)
 ctrl = setMBOControlMultiObj(ctrl, method = "parego")
-mbo.lrn = makeLearner("regr.randomForest", predict.type = "se", ntree = surrogate.ntree)
-mbo.lrn = makeImputeWrapper(mbo.lrn, classes = list(numeric = imputeMax(2), factor = imputeConstant("__miss__")))
-design = generateDesign(n = n.initial.design, par.set = ps.regr, fun = lhs::randomLHS, augment = n.augment)
+ctrl = setMBOControlTermination(ctrl, iters = max.iters)
 @
 
 
 
 <<mo-run, dependson=c("mo-setup"), results='hide'>>=
 # Start MBO
-parallelStartMulticore(cpus = n.cores, show.info = TRUE)
-mbo.iml = mbo(fun = obj.fun, design = design, learner = mbo.lrn, control = ctrl)
+parallelStartMulticore(cpus = n.cores, show.info = TRUE, level = "mlr.resample")
+mbo.iml = mbo(fun = obj.fun, control = ctrl)
 parallelStop()
 saveRDS(mbo.iml, file = "mbo-results.RDS")
 @

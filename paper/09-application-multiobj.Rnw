@@ -4,7 +4,7 @@
 
 <<params>>=
 ### Set parameters for application
-DEBUG_MODE = TRUE 
+DEBUG_MODE = FALSE 
 set.seed(42)
 # Parameters for functional complexity
 MAX_SEG_CAT = 9

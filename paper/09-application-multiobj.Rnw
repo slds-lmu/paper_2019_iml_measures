@@ -4,7 +4,7 @@
 
 <<params>>=
 ### Set parameters for application
-DEBUG_MODE = FALSE
+DEBUG_MODE = TRUE 
 set.seed(42)
 # Parameters for functional complexity
 MAX_SEG_CAT = 9
@@ -14,7 +14,6 @@ GRID.SIZE = 50
 
 # Parameters for mbo
 n.folds = 3
-n.cores = 1
 max.iters = 500
 @
 
@@ -161,9 +160,7 @@ ctrl = setMBOControlTermination(ctrl, iters = max.iters)
 
 <<mo-run, dependson=c("mo-setup"), results='hide'>>=
 # Start MBO
-parallelStartMulticore(cpus = n.cores, show.info = TRUE, level = "mlr.resample")
 mbo.iml = mbo(fun = obj.fun, control = ctrl)
-parallelStop()
 saveRDS(mbo.iml, file = "mbo-results.RDS")
 @
 

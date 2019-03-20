@@ -17,28 +17,27 @@ Depends: OpenML,
          GenSA,
          gridExtra,
          here,
-         parallelMap,
          viridis,
          ltxsparklines,
          xtable,
 	 knitr,
 	 testthat,
 	 Cairo,
-	mlbench,
-	ranger,
-	kernlab,
-	mco,
-	emoa,
-	kknn,
-	Cubist,
-	tinytex,
-	mboost,
-	ggrepel
+	 mlbench,
+	 ranger,
+	 kernlab,
+	 mco,
+	 emoa,
+	 kknn,
+	 Cubist,
+	 tinytex,
+	 mboost,
+	 ggrepel
 Imports: checkmate,
          mlrMBO,
          rpart
-Suggests: xgboost,
-          randomForest
+Suggests:xgboost,
+         randomForest
 License: MIT + file LICENSE
 RoxygenNote: 6.1.0
 VignetteBuilder: knitr

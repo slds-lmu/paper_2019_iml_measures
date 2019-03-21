@@ -2,6 +2,8 @@
 \section{Optimization Performance and Interpretability}
 \label{sec:multiobj}
 
+# TODO: Rename R package names to actual algos (rpart -> CART, xgboost -> gbt, ranger -> rf)
+
 <<params>>=
 ### Set parameters for application
 DEBUG_MODE = FALSE 
@@ -47,7 +49,6 @@ base.learners.regr = list(
   makeLearner("regr.xgboost.mod"),
   makeLearner("regr.rpart"),
   makeLearner("regr.ranger", num.trees = 1000),
-  makeLearner("regr.featureless", method = "median"),
   makeLearner("regr.gamboost")
 )
 
@@ -75,6 +76,7 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
     makeIntegerParam("mstop", lower = 1, upper = 500)
   )
 )
+
 @
 
 % =============================================================================
@@ -211,13 +213,14 @@ best.models.print$descr = apply(best.models.print, 1, function(row) {
 
 # Table of Pareto set + objective values
 tab.cap = "Pareto front of models minimizing mean absolute error (MAE), number of features (NF), main effect complexity (MEC) and interaction strength (IA)."
-to.print = best.models.print[c("descr", measure_names)]
+to.print = best.models.print[order(best.models.print$MAE), c("descr", measure_names)]
 rownames(to.print) = NULL
+baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
+to.print = rbind(to.print, data.frame("descr" = "median", "MAE" = baseline_performance, "MEC" = 0, "IAS", "NF"=0))
 xtable::xtable(to.print, caption = tab.cap, label = "tab:pareto")
 
 
 # Compute scaled version of measures
-baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
 best_performance = min(best.models.print$MAE)
 best.models.print$sMAE = (best.models.print$MAE - best_performance) / (baseline_performance - best_performance)
 best.models.print$sNF  = best.models.print$NF / sum(task$task.desc$n.feat)

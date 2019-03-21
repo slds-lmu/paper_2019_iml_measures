@@ -201,15 +201,14 @@ best.models.print$model = lrn_model_map[best.models.print$selected.learner]
 
 # Shorter description of learner
 best.models.print$descr = apply(best.models.print, 1, function(row) {
-  lrn_name = row['model']
-  params = row[param_cols]
+  lrn_name =   params = row[param_cols]
   params = params[!is.na(params)]
-  names(params) = gsub(sprintf("%s.", lrn_name), "", names(params), fixed = TRUE)
+  names(params) = gsub(sprintf("%s.", row['selected.learner']), "", names(params), fixed = TRUE)
   param_string = sprintf("%s:%s", names(params), params)
   param_string = paste(param_string, collapse = ",")
   # When model has no parameters
   param_string = gsub("()", "", param_string, fixed = TRUE)
-  sprintf("%s (%s)", lrn_name, param_string)
+  sprintf("%s (%s)", row["model"], param_string)
 })
 
 

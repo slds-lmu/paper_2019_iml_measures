@@ -51,9 +51,6 @@ base.learners.regr = list(
   makeLearner("regr.gamboost")
 )
 
-# TODO: Add compboost learner
-# tune: mstop
-# TODO: Set set iteration 40 * d bis 200 * d 
 lrn.regr = makeModelMultiplexer(base.learners.regr)
 
 ps.regr = makeModelMultiplexerParamSet(lrn.regr,
@@ -192,9 +189,14 @@ best.models.print[,numeric_params] = round(best.models.print[,numeric_params], 2
 best.models.print$selected.learner = gsub("regr.", "", best.models.print$selected.learner, fixed = TRUE)
 best.models.print$selected.learner = gsub("xgboost.mod", "xgboost", best.models.print$selected.learner, fixed  = TRUE)
 
+lrn_model_map = c("xgboost" = "gbt", "rpart" = "CART", "featureless" = "median", 
+		  "ksvm" = "svm", "gamboost" = "gamb", "glmnet" = "ridge", "ranger" = "rf")
+
+best.models.print$model = lrn_model_map[best.models$print$selected.learner]
+
 # Shorter description of learner
 best.models.print$descr = apply(best.models.print, 1, function(row) {
-  lrn_name = row['selected.learner']
+  lrn_name = row['model']
   params = row[param_cols]
   params = params[!is.na(params)]
   names(params) = gsub(sprintf("%s.", lrn_name), "", names(params), fixed = TRUE)

@@ -186,6 +186,7 @@ numeric_params = sapply(best.models.print[,param_cols], function(x) is.numeric(x
 numeric_params = names(numeric_params[which(numeric_params)])
 best.models.print = data.frame(best.models.print)
 best.models.print[,numeric_params] = round(best.models.print[,numeric_params], 2)
+best.models.print[, log_params] = 2^best.models.print[, log_params]
 best.models.print$selected.learner = gsub("regr.", "", best.models.print$selected.learner, fixed = TRUE)
 best.models.print$selected.learner = gsub("xgboost.mod", "xgboost", best.models.print$selected.learner, fixed  = TRUE)
 
@@ -261,7 +262,8 @@ best_4 = which(best.models.print$NF <=  7)[1]
 
 indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
-tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 5, width=10)
+tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 5, width=10,
+		      log_params = log_params)
 colnames(tab) = best.models.print$descr[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)

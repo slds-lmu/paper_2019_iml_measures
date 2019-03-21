@@ -78,7 +78,7 @@ get_spark_col = function(pred, ylim = c(NA, NA), width = 5, ...) {
 #' @param indices the subset indices for which to compute the summaries
 #' @param ylim the y-axis limits for the sparklines
 #' @return data.frame with NF, IA, AMEC and sparklines for all features. columns are models
-get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA), ...) {
+get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA), log_params,...) {
   assert_class(mbo_obj, "MBOMultiObjResult")
   assert_numeric(indices, any.missing = FALSE)
   assert_numeric(ylim, len = 2)
@@ -87,6 +87,7 @@ get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA), ...) {
   res = lapply(indices, function(i){
     pp = pareto_set[[i]]
     pp = pp[!is.na(pp)]
+    pp[log_params] = lapply(pp[log_params], function(x) 2^x)
     lrn = setHyperPars(lrn.regr, par.vals = pp)
     mod = train(lrn, task)
     pred = Predictor$new(mod, task.dat)

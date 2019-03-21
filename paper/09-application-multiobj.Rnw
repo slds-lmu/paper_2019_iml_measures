@@ -2,7 +2,7 @@
 \section{Optimization Performance and Interpretability}
 \label{sec:multiobj}
 
-# TODO: Rename R package names to actual algos (rpart -> CART, xgboost -> gbt, ranger -> rf)
+% TODO: Rename R package names to actual algos (rpart -> CART, xgboost -> gbt, ranger -> rf)
 
 <<params>>=
 ### Set parameters for application
@@ -188,6 +188,7 @@ numeric_params = sapply(best.models.print[,param_cols], function(x) is.numeric(x
 numeric_params = names(numeric_params[which(numeric_params)])
 best.models.print = data.frame(best.models.print)
 best.models.print[,numeric_params] = round(best.models.print[,numeric_params], 2)
+log_params = c("ksvm.C", "ksvm.sigma", "glmnet.lambda", "xgboost.eta")
 best.models.print[, log_params] = 2^best.models.print[, log_params]
 best.models.print$selected.learner = gsub("regr.", "", best.models.print$selected.learner, fixed = TRUE)
 best.models.print$selected.learner = gsub("xgboost.mod", "xgboost", best.models.print$selected.learner, fixed  = TRUE)
@@ -196,6 +197,7 @@ lrn_model_map = c("xgboost" = "gbt", "rpart" = "CART", "featureless" = "median",
 		  "ksvm" = "svm", "gamboost" = "gamb", "glmnet" = "ridge", "ranger" = "rf")
 
 best.models.print$model = lrn_model_map[best.models$print$selected.learner]
+
 
 # Shorter description of learner
 best.models.print$descr = apply(best.models.print, 1, function(row) {

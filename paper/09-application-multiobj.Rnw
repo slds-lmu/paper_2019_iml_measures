@@ -12,7 +12,7 @@ set.seed(42)
 MAX_SEG_CAT = 9
 MAX_SEG_NUM = 5
 EPSILON = 0.05
-GRID.SIZE = 50
+GRID.SIZE = 100
 
 # Parameters for mbo
 n.folds = 3
@@ -267,7 +267,7 @@ best_4 = which(best.models.print$NF <=  7)[1]
 
 indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
-tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 5, width=10, log_params = log_params)
+tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 3, width=10, log_params = log_params)
 colnames(tab) = best.models.print$descr[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)

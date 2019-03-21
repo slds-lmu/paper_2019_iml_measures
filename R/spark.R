@@ -87,7 +87,8 @@ get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA), log_params,...) {
   res = lapply(indices, function(i){
     pp = pareto_set[[i]]
     pp = pp[!is.na(pp)]
-    pp[log_params] = lapply(pp[log_params], function(x) 2^x)
+    lparams = intersect(names(pp), log_params)
+    if(length(lparams) > 0) pp[log_params] = lapply(pp[lparams], function(x) 2^x)
     lrn = setHyperPars(lrn.regr, par.vals = pp)
     mod = train(lrn, task)
     pred = Predictor$new(mod, task.dat)

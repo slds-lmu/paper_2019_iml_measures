@@ -179,8 +179,10 @@ best.models = best.models[!dups,]
 
 
 <<mo-results-rename, dependson="mo-results", results = "asis">>=
-# Improves the naming of the learners
+#Improves the naming of the learners
 best.models.print = best.models
+log_params = c("regr.ksvm.C", "regr.ksvm.sigma", "regr.glmnet.lambda", "regr.xgboost.mod.eta")
+best.models.print[, log_params] = 2^best.models.print[, log_params]
 colnames(best.models.print) = gsub("regr.", "", colnames(best.models.print), fixed = TRUE)
 colnames(best.models.print) = gsub("mod.", "", colnames(best.models.print), fixed = TRUE)
 param_cols = setdiff(colnames(best.models.print), c(measure_names, "selected.learner", "index"))
@@ -188,15 +190,13 @@ numeric_params = sapply(best.models.print[,param_cols], function(x) is.numeric(x
 numeric_params = names(numeric_params[which(numeric_params)])
 best.models.print = data.frame(best.models.print)
 best.models.print[,numeric_params] = round(best.models.print[,numeric_params], 2)
-log_params = c("ksvm.C", "ksvm.sigma", "glmnet.lambda", "xgboost.eta")
-best.models.print[, log_params] = 2^best.models.print[, log_params]
 best.models.print$selected.learner = gsub("regr.", "", best.models.print$selected.learner, fixed = TRUE)
 best.models.print$selected.learner = gsub("xgboost.mod", "xgboost", best.models.print$selected.learner, fixed  = TRUE)
 
 lrn_model_map = c("xgboost" = "gbt", "rpart" = "CART", "featureless" = "median", 
 		  "ksvm" = "svm", "gamboost" = "gamb", "glmnet" = "ridge", "ranger" = "rf")
 
-best.models.print$model = lrn_model_map[best.models$print$selected.learner]
+best.models.print$model = lrn_model_map[best.models.print$selected.learner]
 
 
 # Shorter description of learner
@@ -218,7 +218,7 @@ tab.cap = "Pareto front of models minimizing mean absolute error (MAE), number o
 to.print = best.models.print[order(best.models.print$MAE), c("descr", measure_names)]
 rownames(to.print) = NULL
 baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
-to.print = rbind(to.print, data.frame("descr" = "median", "MAE" = baseline_performance, "MEC" = 0, "IAS", "NF"=0))
+to.print = rbind(to.print, data.frame("descr" = "median", "MAE" = baseline_performance, "MEC" = 0, "IAS" = 0, "NF"=0))
 xtable::xtable(to.print, caption = tab.cap, label = "tab:pareto")
 
 
@@ -267,8 +267,7 @@ best_4 = which(best.models.print$NF <=  7)[1]
 
 indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
-tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 5, width=10,
-		      log_params = log_params)
+tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-2, 2), height = 5, width=10, log_params = log_params)
 colnames(tab) = best.models.print$descr[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)

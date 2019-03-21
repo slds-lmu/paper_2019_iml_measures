@@ -30,13 +30,13 @@ Also it's not clear what interpretability really means.
 % =============================================================================
 % Model selection as use case
 % =============================================================================
-This means we can't quantify the tradeoff between interpretability and performance tradeoff especially across different model.
-For example how do we compare the interpretability of a decision tree and a decision list or of a linear model and a support vector machine?
+This means we can't quantify the tradeoff between interpretability and performance especially across different model.
+For example how do we compare the interpretability of a decision tree and a decision rule list or of a linear model and a support vector machine?
 % =============================================================================
 % Need interpretability measures
 % =============================================================================
 A solution to explicitly consider interpretability in the model selection process is model-agnostic measures of the models prediction function complexity \citep{ruping2006learning,bibal2016interpretability}, which allow comparisons in terms of interpretability even between different model classes.
-Interpretability measures allows the user to explicitly decide on the tradeoff between accuracy and interpretability instead of "fixing" interpretability (e.g. by choosing a certain model class) and optimizing only performance \citep{freitas2004critical}.
+Interpretability measures allow the user to explicitly decide on the tradeoff between accuracy and interpretability instead of "fixing" interpretability (e.g. by choosing a certain model class) and optimizing only performance \citep{freitas2004critical}.
 
 % =============================================================================
 % Our solution and novelty

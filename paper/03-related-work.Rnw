@@ -2,7 +2,7 @@
 \section{Related Work and Background}
 \label{sec:related}
 
-In this section we review related approaches for quantifying interpretability and summarize the background on functional decomposition based on which we developed the interpretability measures.
+We review approaches for quantifying interpretability and summarize the background on functional decomposition as the basis for our proposed interpretability measures.
 
 \subsection{Interpretability Measures}
 \label{sec:other}
@@ -16,9 +16,7 @@ To address these shortcomings of the definition of interpretability, we propose 
 Also, as we will demonstrate, the functional decomposition can also be a starting point for alternative measures, which can accomodate to the domain in which the models are used.
 By offering multiple measures, the tradeoff between them can be adapted in any applicaion.
 \citep{freitas2014comprehensible} says that acceptability and interpretability of a model might not be the same.
-For example a doctor might reject a short decision tree because it is too simplistic.
-Not always is a strictly smaller model (in terms of nodes) more accepted by the user.
-\citep{lavravc1999selected} showed a case where medical experts preferred larger trees, since shor trees were not as informative for their decision making.
+\citep{lavravc1999selected} showed a case where medical experts preferred larger trees, since short trees were not as informative for their decision making.
 Doshi et. al  \citep{doshi2017towards} propose different levels at which interpretation methods can be evaluated: application-grounded evaluation (real humans, real tasks), human-grounded (real humans, simple tasks, e.g. through mechanical turk) and functionally-grounded evaluation (no humans, proxy tasks).
 Our proposed measures evaluated the interpretability at the functional level.
 
@@ -32,10 +30,11 @@ Model size is often used as heuristic \citep{huysmans2011empirical,ruping2006lea
 But more concerned with representation of models, not with a number of interpretability that can be attached to a model.
 \citep{zhou2018measuring} propose a general form for model interpetability which includes the structural complexity of the model but again compare model-specific measures like number of leaves, average depth and maximum depth of a tree. 
 
-Akaikes Information Criterion (AIC)  \citep{akaike1998information} and the  Bayesian Information Criterion (BIC)  \citep{schwarz1978estimating} are more broadly applicable tradeoff measure between accuracy and interpretability.
+Akaikes Information Criterion (AIC)  \citep{akaike1998information} and the  Bayesian Information Criterion (BIC)  \citep{schwarz1978estimating} are more broadly applicable tradeoff measure between goodness of fit and interpretability.
 They both rely on a way to estimate the degrees of freedom and a likelihood function, which restricts the applicability to certain model classes (e.g. linear models).
-Also the tradeoff between interpretability and performance is fixed and only one dimension of interpretability is considered.
+Also the tradeoff between interpretability and performance is fixed and only one dimension of interpretability is considered, i.e. degrees of freedom.
 \citep{hauenstein2018computing} use the generalized degrees of freedom to extend the AIC to a model-agnostic measure, but it is computationally expensive as it requires refitting the model multiple times and does not give more granular insight into the complexity.
+Also refitting the model changes the model and its complexity.
 
 % =============================================================================
 % Other approaches
@@ -48,8 +47,7 @@ Ribeiro et. 2017 \citep{Ribeiro2016b} al measured the interpretability of the LI
 % Bridge to decomposition
 % =============================================================================
 Our approach differs because we don't involve humans, but also because we don't measure the interpretability through how the model is represented, but rather how complex the components of the functional decomposition is.
-For example, a decision tree can be represented by a tree structure or a set of decision rules, yet the functional complexity remains the same.
-On the other hand, the representation of a tree can become more complex, while the functional complexity decreases (because the tree approximates a linear function).
+For example the representation of a tree can become more complex, while the functional complexity decreases (because the tree approximates a linear function).
 
 
 \subsection{Functional Decomposition}
@@ -68,6 +66,7 @@ We write the decomposition as:
 
 The decomposition contains a constant mean plus the feature first order effects, second order effects up to the p-th order effect.
 We also call the components in this sum that depend on the main effects and higher-order effects interactions.
+Without constraints, there is no unique decomposition and the components have no guarantee to be meaningful. 
 
 % =============================================================================
 % Some useful decompositions
@@ -80,16 +79,16 @@ Hooker \citep{hooker2007generalized} defined centering, orthogonality and varian
 % =============================================================================
 % ALE decompositions
 % =============================================================================
-Another approach is Accumulated Local Effects proposed by \cite{apley2016visualizing} (ALE) as a tool for visualizing feature effects (see e.g. Figure~\ref{fig:c-demo}), that also represents a decomposition.
+Another approach is Accumulated Local Effects (ALE)proposed by \cite{apley2016visualizing} as a tool for visualizing feature effects (see e.g. Figure~\ref{fig:c-demo}), that also represents a decomposition.
 \begin{eqnarray} f(x)  = & f_0 + \sum_{j=1}^p \falej(x_j)+ \sum_{j\neq k}^p f_{ALE,jk}(x_j, x_k) + \ldots + f_{ALE,1,\ldots,p}(x_1, \ldots, x_p)
 \end{eqnarray}
 
 
-Compared to \citep{hooker2007generalized}, ALE yields a fundamentally different decomposition of the model function $f(x)$.
-\citep{apley2016visualizing} show that this decomposition is unique because of what they call "pseudo-orthogonality".
-Pseudo-orthogonality means that for any component of the ALE decomposition, a repeated application of ALE computation yields zero or the same ALE component (if the same ALE effect is computed).
-For example, lets look at the 1st-order (=main) effect of $x_1$ $f_{ALE,1}$ and the second order effect between $x_1$ and $x_2$ $f_{ALE,1,2}$.
-If we tried to extract the main order effect for $x_1$ from $f_{ALE, 1,2}$ the result would be a constant function that is always 0.
+%Compared to \citep{hooker2007generalized}, ALE yields a fundamentally different decomposition of the model function $f(x)$.
+%\citep{apley2016visualizing} show that this decomposition is unique because of what they call "pseudo-orthogonality".
+%Pseudo-orthogonality means that for any component of the ALE decomposition, a repeated application of ALE computation yields zero or the same ALE component (if the same ALE effect is computed).
+%For example, lets look at the 1st-order (=main) effect of $x_1$ $f_{ALE,1}$ and the second order effect between $x_1$ and $x_2$ $f_{ALE,1,2}$.
+%If we tried to extract the main order effect for $x_1$ from $f_{ALE, 1,2}$ the result would be a constant function that is always 0.
 % =============================================================================
 % ALE property: Pseudo-orthogonality
 % =============================================================================

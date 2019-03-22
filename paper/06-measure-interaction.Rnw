@@ -18,10 +18,10 @@ The measure can also be interpreted as the fidelity of the main effect models fo
 % =============================================================================
 % PRE / PRL
 % =============================================================================
-We propose the proportionate reduction of error (based on \citep{cooil1994reliability}) to measure well the first-order model predictions approximates $\fh$.
+We propose to measure the main effect approximation error (based on \citep{cooil1994reliability}) to measure the interaction strength IA:
 
 \begin{eqnarray}\label{eqn:pre}
-pre(\fh, \fale, L) = 1 - \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}
+IAS = \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}
 \end{eqnarray}
 
 Where $c$ is a meaningful upper baseline for the error, which should be chosen based on the prediction task.
@@ -29,18 +29,9 @@ For a regression task that is evaluated using the L1 loss the median of the targ
 % =============================================================================
 % R2 special case
 % =============================================================================
-The $R^2$-measure is a special case of the pre using the squared loss, which we estimate with:
+When we use the $L2$-loss, the IAS is  $1 - R^2.
 
-$$R^2 = 1 - \frac{SSE}{SST} = \frac{\sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2}{\sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2}$$
-
-
-Based on the $pre \in [0,1]$ in Equation~\ref{eqn:pre}, we define the interaction strength as:
-
-\begin{eqnarray}\label{eqn:ias}
-IAS = 1  - pre(\fh, \fale, L)
-\end{eqnarray}
-
-% =============================================================================
+%$$R^2 = 1 - \frac{SSE}{SST} = \frac{\sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2}{\sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2}$$
 % Interpretation of IAS
 % =============================================================================
 An IAS of 0 means that the prediction function is without interactions and can be fully expressed by the main effects of the features.

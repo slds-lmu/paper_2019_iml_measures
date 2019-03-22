@@ -97,7 +97,7 @@ The data is freely available online.
 % Why like this?
 % =============================================================================
 \subsubsection{Motivation.}
-As \citep{freitas2014comprehensible} points out, it is difficult to know before model what the tradeoffs between interpretability and performance are and suggests multi-objective optimization based on Pareto dominance.
+As \citep{freitas2014comprehensible} points out, it is difficult to know before modeling what the tradeoffs between interpretability and performance are and suggests multi-objective optimization based on Pareto dominance.
 This stands in contrast to apriori selecting an interpretable model class (e.g. decision rules)  and optimizing within this class or exclusively optimizing performance and applying post-hoc interpretations.
 We suggest to search over a wide spectrum of different models and hyper parameters, present the set of Pareto optimal models and let the practitioner choose a suitable tradeoff between interpretability and performance.
 Since we offer three measures of interpretability, we provide a more in-depth characterization of the model's behavior, allowing practitioners to make more informed decisions (e.g. how much does performance suffer when we use model with interactions?).
@@ -157,7 +157,7 @@ ctrl = setMBOControlTermination(ctrl, iters = max.iters)
 
 
 
-<<mo-run, dependson=c("mo-setup"), results='hide'>>=
+<<mo-run, dependson=c("mo-setup"), results='hide', eval = FALSE>>=
 # Start MBO
 mbo.iml = mbo(fun = obj.fun, control = ctrl)
 saveRDS(mbo.iml, file = "mbo-results.RDS")
@@ -289,7 +289,7 @@ First we scaled all measures to the range of $[0,1]$ by scaling each measure wit
 
 $$M_{scaled}(M) = \frac{M - M_{inf}}{M_{sup} - M_{inf}}$$
 
-For MAE, we set $M_{inf}$ to the lowest MAE observed among all models and $M_{sup} = \sum_{i=1}^n|y_i - median(y)|$.
+For MAE, we set $M_{inf}$ to the MAE when we predict the median and $M_{sup} = \sum_{i=1}^n|y_i - median(y)|$.
 For NF, we set $M_{inf}=0$ and $M_{sup}=p$.
 For MEC, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed MEC among all models.
 For IAS, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed IAS among all models.

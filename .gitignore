@@ -17,3 +17,4 @@ paper/latex-math
 *.aux
 *.out
 *.RDS
+*.sty

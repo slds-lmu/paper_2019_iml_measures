@@ -20,6 +20,7 @@ Our proposed measures can be applied for many models since they are model-agnost
 \subsubsection{Limitations.}
 The way we decomposed the prediction function and defined the complexity measures will not be suitable for every situation.
 For example all higher order effects are combined into a single interaction strength measure, but we don't distinguish whether a model models only a single 2-way interaction or more complex ones.
+However, estimating 2nd-order ALE can fix this problem to some degree.
 Also the main effect complexity measure is limited, because we only regard linear segments, but don't check for seasonal components or other structures. 
 Furthermore, the complexity measures quantify the prediction function from outside, ignoring the way a model is represented.
 While this allows these measures to be model-agnostic, which is a strength, it also ignores how the model can be represented and how well humans can understand it.

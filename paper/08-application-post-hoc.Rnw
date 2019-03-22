@@ -2,18 +2,13 @@
 \section{Improving post-hoc interpretation}
 \label{sec:post-hoc}
 
-We demonstrate that minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (AMEC) improves readability, reliability and summarizability of post-hoc interpretation methods like partial dependence plots, feature importance, interaction effects, local surrogate models, etc..
+We demonstrate that minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (AMEC) improves readability, reliability and summarizability of post-hoc interpretation methods like partial dependence plots, ALE plots, feature importance, interaction effects, local surrogate models, etc..
 
 \subsubsection{The less features, the less verbose the interpretations.}
-Minimizing the number of features improves the manageability of post-hoc analysis results.
+Our NF measure improves the manageability of post-hoc analysis results.
 The computational time and output size of most interpretation methods scales with $O(\text{NF})$, like feature effect plots \citep{apley2016visualizing,friedman2001greedy} or feature importance \citep{fisher2018all,casalicchio2018visualizing}.
 If 100 features  were used, 100 feature effect plots have to be looked at to make a sanity check of what the mdoel does.
 Interpretation methods that analyze the interactions between features, e.g. when analyzing 2-way interactions, scale with $O(\text{NF}^2)$ and if you were to do a full functional decomposition be it either through the approach by Hooker \citep{hooker2007generalized} or Apley \citep{apley2016visualizing}, the computation time and output size scales with $O(\text{NF}!)$.
-
-\subsubsection{The less features, the less severe the curse of dimensionality.}
-Some interpretation methods like SHAP \citep{lundberg2017unified} or LIME \citep{ribeiro2016should} create sparse interpretations by selecting relevant features.
-The more high-dimensional the feature features space (high NF), the more difficult it can become to find the most relevant features and the fidelity of an explanation suffers the higher the divergence between the number of features used by the black box model and the number used by the explanation.
-SHAP and LIME also rely on distance measures between instances, which is also affected by the curse of dimensionality and with increasing number of features distance loose their usefulness (lower signal to noise ratio).
 
 \subsubsection{The less interactions, the more reliable feature effect plots.}
 Feature effect plots, like partial dependence plots and accumulated local effect plots visualize the marginal relationship between a feature and the prediction.

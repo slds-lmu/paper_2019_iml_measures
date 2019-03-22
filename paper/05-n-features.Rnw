@@ -12,14 +12,13 @@ We distinguish between the number of features the model was trained with and the
 % Why model-agnostic
 % =============================================================================\
 If available, model-specific methods for extracting the number of features used by the model are preferable over model-agnostic estimation heuristic, like counting the number of non-zero weights in a sparse linear regression model.
-A model-agnostic heuristic is useful in scenarios where we only have access to the prediction function but not the model internals (e.g. a model provided via WebAPI) or when we can't rely on the availability of an extraction method (e.g. when allowing different models) or when multiple models and or preprocessing steps are combined in a pipeline (e.g. applying sparse principal component analysis to the features and training a decision tree on the components). 
+A model-agnostic heuristic is useful in scenarios where we only have access to the prediction function but not the model internals (e.g. a model provided via WebAPI), when we can't rely on the availability of an extraction method (e.g. when allowing different models) or when multiple models and or preprocessing steps are combined in a pipeline (e.g. applying sparse principal component analysis to the features and training a decision tree on the components). 
 
 % =============================================================================
 % Feature-count heuristic: intuition
 % =============================================================================
 We propose a feature-permutation based approach to determine how many features are used by the model  for making predictions.
 We count a feature as "used" by the model, when changing a feature changes the prediction.
-The heuristic to compute whether a feature $x_j$ was used is described in Algorithm~\ref{algo:nfeat}.
 
 
 Take a sample from the data (can be training or test data), get the model predictions for the sample, replace the values for the feature in question with values randomly sampled from the data, get the predictions for the manipulated instances and measure the differences.
@@ -39,8 +38,8 @@ The algorithm for computing if feature j was used:
 NF = 0\;
 	\For{$j \in 1,\ldots,p$}{
 		\For{$k=1,\ldots,K$}{
-			Draw M instances from dataset D\;
-			For each instance, sample feature value $\xj$ from $\xjvec$\;
+			Draw $M$ instances from dataset $D$\;
+			For each instance, sample feature value $\xj$ from its distribution;
 			Compute $d_j^{(i)} = \fh(x^{*^{(i)}}) - \fh(x_{-j}^{*^{(i)}}, x_j)$ for each $i \in \{1,\ldots,M\}$\;
 			\lIf{$\exists i \in {1,\ldots,M} d_j^{(i)} \neq 0$}{$NF += 1$. Break.
 }

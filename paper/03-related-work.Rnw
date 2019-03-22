@@ -2,8 +2,6 @@
 \section{Related Work and Background}
 \label{sec:related}
 
-We review approaches for quantifying interpretability and summarize the background on functional decomposition as the basis for our proposed interpretability measures.
-
 \subsection{Interpretability Measures}
 \label{sec:other}
 % =============================================================================
@@ -82,6 +80,23 @@ Hooker \citep{hooker2007generalized} defined centering, orthogonality and varian
 Another approach is Accumulated Local Effects (ALE)proposed by \cite{apley2016visualizing} as a tool for visualizing feature effects (see e.g. Figure~\ref{fig:c-demo}), that also represents a decomposition.
 \begin{eqnarray} f(x)  = & f_0 + \sum_{j=1}^p \falej(x_j)+ \sum_{j\neq k}^p f_{ALE,jk}(x_j, x_k) + \ldots + f_{ALE,1,\ldots,p}(x_1, \ldots, x_p)
 \end{eqnarray}
+
+
+% =============================================================================
+% ALE definition
+% =============================================================================
+The ALE main effect of a feature $x_j, j \in \{1,\ldots,p\}$ for a prediction function $\fh$ is defined as 
+\begin{eqnarray}\label{eqn:ale}
+f_{j,ALE}(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\delta \fh(X_1,\ldots,X_p)}{\delta X_j}|X_j = z_j\right]dz_j-c_j
+\end{eqnarray}
+Here, $X_j$ refers to the j-the feature as a random variable and $z_{0,j}$ is a lower bound of $X_j$ (usually estimated with the minimal observed value) and the expectation $\mathbb{E}$ is computed marginal on the distribution of all features conditioned on the value for $x_j$.
+The constant $c_1$ is chosen so that the mean of $f_{j,ALE}(x_j)$ with respect to the marginal distribution of $X_j$ is zero.
+While the definition of ALE main effects is based on the gradient with respect to the features, they can also be estimated for non-differentiable prediction functions, since an estimation approach based on finite differences is suggested.
+For the actual estimation we refer to \citep{apley2016visualizing}.
+% Categorical features
+%Categorical features require an ordering of the categories so that accumulated local effects can be estimated.
+%Any ordering of the categories will yield a valid ALE, but the interpretation differs, because category effects are interpreted in terms of changes to the neighbouring categories.
+
 
 
 %Compared to \citep{hooker2007generalized}, ALE yields a fundamentally different decomposition of the model function $f(x)$.

@@ -5,38 +5,23 @@
 %==============================================================================
 % Interpretability requirement and tradeoff
 %==============================================================================
-Predictive models are optimized for predictive performance.
-Additionally it is often required that the models can be interpreted to make predictions actionable, gain trust, meet regulatory requirements, generate insights, etc..
-Interpretability and predictive performance usually come in a trade-off.
-Black box machine learning models like gradient boosting and neural networks often achieve a high predictive performance compared to structurally simpler models like linear models and decision trees, but are usually opaque.
+Predictive models are optimized for predictive performance, yet it is often required that humans can understand the models to make predictions actionable, gain trust, meet regulatory requirements, generate insights and so on.
+To meet these requirements, performance often has to be trade-off for interpretability.
 %==============================================================================
 % Two flawed ways of increasing interpretability
 %==============================================================================
-To achieve model interpretability, practitioners usually choose one of two approaches:
-Either they select a model class apriori that is deemed interpretable (e.g. linear regression models) as is common in fields like life sciences and social sciences \citep{Lipton2016}, or they consider all kinds of possible models, select the one with the best predictive performance and apply post-hoc interpretation methods.
+In many fields like the life sciences and social sciences it is common to restrict model selection to interpretable models like linear regression models \citep{lipton2016} and decision trees.
+An alternative is to allow all models and apply post-hoc interpretation methods to explain model behavior and predictions.
 Interpretation methods quantify the effects features have on the prediction, compute feature importances or explain individual predictions, see \citep{molnar2019} for an overview.
-%\citep{fernandez2014we}.
-% =============================================================================
-% Problems with post-hoc
-% =============================================================================
-Model-agnostic post-hoc interpretation methods can be used with any model, regardless of how complex the model is.
-Yet the usefulness and reliability of these methods is still tied to properties of the model.
-A lack of sparseness, complex relationships between features and prediction and interactions cause a detoriation of post-hoc interpretations:
-Interpretations become more unmanageable, verbose and unreliable, when more features were used, when feature effects diverge from simple relationships (e.g. from linear to non-linear), when the prediction heavily relies on feature interactions.
-% =============================================================================
-% Interpretability not defined
-% =============================================================================
-Also it's not clear what interpretability really means.
-% =============================================================================
-% Model selection as use case
-% =============================================================================
-This means we can't quantify the tradeoff between interpretability and performance especially across different model.
-For example how do we compare the interpretability of a decision tree and a decision rule list or of a linear model and a support vector machine?
+While model-agnostic post-hoc interpretation methods can be used regardless of model complexity, their usefulness and reliability detoriates for model that use a high number of features, models interactions effects and complex main effects.
+
 % =============================================================================
 % Need interpretability measures
 % =============================================================================
-A solution to explicitly consider interpretability in the model selection process is model-agnostic measures of the models prediction function complexity \citep{ruping2006learning,bibal2016interpretability}, which allow comparisons in terms of interpretability even between different model classes.
-Interpretability measures allow the user to explicitly decide on the tradeoff between accuracy and interpretability instead of "fixing" interpretability (e.g. by choosing a certain model class) and optimizing only performance \citep{freitas2004critical}.
+We need model-agnostic interpretability measures to make the tradeoff between interpretability and predictive performance explicit for comparing models \citep{ruping2006learning,bibal2016interpretability}.
+Instead of fixing the tradeoff by pre-selecting an interpretable model class, model-agnostic measures allow the user to make a more explicit model selection with the desired balance between interpretability and predictive performance \citep{freitas2004critical}.
+
+TODO: CONTINUE HERE
 
 % =============================================================================
 % Our solution and novelty

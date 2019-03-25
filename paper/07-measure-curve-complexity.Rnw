@@ -28,10 +28,10 @@ Vertical bars -- if present -- represent the segments the curve was divided into
 
 n = 1000
 grid.size = 50
-dat1 = mlbench::mlbench.friedman2(nf)
+dat1 = mlbench::mlbench.friedman2(n)
 dat1 = data.frame(cbind(dat1$x, y = dat1$y))
 tsk = makeRegrTask(data = dat1, target = "y")
-lrn = makeLearner("regr.ranger", num_trees = 30)
+lrn = makeLearner("regr.ranger", num.trees = 30)
 mod = train(lrn, tsk)
 pred.ksvm = iml::Predictor$new(mod, dat1)
 fc = FunComplexity$new(pred.ksvm, epsilon = 0.01,grid.size = grid.size)

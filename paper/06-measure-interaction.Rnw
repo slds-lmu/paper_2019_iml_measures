@@ -29,7 +29,7 @@ For a regression task that is evaluated using the L1 loss the median of the targ
 % =============================================================================
 % R2 special case
 % =============================================================================
-When we use the $L2$-loss, the IAS is  $1 - R^2.
+When we use the $L2$-loss, the IAS is  $1 - R^2$.
 
 %$$R^2 = 1 - \frac{SSE}{SST} = \frac{\sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2}{\sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2}$$
 % Interpretation of IAS

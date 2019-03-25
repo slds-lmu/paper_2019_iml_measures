@@ -10,7 +10,7 @@ To meet these requirements, performance often has to be trade-off for interpreta
 %==============================================================================
 % Two flawed ways of increasing interpretability
 %==============================================================================
-In many fields like the life sciences and social sciences it is common to restrict model selection to interpretable models like linear regression models \citep{lipton2016} and decision trees.
+In many fields like the life sciences and social sciences it is common to restrict model selection to interpretable models like linear regression models \citep{Lipton2016} and decision trees.
 An alternative is to allow all models and apply post-hoc interpretation methods to explain model behavior and predictions.
 Interpretation methods quantify the effects features have on the prediction, compute feature importances or explain individual predictions, see \citep{molnar2019} for an overview.
 While model-agnostic post-hoc interpretation methods can be used regardless of model complexity, their usefulness and reliability detoriates for model that use a high number of features, models interactions effects and complex main effects.

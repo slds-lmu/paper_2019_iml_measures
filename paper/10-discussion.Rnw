@@ -45,7 +45,7 @@ This allows researchers to make quantified, verifyable claims when proposing "in
 \subsubsection{Implementation.}
 The source code is available along with the paper on Github: LINK.
 The measure are implemented in the iml package \citep{iml2018} which is available on CRAN.
-All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2016}.
+All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2018}.
 % =============================================================================
 % Funding
 % =============================================================================

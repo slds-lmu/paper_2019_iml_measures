@@ -8,52 +8,41 @@ In this section, we introduce notation, review related work and describe the fun
 For the decomposition of this function, we use $f_S:x_S \mapsto y$, $S \subseteq\{1, \ldots, p\} \quad x_S \in \mathbb{R}^{|S|}$ to denote a function that maps a vector with a subset of the features to a marginal prediction.
 For a single feature, this is written as $f_j$.
 We denote the training data for the machine learning model with the tuples $\mathbb{D} = \{x^{(i)},y^{(i)}\}_{i=1}^n$ and refer to the value of the j-th feature from the i-th instance as $x_j^{(i)}$.
+We write $X_j$, when we refer to the j-th feature as a random variable.
 
 \subsection{Interpretability Measures}
 \label{sec:other}
-% =============================================================================
-% Lack of definition of interpretability
-% =============================================================================
-Interpretability depends on the domain \citep{rudin2018please, freitas2014comprehensible, huysmans2011empirical,ruping2006learning} and is not a well defined property \citep{Lipton2016}.
-\citep{askira1998knowledge} argue that we can't summarize interpretability with a single metric. 
-Many researchers rely on intuition of what interpretability is, which leads to using  structurally simpler models (decision trees, decision rules, ...) instead of black-boxes like SVMs and neural networks \citep{bibal2016interpretability}.
-To address these shortcomings of the definition of interpretability, we propose multiple measures instead of a single one.
-Also, as we will demonstrate, the functional decomposition can also be a starting point for alternative measures, which can accomodate to the domain in which the models are used.
-By offering multiple measures, the tradeoff between them can be adapted in any applicaion.
-\citep{freitas2014comprehensible} says that acceptability and interpretability of a model might not be the same.
-\citep{lavravc1999selected} showed a case where medical experts preferred larger trees, since short trees were not as informative for their decision making.
-Doshi et. al  \citep{doshi2017towards} propose different levels at which interpretation methods can be evaluated: application-grounded evaluation (real humans, real tasks), human-grounded (real humans, simple tasks, e.g. through mechanical turk) and functionally-grounded evaluation (no humans, proxy tasks).
-Our proposed measures evaluated the interpretability at the functional level.
 
-
+This section gives a non-exhaustive overview of approaches to measure and optimize for interpretability.
 % =============================================================================
 % Model-specific or class-specific measures of interpretability
 % =============================================================================
-Current measures of model complexity or interpretability are usually model-specific, i.e. only models from the same class can be compared (e.g. compare decision trees with different depths, but not a linear model with decision trees).
-Model size is often used as heuristic \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable} for quantifying how interpretable a model is (e.g. number of decision rules, tree depth, ...).
+Many measures of model complexity or interpretability are model-specific, i.e. only models from the same class can be compared (e.g. only decisiontrees).
+Model size is often used as a measure for quantifying interpretability (e.g. number of decision rules, tree depth, ...) \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable}. 
+Akaikes Information Criterion (AIC) \citep{akaike1998information} and the  Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are more broadly applicable measures for the trade-off between goodness of fit and degrees of freedom.
+In AIC and BIC, the tradeoff between interpretability and performance is fixed and only one dimension of interpretability, the degrees of freedom, is considered.
+%\citep{hauenstein2018computing} use the generalized degrees of freedom to extend the AIC to a model-agnostic measure, but it is computationally expensive as it requires refitting the model multiple times and does not give more granular insight into the complexity.
+%Also refitting the model changes the model and its complexity.
+In \citep{zhou2018measuring} the authors propose a general form for model interpetability which includes the structural complexity of the model, but again compare model-specific measures like number of leaves, average depth and maximum depth of a tree. 
+Often used is also the number of features, but this is usually done by inspecting model parameters (e.g. number of non-zero weights in sparse linear regression).
 
-But more concerned with representation of models, not with a number of interpretability that can be attached to a model.
-\citep{zhou2018measuring} propose a general form for model interpetability which includes the structural complexity of the model but again compare model-specific measures like number of leaves, average depth and maximum depth of a tree. 
+% =============================================================================
+% Model-agnostic measures
+% =============================================================================
+In \citep{philipp2018measuring} the authors propose model-agnostic measures of model stability, based on the semantic similarity of the predictions when the model is repeatedly trained on different samples of the training data.
+Similar to our approach, they based the measures on the predictions, not the structure of the model, but they measure a different property.
 
-Akaikes Information Criterion (AIC)  \citep{akaike1998information} and the  Bayesian Information Criterion (BIC)  \citep{schwarz1978estimating} are more broadly applicable tradeoff measure between goodness of fit and interpretability.
-They both rely on a way to estimate the degrees of freedom and a likelihood function, which restricts the applicability to certain model classes (e.g. linear models).
-Also the tradeoff between interpretability and performance is fixed and only one dimension of interpretability is considered, i.e. degrees of freedom.
-\citep{hauenstein2018computing} use the generalized degrees of freedom to extend the AIC to a model-agnostic measure, but it is computationally expensive as it requires refitting the model multiple times and does not give more granular insight into the complexity.
-Also refitting the model changes the model and its complexity.
+An approach similar to our proposal is described in \citep{plumb2019regularizing}.
+They propose explanation fidelity and explanation stability metrics for quantifying the quality of local explanation models, e.g. as produced with LIME \citep{ribeiro2016should}.
+They proposed to incorporate the metrics as regularizers in the loss function to train a neural network.
+Their local explainability focused metrics are complementary to ours, sicnce we consider more global model properties.
 
 % =============================================================================
 % Other approaches
 % =============================================================================
-Other approaches involve measuring interpretability through surveys and experiments involving people.
-Dhurandhar et. al 2018 \citep{dhurandhar2017tip} propose to measure interpretability as improvement in the task the machine learning model originally tries to solve
-\citep{friedler2019assessing} measure whether models are intepretable in user studies and proopose as objective measure the runtime operation count of the model.
-Ribeiro et. 2017 \citep{Ribeiro2016b} al measured the interpretability of the LIME approach through user studies.
-% =============================================================================
-% Bridge to decomposition
-% =============================================================================
-Our approach differs because we don't involve humans, but also because we don't measure the interpretability through how the model is represented, but rather how complex the components of the functional decomposition is.
-For example the representation of a tree can become more complex, while the functional complexity decreases (because the tree approximates a linear function).
-
+Other measures of interpretability are based on surveys and human studies.
+For example in \citep{dhurandhar2017tip} the authors propose to measure interpretability as the improvement in the task the machine learning model helps to solve.
+In \citep{friedler2019assessing} an interpretability measure based on a runtime operation count is proposed and evaluated in user studies.
 
 \subsection{Functional Decomposition}
 \label{sec:decomposition}
@@ -61,51 +50,58 @@ For example the representation of a tree can become more complex, while the func
 % =============================================================================
 % General decomposition
 % =============================================================================
-We can decompose any high-dimensional prediction function of a model into a sum of components with increasing dimensionality.
-Let $\fh(x)$ be the model prediction function that maps the feature $x$ to the prediction $\fh: \mathbb{R}^p \rightarrow \mathbb{R}$ where x is a p-dimensional feature vector: $x = (x_1, \ldots, x_p)$.
+Any high-dimensional prediction function can be decomposed into a sum of components with increasing dimensionalityi: an intercept, first-order feature effects, second-order effects up to the p-th order effect:
 
-We write the decomposition as:
 \begin{eqnarray}\label{eqn:decomp} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}
 %\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S)
 \end{eqnarray}
-
-The decomposition contains a constant mean plus the feature first order effects, second order effects up to the p-th order effect.
-We also call the components in this sum that depend on the main effects and higher-order effects interactions.
-Without constraints, there is no unique decomposition and the components have no guarantee to be meaningful. 
-
 % =============================================================================
 % Some useful decompositions
 % =============================================================================
-We need constraints for the components to get a unique decomposition.
-Multiple suggestions have been made in the literature.
-Stone \citep{stone1994use} suggest to approximate the function with weighted integrals and function orthogonality constraints.
+Without constraints on the components, this decomposition is not unique.
+For example, you could choose arbitrary functions like setting everyhing to 0, and define the last component as the difference between the arbitrary decomposition and the true model function.
+Stone \citep{stone1994use} suggested to define orthogonality constraints and approximate the function with weighted integrals.
 Hooker \citep{hooker2007generalized} defined centering, orthogonality and variance decomposition as desirable properties, which results in hierarchically orthogonal components under the correlation inner product.
 
 % =============================================================================
 % ALE decompositions
 % =============================================================================
-Another approach is Accumulated Local Effects (ALE)proposed by \cite{apley2016visualizing} as a tool for visualizing feature effects (see e.g. Figure~\ref{fig:c-demo}), that also represents a decomposition.
-\begin{eqnarray} f(x)  = & f_0 + \sum_{j=1}^p \falej(x_j)+ \sum_{j\neq k}^p f_{ALE,jk}(x_j, x_k) + \ldots + f_{ALE,1,\ldots,p}(x_1, \ldots, x_p)
-\end{eqnarray}
+Accumulated Local Effects (ALE) were proposed in \cite{apley2016visualizing} as a tool for visualizing feature effects (see e.g. Figure~\ref{fig:c-demo}) and also yield a unique decomposition of the prediction function $f_S = f_{S,ALE}$.
+The ALE decomposition is unique under an orthogonality-like property further described in \citep{apley2016visualizing}.
 
-
+%\begin{eqnarray}
+%f(x)  = & f_0 + \sum_{j=1}^p \falej(x_j)+ \sum_{j\neq k}^p f_{ALE,jk}(x_j, x_k) + \ldots + f_{ALE,1,\ldots,p}(x_1, \ldots, x_p)
+%\end{eqnarray}
 % =============================================================================
 % ALE definition
 % =============================================================================
-The ALE main effect of a feature $x_j, j \in \{1,\ldots,p\}$ for a prediction function $\fh$ is defined as 
+
+The ALE main effect $f_{j,ALE}$ of a feature $x_j, j \in \{1,\ldots,p\}$ for a prediction function $\fh$ is defined as 
 \begin{eqnarray}\label{eqn:ale}
-f_{j,ALE}(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\delta \fh(X_1,\ldots,X_p)}{\delta X_j}|X_j = z_j\right]dz_j-c_j
+\falej(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\delta \fh(X_1,\ldots,X_p)}{\delta X_j}|X_j = z_j\right]dz_j-c_j
 \end{eqnarray}
-Here, $X_j$ refers to the j-the feature as a random variable and $z_{0,j}$ is a lower bound of $X_j$ (usually estimated with the minimal observed value) and the expectation $\mathbb{E}$ is computed marginal on the distribution of all features conditioned on the value for $x_j$.
-The constant $c_1$ is chosen so that the mean of $f_{j,ALE}(x_j)$ with respect to the marginal distribution of $X_j$ is zero.
-While the definition of ALE main effects is based on the gradient with respect to the features, they can also be estimated for non-differentiable prediction functions, since an estimation approach based on finite differences is suggested.
+Here, $z_{0,j}$ is a lower bound of $X_j$ (usually minimal observed value of $x_j$) and the expectation $\mathbb{E}$ is computed marginal on the distribution of all features conditioned on the value for $x_j$.
+The constant $c_j$ is chosen so that the mean of $f_{j,ALE}(x_j)$ with respect to the marginal distribution of $X_j$ is zero.
+The ALE main effects are defined as the gradients with respect to the features, but are estimated with finite differences, meaning they can be computed for non-differentiable prediction functions.
 For the actual estimation we refer to \citep{apley2016visualizing}.
+% =============================================================================
+% ALE is best
+% =============================================================================
+We use the ALE decomposition, because ALE are relatively cheap to compute, the effects can be computed sequentially instead of simultanously as in \citep{hooker2007generalized} and, most importantly ALEs don't require knowledge of the data distribution.
+ALE plots have software implementations, see \citep{iml,alepackage}.
+
+
+
+% =============================================================================
+% =============================================================================
+% =============================================================================
+% Material
+% =============================================================================
+% =============================================================================
+% =============================================================================
 % Categorical features
 %Categorical features require an ordering of the categories so that accumulated local effects can be estimated.
 %Any ordering of the categories will yield a valid ALE, but the interpretation differs, because category effects are interpreted in terms of changes to the neighbouring categories.
-
-
-
 %Compared to \citep{hooker2007generalized}, ALE yields a fundamentally different decomposition of the model function $f(x)$.
 %\citep{apley2016visualizing} show that this decomposition is unique because of what they call "pseudo-orthogonality".
 %Pseudo-orthogonality means that for any component of the ALE decomposition, a repeated application of ALE computation yields zero or the same ALE component (if the same ALE effect is computed).
@@ -120,23 +116,8 @@ For the actual estimation we refer to \citep{apley2016visualizing}.
 %In words, pseudo-orthogonality is:
 %The S-ALE of an S-ALE function is again S-ALE and the S-ALE function of u-ALE is 0 when S and u are not equal.
 
-% =============================================================================
-% ALE is best
-% =============================================================================
-We decided to use the ALE decomposition, because ALE are relatively cheap to compute, can be computed sequentially instead of all together as in \citep{hooker2007generalized}, they don't require knowledge of the data distribution.
-We prefer pseudo-orthogonality over orthogonality, since when feature are correlated, the true additive structure is not reflected when effects have to be orthogonal.
-For example if the model is a linear model with $f(x) = x_1 + 2\cdot x_2$, with $x_1$ and $x_2$ being correlated, we prefer to recover $f_{1}(x_1) = 1$ and $f_{2}(x_2)$ which is the result under ALE decomposition, but not under the constraint of orthogonality.
-Also ALE plots have software solutions, see \citep{iml,alepackage}.
-
-
-
-% =============================================================================
-% =============================================================================
-% =============================================================================
-% Material
-% =============================================================================
-% =============================================================================
-% =============================================================================
+%We prefer the orthogonality-like  over orthogonality, since when feature are correlated, the true additive structure is not reflected when effects have to be orthogonal.
+%%For example if the model is a linear model with $f(x) = x_1 + 2\cdot x_2$, with $x_1$ and $x_2$ being correlated, we prefer to recover $f_{1}(x_1) = 1$ and $f_{2}(x_2)$ which is the result under ALE decomposition, but not under the constraint of orthogonality.
 
 % =============================================================================
 % Concepts for interpretability

@@ -5,26 +5,21 @@
 % =============================================================================
 % About sparsity
 % =============================================================================
-We propose a model-agnostic heuristic for estimating the number of features that are used by a model for making predictions.
-We distinguish between the number of features the model was trained with and the number features effectively used by the model's prediction function.
+We propose a feature-permutation based approach to determine how many features are used by the model for making predictions.
+We count a feature as "used" by the model, when changing a feature changes the prediction, which can be different from the numbers of features available during training.
 
 % =============================================================================
 % Why model-agnostic
 % =============================================================================\
 If available, model-specific methods for extracting the number of features used by the model are preferable over model-agnostic estimation heuristic, like counting the number of non-zero weights in a sparse linear regression model.
-A model-agnostic heuristic is useful in scenarios where we only have access to the prediction function but not the model internals (e.g. a model provided via WebAPI), when we can't rely on the availability of an extraction method (e.g. when allowing different models) or when multiple models and or preprocessing steps are combined in a pipeline (e.g. applying sparse principal component analysis to the features and training a decision tree on the components). 
+A model-agnostic heuristic is useful when we only have access to the prediction function but not the model (e.g. prediction via WebAPI call), or when pipelining of preprocessing steps and models complicates the programmatic extraction (e.g. training a decision tree on sparse principal components). 
 
 % =============================================================================
 % Feature-count heuristic: intuition
 % =============================================================================
-We propose a feature-permutation based approach to determine how many features are used by the model  for making predictions.
-We count a feature as "used" by the model, when changing a feature changes the prediction.
-
-
-Take a sample from the data (can be training or test data), get the model predictions for the sample, replace the values for the feature in question with values randomly sampled from the data, get the predictions for the manipulated instances and measure the differences.
-If any of the differences is bigger than zero, the feature was used for the prediction
-We repeat the permutation step a couple of times to reduce the false negative rate.
-The procedure is formally described in Algorithm~\ref{algo:nfeat}
+The proposed procedure is formally described in Algorithm~\ref{algo:nfeat}.
+To estimate whether feature $x_j$ was used, we sample instances from data $\D$, replace values for $x_j$ with values randomly sampled from the data, and take the difference of the  predictions before and after replacing the values.
+If the difference is different from zero for any sample, the feature was used for the prediction
 
 
 % =============================================================================
@@ -32,17 +27,15 @@ The procedure is formally described in Algorithm~\ref{algo:nfeat}
 % =============================================================================
 The algorithm for computing if feature j was used:
 \begin{algorithm}
-\caption{NF: Number of features}\label{algo:nfeat}
-\KwInput{Number of samples $M$, number of permutations $K$, data $\D$}
+\caption{Number of features used (NF)}\label{algo:nfeat}
+\KwInput{Number of samples $M$,data $\D$}
 \KwOutput{Number of features used}
 NF = 0\;
 	\For{$j \in 1,\ldots,p$}{
-		\For{$k=1,\ldots,K$}{
-			Draw $M$ instances from dataset $D$\;
-			For each instance, sample feature value $\xj$ from its distribution;
-			Compute $d_j^{(i)} = \fh(x^{*^{(i)}}) - \fh(x_{-j}^{*^{(i)}}, x_j)$ for each $i \in \{1,\ldots,M\}$\;
-			\lIf{$\exists i \in {1,\ldots,M} d_j^{(i)} \neq 0$}{$NF += 1$. Break.
-}
+		Draw $M$ instances $\{x^{(m)}\}_{m=1}^M$ from dataset $D$\;
+			Create $\{x^{(m)*}\}_{m=1}^M$ by replacing $x_j$ with samples from $X_j$ in $\{x^{(m)}\}_{m=1}^M$ \;
+			Compute prediction differences $d_j^{(m)} = f(x^{(m)*}) - f(x^{(m)})$\; 
+			\lIf{$\exists m \in {1,\ldots,M}:d_j^{(m)}\neq 0$}{$NF += 1$. 
 		}
 		}
 \Return NF	
@@ -51,25 +44,16 @@ NF = 0\;
 % =============================================================================
 % False negatives
 % =============================================================================
-The false positive rate is zero, because when the method detects a difference in the prediction given a feature permutation, according to our definition, the feature was used by the model.
+The rate of false positives, i.e. the heuristic falsely counts a feature as used, is zero, because we defined a feature as used when the prediction changes given a feature change.
 
-
-It can happen that we overlook a feature that was used, but we don't count it with the heuristic.
-The probability of a false negative depends on the probability that we sample an instance for which a change in the feature affects the prediction and on the probability that a permutation of a feature changes the feature so that the prediction changes (given that the instance can be affected at all).
-
-Let $P_{fn}^j$ be the false negative probability for feature $x_j$ (feature was used by the model, the heuristic does not count it), $P_{aff}^j$ the probability that a random data instance's prediction can be affected at all by a change in $x_j$ and $P_{rng}^j$ the probability that, given an instance for which the prediction can be changed by permuting the feature, we sample a value for the feature that changes the prediction.
-
-\begin{eqnarray*}
-	P_{fn}^j&=\left(1 - P_{aff}^j + P_{aff}^j (1 - P_{rng}^j)^K\right)^M
-\end{eqnarray*}
-
-The probability that we miss at least one feature is $1 - (1 - P_{fn})^p$ with the simplification that $P_{fn}^j = P_{fn} \forall j \in 1,\ldots,p$
+The probability of a false negative, i.e. the heuristic overlooks a feature depends on the number of samples $M$ and the model function $f$.
+Let $P_{aff}^j$ the probability that a instance's prediction depends on the value of $x_j$ and $P_{rng}^j$ the probability that a sample from $X_j$ changes the predicton for an instance i, assuming that the prediction depends on $x_j$.
+Then the probability of missing the use of feature $x_j$ is: $P_{fn}^j=(1 - P_{aff}^j + P_{aff}^j (1 - P_{rng}^j))^M$
+With the simplifying assumption that $P_{fn}^j = P_{fn} \forall j \in 1,\ldots,p$, the probability that we miss at least one feature is $1 - (1 - P_{fn})^p$.
 
 For a linear model without interactions and only numerical features, the false negative rate is 0:
-$P_{aff}=1$ and $P_{rng}^j = 0$, so that $P_{fn}^j = (1 - 1 + 0^K)^M = 0$.
-
-Let's assume that only 1 percent of instances are affected by a change in a numerical feature $\xj$ ($P_{aff}=0.01$), and for those the average probability that a change in the feature will change the prediction is 2 percent ($P_{rng}=0.02$).
-When we use $M=100$, $K=10$, then $\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01 * 0.01^{10})^{100} = 0.3660$.
-In this case the false discovery rate is quite high due to a too low number of instances sampled.
-If we increase M to 500, the probability drops to  0.0066.
+$P_{aff}=1$ and $P_{rng}^j = 0$, so that $P_{fn}^j = (1 - 1 + 0)^M = 0$.
+Let's assume a model where only one percent of instances rely on feature $\xj$ ($P_{aff}=0.01$) and these instance have a probability of 0.02 that random value from $X_j$ changes the prediction ($P_{rng}=0.02$).
+When we set $M=100$, then $\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01 * 0.01)^{100} \approx 0.37$.
+If we increase M to 500, the probability drops to $\approx 0.007$.
 

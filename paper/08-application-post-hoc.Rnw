@@ -49,7 +49,7 @@ lrn = makeLearner("regr.lm")
 mod.gamboost = train(lrn, task)
 pred = Predictor$new(mod.gamboost, datx2, class = 1)
 
-ylim = c(-10, 1300)
+ylim = c(-100, 1300)
 fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_gamboost = 1 - fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
@@ -59,7 +59,7 @@ p_gamboost = plot(fe$effects[[feature]], ylim = y_limit) +
   scale_y_continuous("Prediction (centered at x=0)", limits = ylim)
 
 
-lrn = makeLearner("regr.randomForest")
+lrn = makeLearner("regr.ksvm", C = 0.05)
 mod.ranger = train(lrn, task)
 pred = Predictor$new(mod.ranger, datx2)
 fc = FunComplexity$new(pred, grid.size = grid.size)
@@ -67,11 +67,10 @@ r2_ksvm = 1- fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
 p_ksvm = plot(fe$effects[[feature]], ylim = y_limit) +
 	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_ksvm), size = 10) + 
-  ggtitle("Random Forest") + 
+  ggtitle("SVM") + 
   scale_y_continuous("", limits = ylim)
 
-
-lrn = makeLearner("regr.kknn", k = 3)
+lrn = makeLearner("regr.xgboost", nrounds = 1000)
 mod.kknn = train(lrn, task)
 pred = Predictor$new(mod.kknn, datx2, class = 1)
 fc = FunComplexity$new(pred, grid.size = grid.size)
@@ -79,7 +78,7 @@ r2_kknn = 1- fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
 p_kknn = plot(fe$effects[[feature]], ylim = y_limit) +
 	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_kknn), size = 10) + 
-  ggtitle("knn (k=3)") + 
+  ggtitle("gbt") + 
   scale_y_continuous("", limits = ylim)
 
 mae.gamboost = measureMAE(datx2$y, getPredictionResponse(predict(mod.gamboost, task2)))

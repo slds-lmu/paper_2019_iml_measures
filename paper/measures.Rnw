@@ -5,30 +5,19 @@
 % =============================================================================
 % General idea in words
 % =============================================================================
-We decompose the prediction function into a constant term plus main effects (estimated with ALE) plus a rest containing interactions, then we measure the number of features(NF) that were used (see Section~\ref{sec:nfeatures}), the interaction strength (IA) (see Section~\ref{sec:interaction} and the average main effect complexity (MEC) (see Section \ref{sec:curve}.
-These measures quantify the complexity of a machine learning model from an external view onto the shape of the prediction function and ignores the actual representation of the model (e.g. tree structure).
-
+In this section, we motivate complexity measures based on the functional decomposition: number of features (NF) used (Section~\ref{sec:nfeatures}), interaction strength (IA) (Section~\ref{sec:interaction} and the average main effect complexity (MEC) (Section \ref{sec:curve}.
 
 % =============================================================================
 % Decomposition and Simplification
-% =============================================================================
-Based on Equation~\ref{eqn:decomp}, we estimate the main effects by ALE and summarize the interaction in a rest term $IA(x)$:
+% ============================================================================
+Based on Equation~\ref{eqn:decomp}, we decompose the prediction function into a constant (estimated as $f_0 = \frac{1}{n}\sum_{i=1}^n \hat{f}(\xi)$), plus the main effects (estimate with ALE), and a rest containing interactions.
+
 \begin{eqnarray} f(x) % = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S}(x_S)}^{\text{Higher order effects}} \\
 =&\underbrace{f_0 + \sum_{j=1}^p \overbrace{\falej(x_j)}^\text{AMEC: How complex?} + \overbrace{IA(x)}^{\text{IA: Interaction strength?}}}_{\text{NF: How many features were used}}
 \end{eqnarray}
-The constant term is estimated with the mean of the model prediction $f_0 = \frac{1}{n}\sum_{i=1}^n \hat{f}(\xi)$.
-This arrangement of components emphasizes the view of the model as the mixture of an additive main effect model and interactions between the features.
-The main effects can be arbitrarily complex one-dimensional functions which we can visualize.
-The idea behind the IA measure is to quantify how well the main effects approximate $\fh$ without the interactions.
-In isolation from the interactions, the main effect model constitutes a prediction function and we can analyze how well it already approximates $\fh$, which is the idea behind the interaction measure IAS.
-Depending on the underlying model class and the true relationships in the data, the individual main effect curves can be of different complexity.
-The average main effect complexity (AMEC) tries to capture how many parameters we need to describe the main effects on average.
-
-
-% =============================================================================
-% Replace components with ALE
-% =============================================================================
-We compute the main effects using accumulated local effects proposed by \cite{apley2016visualizing}.
+The arrangement of components emphasizes the prediction function as the sum of an additive main effect model and an interactions rest.
+In isolation from the interactions, the main effect model constitutes a prediction function and we can analyze how well it already approximates $f$, which is the idea behind the interaction measure IAS.
+The average main effect complexity (AMEC) tries to capture how many parameters we need to describe the one-dimensional main effects on average.
 
 % =============================================================================
 % Why minimize proposed measures?
@@ -47,6 +36,8 @@ We compute the main effects using accumulated local effects proposed by \cite{ap
 % -----------------------------------------------------------------------------
 % Material
 % -----------------------------------------------------------------------------
+%These measures quantify the complexity of a machine learning model from an external view onto the shape of the prediction function and ignores the actual representation of the model (e.g. tree structure).
+
 
 % We do the following approximation:
 %

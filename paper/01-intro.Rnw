@@ -11,6 +11,7 @@ To meet these requirements, performance often has to be trade-off for interpreta
 % Two flawed ways of increasing interpretability
 %==============================================================================
 In fields like life science and social science it is common to restrict model selection to interpretable models like linear regression models \citep{Lipton2016} and decision trees.
+Many researchers rely on intuition of what interpretability is, which leads to using  structurally simpler models like decision trees instead of black-boxes like SVMs and neural networks \citep{bibal2016interpretability}.
 This has the drawback that better performing models might a-priori be excluded from model selection step.
 An alternative is to allow all models and apply post-hoc interpretation methods to explain model behavior and predictions.
 Interpretation methods quantify the effects features have on the prediction, compute feature importances or explain individual predictions, see \citep{molnar2019} for an overview.
@@ -23,12 +24,29 @@ We need model-agnostic interpretability measures to make the tradeoff between in
 Instead of fixing the tradeoff by pre-selecting an interpretable model class, model-agnostic measures allow the user to make a more explicit model selection with the desired balance between interpretability and predictive performance \citep{freitas2004critical}.
 
 % =============================================================================
+% Lack of definition of interpretability
+% =============================================================================
+There are additional issues with interpretability:
+Interpretability is not well defined \citep{Lipton2016} and depends on the domain \citep{rudin2018please, freitas2014comprehensible, huysmans2011empirical,ruping2006learning}.
+These observations support the conclusion in \citep{askira1998knowledge} that we can't summarize interpretability with a single metric.
+
+% =============================================================================
+% Our solution
+% =============================================================================
+We propose multiple measures of interpretability to address these shortcomings and to more explicitly tradeoff predictive performance for interpretability.
+By offering multiple measures, the tradeoff between them can be adapted in any applicaion.
+%Also, as we will demonstrate, the functional decomposition can also be a starting point for alternative measures, which can accomodate to the domain in which the models are used.
+%\citep{freitas2014comprehensible} says that acceptability and interpretability of a model might not be the same.
+%\citep{lavravc1999selected} showed a case where medical experts preferred larger trees, since short trees were not as informative for their decision making.
+
+
+% =============================================================================
 % Our solution and novelty
 % =============================================================================
 Our contributions are the following:
-After a review of related work \ref{sec:other} and background on functional decomposition \ref{sec:decomposition}, we suggest three novel model-agnostic measures of interpretability.
-For the number of features used by the model, we propose a novel estimation heuristic \ref{sec:nfeatures}.
-Based on decomposition of the model prediction function, we suggest measures for interaction strength \ref{sec:interaction} and for average complexity of the feature main effects \ref{sec:curve}.
+After a review of related work \ref{sec:other} and background on functional decomposition \ref{sec:decomposition}, we suggest three model-agnostic measures of interpretability.
+For the \textbf{number of features used} by the model, we propose a novel estimation heuristic \ref{sec:nfeatures}.
+Based on decomposition of the model prediction function, we suggest measures for \textbf{interaction strength} \ref{sec:interaction} and for \textbf{average complexity of the feature main effects} \ref{sec:curve}.
 We demonstrate that minimizing these three measures improves the readability and reliability of post-hoc interpretation methods \ref{sec:post-hoc}.
 Finally, we illustrate the use of the proposed complexity measures in multi-objective optimization  \ref{sec:multiobj}.
 

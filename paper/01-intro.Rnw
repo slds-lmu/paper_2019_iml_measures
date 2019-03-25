@@ -27,9 +27,9 @@ TODO: CONTINUE HERE
 % Our solution and novelty
 % =============================================================================
 Our contributions are the following:
-After a review of related work \ref{sec:other} and of the theory of functional decomposition \ref{sec:decomposition}, we suggest three novel model-agnostic measures of interpretability.
-The first measure is the number of features used by the model, for which we propose a novel estimation heuristic \ref{sec:nfeatures}.
-Based on a decomposition and condensation of the model prediction function, we suggest measures for interaction strength \ref{sec:interaction} and for average complexity of the feature main effects \ref{sec:curve}.
-We demonstrate that minimizing these three measures improves the readability, reliability and fidelity of post-hoc interpretation methods \ref{sec:post-hoc}.
-Finally we illustrate the usefulness of the complexity measures in multi-objective optimization setting to allow a tradeoff between interpretability and accuracy \ref{sec:multiobj}.
+After a review of related work \ref{sec:other} and background on functional decomposition \ref{sec:decomposition}, we suggest three novel model-agnostic measures of interpretability.
+For the number of features used by the model, we propose a novel estimation heuristic \ref{sec:nfeatures}.
+Based on decomposition of the model prediction function, we suggest measures for interaction strength \ref{sec:interaction} and for average complexity of the feature main effects \ref{sec:curve}.
+We demonstrate that minimizing these three measures improves the readability and reliability of post-hoc interpretation methods \ref{sec:post-hoc}.
+Finally, we illustrate the use of the proposed complexity measures in multi-objective optimization  \ref{sec:multiobj}.
 

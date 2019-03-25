@@ -2,6 +2,13 @@
 \section{Related Work and Background}
 \label{sec:related}
 
+In this section, we introduce notation, review related work and describe the functional decomposition on which we based the proposed complexity measures.
+
+\subsubsection{Notation:} We consider machine learning prediction functions $f:x \mapsto y$, where $x \in \mathbb{R}^p$ is a  p-dimensional feature vector and $y \in \mathbb{R}$ the prediction.
+For the decomposition of this function, we use $f_S:x_S \mapsto y$, $S \subseteq\{1, \ldots, p\} \quad x_S \in \mathbb{R}^{|S|}$ to denote a function that maps a vector with a subset of the features to a marginal prediction.
+For a single feature, this is written as $f_j$.
+We denote the training data for the machine learning model with the tuples $\mathbb{D} = \{x^{(i)},y^{(i)}\}_{i=1}^n$ and refer to the value of the j-th feature from the i-th instance as $x_j^{(i)}$.
+
 \subsection{Interpretability Measures}
 \label{sec:other}
 % =============================================================================

@@ -3,43 +3,34 @@
 \label{sec:interaction}
 
 
-
 % =============================================================================
 % First order model
 % =============================================================================
-We propose to measure the interaction strength as the error between the ALE main effect model and the black box model $\fh$.
-Based on the ALE decomposition, the ALE main effect model is defined as:
-
-$$f_{1st,ALE}(x) = f_0 + f_{1,ALE}(x_1) + \ldots  + f_{p,ALE}(x_p)$$
-
-Here, $f_0$ is estimated using $f_0 = \frac{1}{n}\sum_{i=1}^n x_i$
-The individual ALE components $f_{j,ALE}$ can be estimated as described in Equation~\ref{eqn:ale}.
-The measure can also be interpreted as the fidelity of the main effect models for approximating the black box model.
+Interaction between features means that the prediction cannot be expressed as a sum of independent feature effects, but the effect of a feature depends on values of other features \citep{molnar2019}.
+We propose to measure interaction strength as the approximation error between the ALE main effect model and the prediction function $\fh$.
+Based on the ALE decomposition, the ALE main effect model is defined as the sum of first order ALE effects:
+$$\faleme(x) = f_0 + f_{1,ALE}(x_1) + \ldots + f_{p,ALE}(x_p)$$
 % =============================================================================
 % PRE / PRL
 % =============================================================================
-We propose to measure the main effect approximation error (based on \citep{cooil1994reliability}) to measure the interaction strength IA:
-
+We define interaction strength as the relative main effect approximation error:
 \begin{eqnarray}\label{eqn:pre}
-IAS = \frac{\mathbb{E}(L(\fh, \fale))}{\mathbb{E}(L(\fh, c))}
+IAS = \frac{\mathbb{E}(L(\fh, \faleme))}{\mathbb{E}(L(\fh, c))}
 \end{eqnarray}
-
-Where $c$ is a meaningful upper baseline for the error, which should be chosen based on the prediction task.
-For a regression task that is evaluated using the L1 loss the median of the target would be a natural choice for the baseline.
+Here, $c$ is the constant that minimizes the loss function $L$.
+For example, if the L1 loss is chosen for $L$, $c$ is the median of the model prediction.
 % =============================================================================
 % R2 special case
 % =============================================================================
-When we use the $L2$-loss, the IAS is  $1 - R^2$.
-
-%$$R^2 = 1 - \frac{SSE}{SST} = \frac{\sum_{i=1}^n (f(x^{(i)}) - f_{1st,ALE}(x^{(i)}))^2}{\sum_{i=1}^n (f(x^{(i)}) -  \frac{1}{n}\sum_{i=1}^n f(x^{(i)}))^2}$$
+When we use the $L2$-loss, IAS is equivalent to 1 minus the R-squared measure:
+$$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(x) - c)^2} = 1 - R^2$$
+Here, c is the mean of the predictions.
 % Interpretation of IAS
 % =============================================================================
-An IAS of 0 means that the prediction function is without interactions and can be fully expressed by the main effects of the features.
-An IAS of 0 also means that a visualization of all the ALE main effects covers the whole variety of the predictions.
-An IAS of 1 means that all main effects are constant at 0 and the model is only interaction.
-For example a model perfectly predicting the (class balanced) XOR problem would have a IAS of 1.
-IAS does not account for order or complexity of the interaction, just how much the main effect model leaves to be explained by the interactions.
-This means that two models can have the same IAS measure, but for one model there is only an interaction of two features, while the other model has a lot of high order interations between multiple features.
+If $IAS=0$, then $L(\fh,\faleme)=0$ meaning we can perfectly approximate $\fh$ with a first order model and the model has no interactions. 
+If $IAS=0$, the a visualization of the ALE main effects captures the full model prediction function.
+If $IAS=1$, all main effects are constant at value 0.
+A model that perfectly predicts the (class balanced) XOR problem would have $IAS=1$.
 
 % =============================================================================
 % =============================================================================

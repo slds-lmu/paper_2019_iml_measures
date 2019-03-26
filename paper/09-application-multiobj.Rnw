@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Optimization Performance and Interpretability}
+\section{Optimization of Performance and Interpretability}
 \label{sec:multiobj}
 
 % TODO: Rename R package names to actual algos (rpart -> CART, xgboost -> gbt, ranger -> rf)

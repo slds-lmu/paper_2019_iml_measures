@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\subsection{Average Main Effect Complexity (AMEC)}
+\subsection{Main Effect Complexity (MEC)}
 \label{sec:curve}
 
 % =============================================================================
@@ -15,17 +15,14 @@ pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x")
 app = AleNumApprox$new(ale = fe, max_seg = 2, epsilon = 0.05)
 @
-
-We propose MEC, a measure for the curve complexity of the ALE main effects $\falej$.
-For an individual ALE curve we measure complexity as the number of parameters we need to approximate the curve with linear segments.
-We compute the main effect complexity for the entire prediction function as the average main effect complexity, weighted by the variance of each curve.
-Figure~\ref{fig:c-demo} shows an exemplary ALE plot (= main effect) and an approximation with linear segments.
-Throughout the paper, we will represent main effect ALE curves with sparklines, e.g. Figure~\ref{fig:c-demo} looks like this in-text \Sexpr{spark(app)}.
-Vertical bars -- if present -- represent the segments the curve was divided into for approximation.
-
+To determine the shape complexity of ALE main effects $\falej$, we propose the main effect complexity (MEC) measure.
+For an individual ALE main effect, $\text{MEC}_j$ is the number of parameters needed to approximate the curve with linear segments.
+For the entire model, MEC is the average $\text{MEC}_j$ over all main effects, weighted by their variance.
+Figure~\ref{fig:c-demo} shows an ALE plot (= main effect) and its approximation with two linear segments.
+In the remainder, main effect ALE curves will be represented by sparklines, e.g. Figure~\ref{fig:c-demo} by \Sexpr{spark(app)}.
+Vertical bars -- if present -- show intervals between segments of the approximation.
 
 <<epsilons,  fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
-
 n = 1000
 grid.size = 50
 dat1 = mlbench::mlbench.friedman2(n)
@@ -78,8 +75,6 @@ app2_jump = AleNumApprox$new(ale = fe, max_seg = 5, epsilon = 0.05)
 n = 3000
 grid.size = 100
 x = runif(n = n)
-
-
 y = 0.2 * sin(15 * x)
 dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
 mod = mgcv::gam(y ~ s(x), data = dat)
@@ -110,34 +105,36 @@ p3 = plot(app3)  + scale_y_continuous(limits = c(-7,7))
 <<c-demo, fig.cap = "ALE curve (black line) approximated by two linear segments. Segments are vertical lines, approximation the doted lines.", out.height ="4cm", out.width="10cm", fig.height=4, fig.width=10, fig.align="center", dependson="c-demo-prepare">>=
 plot(app) + ggtitle("") + scale_y_continuous("ALE")
 @
-
 % =============================================================================
 % Measure Intuition
 % =============================================================================
-The procedure to compute MEC is described in Algorithm~\ref{algo:AMEC}.
-The motivation behind approximating the ALE curves is to replace the curve with a function of known complexity, in this case measured as the number of parameters needed to describe the curve with linear segments, a similar concept as the degrees of freedom often used in linear regression models.
-Another goal was to allow the approximation to have some error, so that a curve that wiggles around a straight line to be approximated by a straight line, e.g. we would like the curve \Sexpr{spark(fc1$approx_models$V3$ale)} be approximated with a single linear segment.
-We measured the approximation with $R^2$ of the approximation vs. the full ALE curve and allow the $R^2$ be 1 - $\epsilon$ as defined by the user.
+Through the approximation with linear segments, the degrees of freedoms needed for describing a main effect curve becomes measurable.
+It also allows some approximation error, e.g. an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)} 
+ has $\text{MEC}_j=1$, even if dozens of parameters would be needed to perfectly describe it. 
+The approximation quality is measured with the R-squared measure.
+An approximation has to reach an R-squared of at least $1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
+We also introduced parameter $max_{seg}$, the maximum number of segments.
+In the case that an approximation can't reach an R-squared above $1-\epsilon$ with a given $max_{seg}$, $\text{MEC}_j$ is computed with the maximum number of segments.
 % =============================================================================
 % Measure Sum Up and Fix
 % =============================================================================
-First we compute the main effect complexity for each feature individually and then average the results.
-If we average the main effect complexities without weighting, we run into the problem that some effects might be very complex, but don't contribute much to the prediction and we visually interpret the feature effect as having no impact and being wiggly around effect of zero.
-For example, the two ALE curves  \Sexpr{spark(app1_wiggle$ale, c(-7, 7), width = 5)} and \Sexpr{spark(app2_jump$ale, c(-7, 7), width = 5)} are identical except for the jump at 0.5 in the second curve.
-We need more linear segments to get the same approximation $R^2$ as for the second curve.
-One way to mitigate the problem of getting high AMEC estimates through wiggly main effects that are irrelevant for the prediction is to weight each main effect by its variance.
-Let's consider 3 main effect curves \Sexpr{spark(app1$ale, c(-6, 6), width = 5)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)}, which only differ by a scaling factor in the y-axis.
-All three curves need the five segments to be approximated with  $R^2 >= 0.95$:
+$\text{MEC}_j$ is averaged over all features to get the main effect complexity for the model.
+The individual $\text{MEC}_j$ are weighted by the variance of the corresponding ALE main effect, to give less weight to features that did not contribute much to the prediction, e.g. when their ALE curve wiggles around zero.
+%For example, the two ALE curves  \Sexpr{spark(app1_wiggle$ale, c(-7, 7), width = 5)} and \Sexpr{spark(app2_jump$ale, c(-7, 7), width = 5)} are identical except for the jump at 0.5 in the second curve.
+%We need more linear segments to get the same approximation $R^2$ as for the second curve.
+%One way to mitigate the problem of getting high MEC estimates through wiggly main effects that are irrelevant for the prediction is to weight each main effect by its variance.
+For example the three main effect curves \Sexpr{spark(app1$ale, c(-6, 6), width = 5)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)} differ by a scaling factor in the y-axis, yet each needs five segments to be approximated with $R^2 >= 0.95$:
  \Sexpr{spark(app1, c(-6, 6), width = 5)}, \Sexpr{spark(app2, c(-6, 6), width = 5)} and \Sexpr{spark(app3, c(-6, 6), width = 5)}
 When weighted by the variance,  \Sexpr{spark(app1$ale, c(-6, 6), width = 5)} gets a weight of \Sexpr{sprintf("%.2f", app1$var)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app2$var)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app3$var)}.
+Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 
 % =============================================================================
 % Algorithm for complexity
 % =============================================================================
 \begin{algorithm}
-\caption{Average main effect complexity (AMEC).}\label{algo:AMEC}
-	\KwInput{$\fh$, allowed error $\epsilon$, segments limit $max_{seg}$, features $x_j,j\in \pset$}
-	\KwOutput{Average Main Effect Complexity AMEC}
+\caption{Main Effect Complexity (MEC).}\label{algo:AMEC}
+	\KwInput{$\fh$, $\epsilon$, $max_{seg}$, $\D$}
+	\KwOutput{Main Effect Complexity MEC}
 	\For{$j \in \pset$}{
 Estimate ALE $\falej$\;
 	%\If{$\falej(x_j) = 0$ for all $x$}{
@@ -146,42 +143,33 @@ Estimate ALE $\falej$\;
 	%	}
 	Approximate $\falej$ with $g_j(x_j) = \beta_0 + \beta_1 x_j$\;
 	Compute $R^2$ of $g_j(x_j)$\;
-	Set $K=0$\;
-	\While{$K \leq max_{seg}$ AND $R^2 < (1- \epsilon)$}{
-		Set $K = K+1$\;
+	Set $K=1$ \tcp{Number of breakpoints}
+	\While{$K < max_{seg}$ AND $R^2 < (1- \epsilon)$}{
 		\tcp{Optimize intervals $Z_k$ via generalized simulated annealing, $\beta$'s per segment with ordinary least squares}
 		\tcp{For categorical feature, fix slope to zero} 
-		$g_j = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$
+		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\cdot\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$
 
-		Compute $R^2$ of $g_j$
+		Compute $R^2$ of $g_j$\;
+		Set $K = K+1$ \;
 	}
 	\tcp{Post-processing of slopes}
 	\For{$k \in 1,\ldots,K$}{
-		Set $\beta_{j0}^k = \frac{1}{n_k}\sum_{\xi\in Z_k}\falej(\xij)$ and $\beta_{j1}^k = 0$ in $g_j$\;
+		Set $\beta_{0}^k = \frac{1}{\sum_{i=1}^n\I_{\xi\in Z_k}}\sum_{i=1}^n\I_{\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{j1}^k = 0$ in $g_j$\;
 		\lIf{$R^2(g_j) > (1-\epsilon)$}
 		{
-			Use new $\beta_{j0}^k$, $\beta_{j1}^k$ in $g_j$
+			Use new $\hat{\beta}_{j0}^k$, $\hat{\beta}_{j1}^k$ in $g_j$
 		}
 		\lElse{
-			Keep old $\beta_{j0}^k$, $\beta_{j1}^k$ in $g_j$	
+			Keep old $\hat{\beta}_{0}^k$, $\hat{\beta}_{1}^k$ in $g_j$	
 			}
 			}
-$MEC_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_k > 0}$\;
+$MEC_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_j^k > 0}$\;
 $V_j = \frac{1}{n}\sum_{i=1}^n \left(\hat{f}^{ALE}_j(x^{(i)})\right)^2$\;
 }
-	\Return{$AMEC = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jMEC_j$\;}
+	\Return{$MEC = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jMEC_j$\;}
 \end{algorithm}
 
 
-
-
-
-
-% =============================================================================
-% Different epsilons
-% =============================================================================
-The choice of $\epsilon$ affects the complexity measures:
-This ALE main effect \Sexpr{spark(fc1$approx_models$V3$ale)} can be approximated with a linear model \Sexpr{spark(fc1$approx_models$V3, approx = TRUE)} when $\epsilon = \Sexpr{eps1}$ but needs \Sexpr{(fc3$approx_models$V3$n_coefs + 1) / 2} segments when $\epsilon$ is decreased to \Sexpr{eps3}: \Sexpr{spark(fc3$approx_models$V3, approx = TRUE)}.
 
 
 
@@ -200,51 +188,6 @@ dat$y = 2 * dat$x + rnorm(n, sd = nsd)
 grid.size = 100
 epsilon = 0.05
 @
-The complexity measures ignores how complex the internal structure of the model is, e.g. it does not matter whether the linear relationship comes from a single linear model or a blend of hundreds of linear models.
-We demonstrate how the number of nodes and complexity measure C increase with increasing model performacne, but at some point the complexity C decreases again.
-For this example, \Sexpr{n} data points were drawn from a uniform distribution between 0 and 1, and the target is simulated as $2 * x + \epsilon$, where $\epsilon \sim N(0,\Sexpr{nsd})$.
-We trained three trees with different maximal depths, as shown in Table~\ref{tab:tree}.
-
-<<tree-increase, dependson="tree-increase-data",results="asis">>=
-rp_width = function(rp) sum(rp$frame$var == "<leaf>")
-
-rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 1))
-pred1 = Predictor$new(rp1, data = dat)
-fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
-#p1 = fc1$approx_models$x$plot() +
-#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp1), fc1$c_wmean))
-
-rp2 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
-pred2 = Predictor$new(rp2, data = dat)
-fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
-#p2 = fc2$approx_models$x$plot() +
-#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp2), fc2$c_wmean))
-
-rp3 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 3))
-pred3 = Predictor$new(rp3, data = dat)
-fc3 = FunComplexity$new(pred3, grid.size = grid.size, epsilon = epsilon)
-#p3 = fc3$approx_models$x$plot() +
-#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp3), fc3$c_wmean))
-
-#grid.arrange(p1, p2, p3, nrow = 1)
-n_terminal = function(tree) {
-  nrow(tree$frame[tree$frame$var == "<leaf>",])
-}
-
-tab = data.frame(
-  "Tree Depth" = c(1,2,3),
-  "Terminal nodes" = c(n_terminal(rp1), n_terminal(rp2),n_terminal(rp3)),
-  "ALE" = c(spark(fc1$approx_models$x),spark(fc2$approx_models$x),spark(fc3$approx_models$x)),
-  "Approximation" = c(
-    spark(fc1$approx_models$x, approx = TRUE),
-    spark(fc2$approx_models$x, approx = TRUE),
-    spark(fc3$approx_models$x, approx = TRUE)),
-  "AMEC" = c(fc1$c_wmean, fc2$c_wmean, fc3$c_wmean))
-
-caption = "Increasing the tree depth always increases number of terminal nodes, but the complexity measure increases at some point because the prediction function can be approximated by a single linear function."
-print.xtable(xtable(tab, caption = caption), sanitize.text.function = as.is, booktabs = TRUE, label = "tab:tree")
-@
-
 
 
 % =============================================================================
@@ -313,6 +256,12 @@ print.xtable(xtable(tab, caption = caption), sanitize.text.function = as.is, boo
 dat = data.frame(test = c(1,2), sp = c(spark(fc$approx_models$V1), spark(fc$approx_models$V2)), stringsAsFactors = FALSE)
 print.xtable(xtable(dat), sanitize.text.function = as.is)
 @
+% =============================================================================
+% Different epsilons
+% =============================================================================
+%The choice of $\epsilon$ affects the complexity measures:
+%This ALE main effect \Sexpr{spark(fc1$approx_models$V3$ale)} can be approximated with a linear model \Sexpr{spark(fc1$approx_models$V3, approx = TRUE)} when $\epsilon = \Sexpr{eps1}$ but needs \Sexpr{(fc3$approx_models$V3$n_coefs + 1) / 2} segments when $\epsilon$ is decreased to \Sexpr{eps3}: \Sexpr{spark(fc3$approx_models$V3, approx = TRUE)}.
+
 
 
 % =============================================================================
@@ -323,6 +272,51 @@ print.xtable(xtable(dat), sanitize.text.function = as.is)
 % The degrees of freedom exploded when the ALE plot was not quite linear, but almost, yielding an unintuitive measure.
 % Tree splits did not work, like for example model based partitioning TODO: CITE mob.
 % One reason is that the greedy approach did not work well and we found it better to search per number of splits.
+
+%The complexity measures ignores how complex the internal structure of the model is, e.g. it does not matter whether the linear relationship comes from a single linear model or a blend of hundreds of linear models.
+%We demonstrate how the number of nodes and complexity measure C increase with increasing model performacne, but at some point the complexity C decreases again.
+%For this example, \Sexpr{n} data points were drawn from a uniform distribution between 0 and 1, and the target is simulated as $2 * x + \epsilon$, where $\epsilon \sim N(0,\Sexpr{nsd})$.
+%We trained three trees with different maximal depths, as shown in Table~\ref{tab:tree}.
+
+<<tree-increase, dependson="tree-increase-data",results="asis", eval=FALSE>>=
+rp_width = function(rp) sum(rp$frame$var == "<leaf>")
+
+rp1 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 1))
+pred1 = Predictor$new(rp1, data = dat)
+fc1 = FunComplexity$new(pred1, grid.size = grid.size, epsilon = epsilon)
+#p1 = fc1$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp1), fc1$c_wmean))
+
+rp2 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 2))
+pred2 = Predictor$new(rp2, data = dat)
+fc2 = FunComplexity$new(pred2, grid.size = grid.size, epsilon = epsilon)
+#p2 = fc2$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp2), fc2$c_wmean))
+
+rp3 = rpart(y ~ ., data = dat, control = rpart.control(maxdepth = 3))
+pred3 = Predictor$new(rp3, data = dat)
+fc3 = FunComplexity$new(pred3, grid.size = grid.size, epsilon = epsilon)
+#p3 = fc3$approx_models$x$plot() +
+#  ggtitle(sprintf("Leaf nodes: %i, C: %i", rp_width(rp3), fc3$c_wmean))
+
+#grid.arrange(p1, p2, p3, nrow = 1)
+n_terminal = function(tree) {
+  nrow(tree$frame[tree$frame$var == "<leaf>",])
+}
+
+tab = data.frame(
+  "Tree Depth" = c(1,2,3),
+  "Terminal nodes" = c(n_terminal(rp1), n_terminal(rp2),n_terminal(rp3)),
+  "ALE" = c(spark(fc1$approx_models$x),spark(fc2$approx_models$x),spark(fc3$approx_models$x)),
+  "Approximation" = c(
+    spark(fc1$approx_models$x, approx = TRUE),
+    spark(fc2$approx_models$x, approx = TRUE),
+    spark(fc3$approx_models$x, approx = TRUE)),
+  "AMEC" = c(fc1$c_wmean, fc2$c_wmean, fc3$c_wmean))
+
+caption = "Increasing the tree depth always increases number of terminal nodes, but the complexity measure increases at some point because the prediction function can be approximated by a single linear function."
+print.xtable(xtable(tab, caption = caption), sanitize.text.function = as.is, booktabs = TRUE, label = "tab:tree")
+@
 
 
 

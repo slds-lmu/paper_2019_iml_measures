@@ -6,7 +6,7 @@
 % Interpretability requirement and tradeoff
 %==============================================================================
 Machine learning models are optimized for predictive performance, yet it is often additionally required that humans understand the models to make predictions actionable, gain trust, meet regulatory requirements, generate insights and so on.
-To meet these requirements, performance often has to be trade-off for interpretability.
+To meet these requirements, performance often has to be traded off for interpretability.
 %==============================================================================
 % Two flawed ways of increasing interpretability
 %==============================================================================

@@ -20,7 +20,7 @@ This section gives a non-exhaustive overview of approaches to measure and optimi
 Many measures of model complexity or interpretability are model-specific, i.e. only models from the same class can be compared (e.g. only decisiontrees).
 Model size is often used as a measure for quantifying interpretability (e.g. number of decision rules, tree depth, ...) \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable}. 
 Akaikes Information Criterion (AIC) \citep{akaike1998information} and the  Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are more broadly applicable measures for the trade-off between goodness of fit and degrees of freedom.
-In AIC and BIC, the tradeoff between interpretability and performance is fixed and only one dimension of interpretability, the degrees of freedom, is considered.
+In AIC and BIC, the tradeoff between interpretability and performance is fixed, and only one dimension of interpretability, the degrees of freedom, is considered.
 %\citep{hauenstein2018computing} use the generalized degrees of freedom to extend the AIC to a model-agnostic measure, but it is computationally expensive as it requires refitting the model multiple times and does not give more granular insight into the complexity.
 %Also refitting the model changes the model and its complexity.
 In \citep{zhou2018measuring} the authors propose a general form for model interpetability which includes the structural complexity of the model, but again compare model-specific measures like number of leaves, average depth and maximum depth of a tree. 
@@ -50,7 +50,7 @@ In \citep{friedler2019assessing} an interpretability measure based on a runtime 
 % =============================================================================
 % General decomposition
 % =============================================================================
-Any high-dimensional prediction function can be decomposed into a sum of components with increasing dimensionalityi: an intercept, first-order feature effects, second-order effects up to the p-th order effect:
+Any high-dimensional prediction function can be decomposed into a sum of components with increasing dimensionality: an intercept, first-order feature effects, second-order effects up to the p-th order effect:
 
 \begin{eqnarray}\label{eqn:decomp} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j\neq k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}
 %\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S)

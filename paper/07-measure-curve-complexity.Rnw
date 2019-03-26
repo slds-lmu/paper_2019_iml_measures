@@ -115,6 +115,8 @@ The approximation quality is measured with the R-squared measure.
 An approximation has to reach an R-squared of at least $1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
 We also introduced parameter $max_{seg}$, the maximum number of segments.
 In the case that an approximation can't reach an R-squared above $1-\epsilon$ with a given $max_{seg}$, $\text{MEC}_j$ is computed with the maximum number of segments.
+Approximation error $\epsilon$ should be small, but not too small.
+We found approximations with $\epsilon$ between $0.01$ and $0.1$ visually meaningful.
 % =============================================================================
 % Measure Sum Up and Fix
 % =============================================================================
@@ -163,7 +165,8 @@ Estimate ALE $\falej$\;
 			Keep old $\hat{\beta}_{0}^k$, $\hat{\beta}_{1}^k$ in $g_j$	
 			}
 			}
-$MEC_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_j^k > 0}$\;
+\tcp{Sum of non-zero coefficients minus first intercept}
+$MEC_j = K - 1+ \sum_{k=1}^K \mathbb{I}_{\beta_j^k > 0}$\;
 $V_j = \frac{1}{n}\sum_{i=1}^n \left(\hat{f}^{ALE}_j(x^{(i)})\right)^2$\;
 }
 	\Return{$MEC = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jMEC_j$\;}

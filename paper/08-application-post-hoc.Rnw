@@ -2,7 +2,7 @@
 \section{Improving Post-hoc Interpretation}
 \label{sec:post-hoc}
 
-We demonstrate that minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (AMEC) improves readability, reliability and summarizability of post-hoc interpretation methods like partial dependence plots, ALE plots, feature importance, interaction effects, local surrogate models, etc..
+Minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (AMEC) improves readability, reliability and summarizability of post-hoc interpretation methods like partial dependence plots, ALE plots, feature importance, interaction effects, local surrogate models, etc..
 
 \subsubsection{The less features, the less verbose the interpretations.}
 Our NF measure improves the readability of post-hoc analysis results.

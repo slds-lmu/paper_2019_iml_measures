@@ -30,6 +30,8 @@ If $IAS=0$, then $L(\fh,\faleme)=0$ meaning we can perfectly approximate $\fh$ w
 If $IAS=0$, the a visualization of the ALE main effects captures the full model prediction function.
 If $IAS=1$, all main effects are constant at value 0.
 A model that perfectly predicts the (class balanced) XOR problem would have $IAS=1$.
+Since the ALE effect is only estimated, we might slightly overestimate the first order approximation error, i.e. slightly overestimate $IAS$.
+A model without interactions might have $IAS>0$ because of an estimation error, which we observed in the multi-objective optimization setting in Section~\ref{sec:multiobj} ($IAS=0.01$).
 
 % =============================================================================
 % =============================================================================

@@ -25,12 +25,12 @@ If the difference is different from zero for any sample, the feature was used fo
 % =============================================================================
 \begin{algorithm}
 \caption{Number of features used (NF)}\label{algo:nfeat}
-\KwInput{Number of samples $M$,data $\D$}
+\KwInput{Number of samples $M$, data $\D$}
 \KwOutput{Number of features used}
 NF = 0\;
 	\For{$j \in 1,\ldots,p$}{
 		Draw $M$ instances $\{x^{(m)}\}_{m=1}^M$ from dataset $D$\;
-			Create $\{x^{(m)*}\}_{m=1}^M$ by replacing $x_j$ with samples from $X_j$ in $\{x^{(m)}\}_{m=1}^M$ \;
+			Create $\{x^{(m)*}\}_{m=1}^M$ by permutating $x_j$\;
 			Compute prediction differences $d_j^{(m)} = f(x^{(m)*}) - f(x^{(m)})$\; 
 			\lIf{$\exists m \in {1,\ldots,M}:d_j^{(m)}\neq 0$}{$NF += 1$. 
 		}

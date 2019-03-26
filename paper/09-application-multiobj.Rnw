@@ -102,10 +102,10 @@ The three measures of interpretability provide an in-depth characterization of t
 % Objectives and Models
 % =============================================================================
 \subsubsection{Optimization Setup.}
-We applied the model-based optimization framework \citep{mlrMBO} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) on test data.
+We used a model-based optimization framework \citep{mlrMBO} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) on test data.
 We optimized over the space of following model classes (and hyperparameters): CART (maximum tree-depth, pruning cp), a support vector machine (cost C and sigma), ridge regression for sparse linear models (regularization alpha and penalization lambda), gradient boosted trees (maximum depth, number of iterations), gradient boosted generalized additive model (number of iterations) a random forest with 1000 trees (no tuning).
 \subsubsection{Model-based Optimization Setup.}
-We used the ParEGO algorithm \citep{knowles2006parego} for the multi-objective optimization.
+We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
 Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IA) were estimated in-sample.
 We set the number of iterations of ParEGO to \Sexpr{max.iters}.
 For all other parameters of the multi-objective optimization, we relied on the sensitive defaults provided by \citep{mlrMBO}.

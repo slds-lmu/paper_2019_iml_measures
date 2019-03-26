@@ -96,8 +96,6 @@ FunComplexity = R6::R6Class(
           AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_cat)
         }
       })
-      # Compute Shapley weights based on r2
-      SSM = ssq(self$predict(private$X) - private$mean_pred)
       am_coefs = unlist(lapply(self$approx_models, function(x) x$n_coefs))
       am_weights = unlist(lapply(self$approx_models, function(x) x$var))
       self$c_wmean = weighted.mean(am_coefs, w = am_weights)

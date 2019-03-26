@@ -27,12 +27,12 @@
 \maketitle
 
 \begin{abstract}
-To make machine learning models interpretable, either interpretable models are considered (e.g. decision tree) or post-hoc interpretation methods like partial depends plots are applied.
-Both approaches implicitly tradeoff performance and interpretability, since the class of interpretable models might not include the best performing model and post-hoc interpretation methods can become unreliable and verbose for complex models.
-We suggest to make the tradeoff explicit by quantifying the complexity of machine learning models.
-Based on functional decomposition, we propose measures for the number of features used, interaction strength and the main effect complexity.
-We show that the post-hoc interpretation of models that minimize the three measures becomes more reliable and compact.
-We demonstrate an application of the complexity measures in multi-criteria optimization.
+To make machine learning models interpretable, either interpretable models are considered (e.g. decision tree) or post-hoc interpretation methods such as partial depends plots are used.
+Both approaches implicitly trade-off performance for interpretability, since the class of interpretable models may not include the best performing model and post-hoc interpretation methods may be unreliable and verbose for complex models.
+We propose to make the compromise explicit by quantifying the complexity of machine learning models.
+Based on functional decomposition, we propose measures of number of features used, interaction strength and main effect complexity.
+We show that post-hoc interpretation of models that minimize the three measures becomes more reliable and compact.
+We show an application of complexity measures in multi-objective optimization.
 \keywords{Interpretable Machine Learning \and Explainable AI \and Accumulated Local Effects.}
 \end{abstract}
 

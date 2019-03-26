@@ -136,7 +136,6 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 \begin{algorithm}
 \caption{Main Effect Complexity (MEC).}\label{algo:AMEC}
 	\KwInput{$\fh$, $\epsilon$, $max_{seg}$, $\D$}
-	\KwOutput{Main Effect Complexity MEC}
 	\For{$j \in \pset$}{
 Estimate ALE $\falej$\;
 	%\If{$\falej(x_j) = 0$ for all $x$}{

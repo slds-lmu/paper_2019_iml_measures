@@ -6,10 +6,10 @@
 % =============================================================================
 % Key findings
 % =============================================================================
-In this paper, we proposed three model-agnostic measures of prediction function complexity based on functional decomposition: number of features, interaction strength and main effect complexity.
+We proposed three model-agnostic measures for machine learning model complexity based on functional decomposition: number of features used, interaction strength and main effect complexity.
 The measures allow model comparison across different model classes due to their model-agnostic nature.
-We argued that minimizing the number of features, interaction strength and main effect complexity improves the post-hoc interpretation.
-We demonstrated that these measures can be explicitly optimized with multi-objective optimization, to make the trade-off between interpretability and performance explicit and allow practitioners to select a model that is optimal for their application.
+We argued that minimizing these measures improves post-hoc interpretation of machine learning model.
+We demonstrated that the measures can be directly optimized with multi-objective optimization to make the trade-off between interpretability and performance explicit, which helps for model selection.
 
 
 % =============================================================================
@@ -17,41 +17,39 @@ We demonstrated that these measures can be explicitly optimized with multi-objec
 % =============================================================================
 \subsubsection{Strengths.}
 Our proposed measures can be applied for many models since they are model-agnostic, work for regression and binary classification (based on probabilities) and work for categorical and numerical features.
+They can be used for model selection, but also in benchmarks to compare model classes.
 \subsubsection{Limitations.}
-The way we decomposed the prediction function and defined the complexity measures will not be suitable for every situation.
-For example all higher order effects are combined into a single interaction strength measure, but we don't distinguish whether a model models only a single 2-way interaction or more complex ones.
-However, estimating 2nd-order ALE can fix this problem to some degree.
-Also the main effect complexity measure is limited, because we only regard linear segments, but don't check for seasonal components or other structures. 
-Furthermore, the complexity measures quantify the prediction function from outside, ignoring the way a model is represented.
-While this allows these measures to be model-agnostic, which is a strength, it also ignores how the model can be represented and how well humans can understand it.
-
+The proposed decomposition of the prediction function and definition of the complexity measures will not be suitable in every situation.
+For example, all higher order effects are combined into a single interaction strength measure, which does not distinguish between two-way interactions and higher order interactions.
+Two models can have the same IAS, but one only models a single two-way interaction, the other many different higher order interactions.
+However, the framework of ALE allows to estimate higher order effects and different interaction measures can be constructed.
+Also the main effect complexity measure is limited, because it only considers linear segments but not e.g. seasonal components or other structures.
+Furthermore, the complexity measures quantify machine learning models from a functional view, ignoring the structure of the model (e.g. whether it can be respresented by a tree).
 % =============================================================================
 % What's next
 % =============================================================================
 \subsubsection{The bigger picture.}
-The proposed measures do not all-encompassingly define interpretability, but are a step forward in providing quantifiable properties of machine learning models towards more rigorous science in interpretable machine learning, as \citep{doshi2017towards,Lipton2016} urge.
-We believe that interpretability can't be measured with a single number, but is a high-dimensional concept (sparsity, additivity, fidelity, human simulatability, ...) and we need many ways to measure interpretability.
-An example for such a measure that complements our work is \citep{friedler2019assessing} who propose the number of computational steps necessary for a human to emulate the model prediction as measure for interpretability.
-This matches \citep{rudin2018please} notion that interpretability depends on the application and the audience and we think this can be seen as putting different weights on the different interpretability dimension.
-In some situations we might prefer sparseness and a lack of interactions, in other it's important that we can represent the model as a decision list.
-As \citep{doshi2017towards} mentions this quantification has to happen on different levels: on the functional level (what we did), with humans and with experts.
-
-We believe that a plethora of measurements for interpretability are necessary to solve the lack of definition of interpretability.
-This allows researchers to make quantified, verifyable claims when proposing "interpretable" models or methods.
+The proposed measures do not all-encompassingly define interpretability, but we believe they are a step towards a more rigorous science in interpretable machine learning, as \citep{doshi2017towards,Lipton2016} urged.
+Interpretability is a high-dimensional concept (sparsity, additivity, fidelity, human simulatability, ...) and we need multiple approaches to make interpretability measurable.
+With that in mind, we see our work complementary to other approaches \citep{friedler2019assessing,dhurandhar2017tip,plumb2019regularizing}, which together build a foundation for a more rigorous definition of interpretability.
+Multiple interpretability measures also fits in with the notion that interpretability depends on the audience and the context \citep{rudin2018please}.
+Different situations require differently weighted interpretability measures.
+For example, in some situations we might prefer sparseness and a lack of interactions, in other it's important that we can represent the model as a decision list.
+A multi-dimensional view of interpretability solves the lack of definition of interpretability and supports researcher to make quantified, verifiable and more articulated claims about when interpretability of models or methods.
 
 % =============================================================================
 % Implementation Note
 % =============================================================================
 \subsubsection{Implementation.}
-The source code is available along with the paper on Github: LINK.
-The measure are implemented in the iml package \citep{iml2018} which is available on CRAN.
+The source code is available along with the paper on Github: \url{https://github.com/compstat-lmu/paper_2018_autoiml}.
 All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2018}.
 % =============================================================================
 % Funding
 % =============================================================================
 \subsubsection{Funding.}
-This work is funded by the Bavarian State Ministry of Science and the Arts in the framework of the Centre Digitisation.Bavaria (ZD.B)<
-
+This work is funded by the Bavarian State Ministry of Science and the Arts in the framework of the Centre Digitisation.Bavaria (ZD.B).
+This work has been funded by the German Federal Ministry of Education and Research (BMBF) under Grant No. 01IS18036A.
+The authors of this work take full responsibilities for its content.
 
 
 % =============================================================================

@@ -15,10 +15,9 @@ $$\faleme(x) = f_0 + f_{1,ALE}(x_1) + \ldots + f_{p,ALE}(x_p)$$
 % =============================================================================
 We define interaction strength as the relative main effect approximation error:
 \begin{eqnarray}\label{eqn:pre}
-IAS = \frac{\mathbb{E}(L(\fh, \faleme))}{\mathbb{E}(L(\fh, c))}
+IAS = \frac{\mathbb{E}(L(\fh, \faleme))}{\mathbb{E}(L(\fh, f_0))}
 \end{eqnarray}
-Here, $c$ is the constant that minimizes the loss function $L$.
-For example, if the L1 loss is chosen for $L$, $c$ is the median of the model prediction.
+Here, $f_0$ is the mean of the predictions.
 % =============================================================================
 % R2 special case
 % =============================================================================

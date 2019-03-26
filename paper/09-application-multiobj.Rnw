@@ -14,7 +14,7 @@ GRID.SIZE = 150
 
 # Parameters for mbo
 n.folds = 5
-max.iters = 500
+max.iters = 600
 @
 
 <<mo-data>>=
@@ -140,7 +140,7 @@ ctrl = setMBOControlTermination(ctrl, iters = max.iters)
 
 
 
-<<mo-run, dependson=c("mo-setup"), results='hide', eval = FALSE>>=
+<<mo-run, dependson=c("mo-setup"), results='hide', eval = TRUE>>=
 # Start MBO
 mbo.iml = mbo(fun = obj.fun, control = ctrl)
 saveRDS(mbo.iml, file = "mbo-results.RDS")

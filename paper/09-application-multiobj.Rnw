@@ -86,29 +86,29 @@ As one of the main applications of the proposed interpretability measures, we de
 % Wine Data
 % =============================================================================
 \subsubsection{Predicting Wine Quality.}
-We used the wine quality dataset \citep{cortez2009modeling}, which contains physicochemical properties like alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
-The goal is to predict wine quality on a scale from 0 to 10, assessed by the median of three blind ratings.
+We used the wine quality dataset \citep{cortez2009modeling} which contains physical-chemical properties such as alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
+The goal is to predict wine quality on a scale of 0 to 10, assessed by the median of three blind ratings.
 
 % =============================================================================
 % Why like this?
 % =============================================================================
 \subsubsection{Motivation.}
-As \citep{freitas2014comprehensible} points out, it is difficult to know tradeoffs between interpretability and performance before the modeling step and suggests multi-objective optimization.
-This stands in contrast to apriori selecting an interpretable model class (e.g. decision rules)  and optimizing within this class or exclusively optimizing performance and applying post-hoc interpretations.
-We suggest to search over a wide spectrum of model classes and hyper parameter settings, present the set of Pareto optimal models and let the practitioner choose a suitable balance between interpretability and performance.
-The three measures of interpretability provide an in-depth characterization of the machine learning models, allowing practitioners to make more informed decisions (e.g. how much does performance suffer when we use a model without interactions?).
+As \citep{freitas2014comprehensible} emphasizes, it is difficult to know the desired compromise between interpretability and performance before the modeling step and suggests multi-objective optimization.
+This stands in contrast to a priori selecting an interpretable model class (e.g. decision rules) and optimizing within this class or exclusively optimizing performance and applying post-hoc interpretations.
+We suggest searching over a wide spectrum of model classes and hyper parameter settings, presenting the set of Pareto optimal models, and allowing the practitioner to choose a suitable compromise between interpretability and performance.
+The three measures of interpretability provide a detailed characterization of machine learning models, which enables making informed decisions (e.g. how much does performance suffer if we use a model without interactions?).
 
 % =============================================================================
 % Objectives and Models
 % =============================================================================
 \subsubsection{Optimization Setup.}
-We used a model-based optimization framework \citep{mlrMBO} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) on test data.
-We optimized over the space of following model classes (and hyperparameters): CART (maximum tree-depth, pruning cp), a support vector machine (cost C and sigma), ridge regression for sparse linear models (regularization alpha and penalization lambda), gradient boosted trees (maximum depth, number of iterations), gradient boosted generalized additive model (number of iterations) a random forest with 1000 trees (no tuning).
+We used a model-based optimization framework \citep{mlrMBO} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) on unseen data.
+We optimized over the space of following model classes (and hyperparameters): CART (maximum tree-depth, pruning cp), support vector machine (cost C and sigma), ridge regression (regularization alpha and penalization lambda), gradient boosted trees (maximum depth, number of iterations), gradient boosted generalized additive model (number of iterations) a random forest with 1000 trees (no tuning).
 \subsubsection{Model-based Optimization Setup.}
 We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
 Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IA) were estimated in-sample.
 We set the number of iterations of ParEGO to \Sexpr{max.iters}.
-For all other parameters of the multi-objective optimization, we relied on the sensitive defaults provided by \citep{mlrMBO}.
+For all other parameters of the model-based, multi-objective optimization, we relied on the sensitive defaults provided by \citep{mlrMBO}.
 
 <<mo-setup, dependson=c("params", "mo-learners", "mo-data")>>=
 fn = function(x){
@@ -223,11 +223,11 @@ smeasure_names = c("sMAE", "sMEC", "sIAS", "sNF")
 % Pareto Front Table
 % =============================================================================
 \subsubsection{Results.}
-Table \ref{tab:pareto} shows the set of Pareto optimal models along with their MAE, NF, IAS and MEC measures.
-If two models from the same class but with different hyperparameter had the exact same MAE, NF, IAS and MEC, we dropped one randomly from the Pareto set.
-We also dropped constant models (e.g. ridge regression with strong penalization). 
-For a more informative visualization, we propose to visualize the main effects along with the measures for a selection of models in Table~\ref{tab:spark-table-multiobj}.
-The four selected models show different tradeoffs between the four measures.
+Table \ref{tab:pareto} shows the set of Pareto-optimal models along with their MAE, NF, IAS and MEC.
+If two models from the same class but with different hyperparameter had exactly the same MAE, NF, IAS and MEC, we randomly dropped one from the Pareto set.
+We also dropped constant models (e.g. ridge regression with strong penalization), with exception of the median model.
+For a more informative visualization, we propose to visualize the main effects together with the measures in Table~\ref{tab:spark-table-multiobj}.
+The four selected models show different trade-offs between the four measures.
 % =============================================================================
 % Best performing model
 % =============================================================================
@@ -270,20 +270,20 @@ print.xtable(xtab, sanitize.text.function = as.is)
 % Visualization of Pareto Front
 % =============================================================================
 \subsubsection{Performance-Interpretability Trade-off}
-The complexity measures allows to study the trade-off between interpretability and performance across different model classes and hyperparameter settings.
-First, we mapped each measure to the interval $[0,1]$ by scaling each measure with meaningful upper and lower bounds:
+The complexity measures allow to study the trade-off between interpretability and performance across different model classes and hyperparameter settings.
+We mapped each measure to the interval $[0,1]$ by scaling each measure with meaningful upper and lower bounds:
 
 $$M_{scaled}(M) = \frac{M - M_{inf}}{M_{sup} - M_{inf}}$$
 
 For MAE, we set $M_{inf}$ to the MAE when we predict the median and $M_{sup} = \sum_{i=1}^n|y_i - median(y)|$.
 For NF, we set $M_{inf}=0$ and $M_{sup}=p$.
-For MEC, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed MEC among all models.
-For IAS, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed IAS among all models.
-To combine the tree measures into a single dimension in  Figure~\ref{fig:perf-interpret-tradeoff} we defined interpretability ad-hoc as: $Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$
+For MEC, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed MEC of all models.
+For IAS, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed IAS of all models.
+To combine the tree measures in a single dimension in Figure~\ref{fig:perf-interpret-tradeoff}, we defined interpretability ad-hoc as: $Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$
 This weights all three (scaled) measures equally.
-The maximal interpretability is 3 for the model that always predicts the median wine quality.
-The theoretical minimal interpretability is 0 for a model that uses all features and has the highest interaction strength and main effect complexity measure among all Pareto optimal models.
-Figure~\ref{fig:perf-interpret-tradeoff} maps each model and hyperparameter configuration from the Pareto set into the performance/intepretability space.
+The maximum interpretability is 3 for the model that always predicts the median wine quality.
+The theoretical minimum interpretability is 0 for a model that uses all features and has the highest interaction strength and main effect complexity measure among all Pareto optimal models.
+Figure~\ref{fig:perf-interpret-tradeoff} maps each model and hyperparameter configuration from the Pareto set to the performance / interpretability space.
 
 <<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. interpretability tradeoff for predicting wine quality.",  fig.height=7, fig.width=12, fig.align="center", out.height="7cm", out.width="12cm">>=
 

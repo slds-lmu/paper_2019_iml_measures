@@ -109,7 +109,7 @@ plot(app) + ggtitle("") + scale_y_continuous("ALE")
 % Measure Intuition
 % =============================================================================
 Through the approximation with linear segments, the degrees of freedom required for describing a main effect curve becomes measurable.
-The approximiation allows some error, e.g. an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)}  has $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
+The approximation allows some error, e.g. an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)}  has $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
 The approximation quality is measured with R-squared.
 An approximation has to reach an R-squared of at least $1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
 We also introduced parameter $max_{seg}$, the maximum number of segments.

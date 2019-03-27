@@ -5,20 +5,20 @@
 % =============================================================================
 % General idea in words
 % =============================================================================
-In this section, we motivate complexity measures based on the functional decomposition: number of features (NF) used (Section~\ref{sec:nfeatures}), interaction strength (IA) (Section~\ref{sec:interaction} and the average main effect complexity (MEC) (Section \ref{sec:curve}.
+In this section we motivate complexity measures based on the functional decomposition: number of features (NF) used (Section~\ref{sec:nfeatures}), interaction strength (IA) (Section~\ref{sec:interaction} and the average main effect complexity (MEC) (Section \ref{sec:curve}.
 
 % =============================================================================
 % Decomposition and Simplification
 % ============================================================================
-Based on Equation~\ref{eqn:decomp}, we decompose the prediction function into a constant (estimated as $f_0 = \frac{1}{n}\sum_{i=1}^n \hat{f}(\xi)$), plus the main effects (estimate with ALE), and a rest containing interactions.
+Based on Equation~\ref{eqn:decomp}, we decompose the prediction function into a constant (estimated as $f_0 = \frac{1}{n}\sum_{i=1}^n \hat{f}(\xi)$), plus the main effects (estimate with ALE), and a rest containing interactions (difference between full model and constant plus sum of main effects).
 
 \begin{eqnarray} f(x) % = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S}(x_S)}^{\text{Higher order effects}} \\
 =&\underbrace{f_0 + \sum_{j=1}^p \overbrace{\falej(x_j)}^\text{AMEC: How complex?} + \overbrace{IA(x)}^{\text{IA: Interaction strength?}}}_{\text{NF: How many features were used}}
 \end{eqnarray}
-The arrangement of components emphasizes the prediction function as the sum of an additive main effect model and an interactions rest.
-In isolation from the interactions, the main effect model constitutes a prediction function and we can analyze how well it already approximates $f$, which is the idea behind the interaction measure IAS.
-The average main effect complexity (AMEC) tries to capture how many parameters we need to describe the one-dimensional main effects on average.
-
+This arrangement of components emphasizes a decomposition of the prediction function into a main effect model and an interactions rest.
+The main effect model itself can be used as a prediction function and we can analyze how well it approximates $f$, which is the idea behind the interaction measure IAS.
+The average main effect complexity (MEC) captures how many parameters are needed to describe the one-dimensional main effects on average.
+The number of features used (NF) describes how many features were used in the full prediction function.
 % =============================================================================
 % Why minimize proposed measures?
 % =============================================================================

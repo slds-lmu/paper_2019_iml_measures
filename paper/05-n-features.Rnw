@@ -5,21 +5,21 @@
 % =============================================================================
 % About sparsity
 % =============================================================================
-We propose a feature-permutation based approach to determine how many features are used by the model for making predictions.
-We count a feature as "used" by the model, when changing a feature changes the prediction, which can be different from the numbers of features available during training.
+We propose an approach based on feature permutation to determine how many features are used by the model for predictions.
+We features as "used" by the model when changing a feature changes the prediction, which may differ from the numbers of features available during training.
 
 % =============================================================================
 % Why model-agnostic
 % =============================================================================\
-If available, model-specific methods for extracting the number of features used by the model are preferable over model-agnostic estimation heuristic, like counting the number of non-zero weights in a sparse linear regression model.
-A model-agnostic heuristic is useful when we only have access to the prediction function but not the model (e.g. prediction via WebAPI call), or when pipelining of preprocessing steps and models complicates the programmatic extraction (e.g. training a decision tree on sparse principal components). 
+If available, model-specific methods for extracting the number of features used by the model are preferable to model-agnostic estimation heuristic, such as counting the number of non-zero weights in a sparse linear regression model.
+A model-agnostic heuristic is useful when the prediction function is accessible but not the model (e.g. prediction via API call), or when combining preprocessing steps and models complicates programmatic extraction (e.g. training a decision tree on sparse principal components). 
 
 % =============================================================================
 % Feature-count heuristic: intuition
 % =============================================================================
 The proposed procedure is formally described in Algorithm~\ref{algo:nfeat}.
-To estimate whether feature $x_j$ was used, we sample instances from data $\D$, replace values for $x_j$ with values randomly sampled from the data, and take the difference of the  predictions before and after replacing the values.
-If the difference is different from zero for any sample, the feature was used for the prediction
+To estimate whether feature $x_j$ was used, we sample instances from data $\D$, permute values for $x_j$, and take the difference of the  predictions before and after permutation.
+If the difference for any simple is different from zero, the feature was used for the prediction. 
 % =============================================================================
 % Feature-count heuristic: algorithm
 % =============================================================================
@@ -29,7 +29,7 @@ If the difference is different from zero for any sample, the feature was used fo
 NF = 0\;
 	\For{$j \in 1,\ldots,p$}{
 		Draw $M$ instances $\{x^{(m)}\}_{m=1}^M$ from dataset $D$\;
-			Create $\{x^{(m)*}\}_{m=1}^M$ by permutating $x_j$\;
+			Create $\{x^{(m)*}\}_{m=1}^M$ by permuting $x_j$\;
 			Compute prediction differences $d_j^{(m)} = f(x^{(m)*}) - f(x^{(m)})$\; 
 			\lIf{$\exists m \in {1,\ldots,M}:d_j^{(m)}\neq 0$}{$NF += 1$. 
 		}
@@ -40,16 +40,16 @@ NF = 0\;
 % =============================================================================
 % False negatives
 % =============================================================================
-The rate of false positives, i.e. the heuristic falsely counts a feature as used, is zero, because we defined a feature as used when the prediction changes given a feature change.
+The rate of false positives, i.e. the heuristic falsely counts a feature as used, is zero because we have defined a feature as used when the prediction changes given a feature change.
 
-The probability of a false negative, i.e. the heuristic overlooks a feature depends on the number of samples $M$ and the model function $f$.
-Let $P_{aff}^j$ the probability that a instance's prediction depends on the value of $x_j$ and $P_{rng}^j$ the probability that a sample from $X_j$ changes the predicton for an instance i, assuming that the prediction depends on $x_j$.
-Then the probability of missing the use of feature $x_j$ is: $P_{fn}^j=(1 - P_{aff}^j + P_{aff}^j (1 - P_{rng}^j))^M$
+The probability of a false negative, i.e. the heuristic overlooks a feature, depends on the number of samples $M$, the model function $f$ and the data distribution.
+Let $P_{aff}^j$ be the probability that the prediction of a random instance depends on the value of $x_j$ and $P_{rng}^j$ the probability that a sample from $X_j$ changes the prediction for an instance i, provided that the prediction depends on $x_j$.
+Then the probability of overlooking feature $x_j$ is: $P_{fn}^j=(1 - P_{aff}^j + P_{aff}^j (1 - P_{rng}^j))^M$
 With the simplifying assumption that $P_{fn}^j = P_{fn} \forall j \in 1,\ldots,p$, the probability that we miss at least one feature is $1 - (1 - P_{fn})^p$.
 
 For a linear model without interactions and only numerical features, the false negative rate is 0:
 $P_{aff}=1$ and $P_{rng}^j = 0$, so that $P_{fn}^j = (1 - 1 + 0)^M = 0$.
-Let's assume a model where only one percent of instances rely on feature $\xj$ ($P_{aff}=0.01$) and these instance have a probability of 0.02 that random value from $X_j$ changes the prediction ($P_{rng}=0.02$).
-When we set $M=100$, then $\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01\cdot 0.01)^{100} \approx 0.37$.
+Let's assume a model where only one percent of instances rely on feature $\xj$ ($P_{aff}=0.01$) and these instance have a probability of 0.02 that the feature permutation changes the prediction ($P_{rng}=0.02$).
+If we set $M=100$, then $\mathbb{P}(\hat{z}_j = 0| z_j = 1) = (0.99 + 0.01\cdot 0.01)^{100} \approx 0.37$.
 If we increase M to 500, the probability drops to $\approx 0.007$.
 

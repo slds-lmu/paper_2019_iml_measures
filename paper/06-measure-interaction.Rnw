@@ -7,32 +7,32 @@
 % First order model
 % =============================================================================
 Interaction between features means that the prediction cannot be expressed as a sum of independent feature effects, but the effect of a feature depends on values of other features \citep{molnar2019}.
-We propose to measure interaction strength as the approximation error between the ALE main effect model and the prediction function $\fh$.
+We propose to measure interaction strength as the scaled approximation error between the ALE main effect model and the prediction function $\fh$.
 Based on the ALE decomposition, the ALE main effect model is defined as the sum of first order ALE effects:
 $$\faleme(x) = f_0 + f_{1,ALE}(x_1) + \ldots + f_{p,ALE}(x_p)$$
 % =============================================================================
 % PRE / PRL
 % =============================================================================
-We define interaction strength as the relative main effect approximation error:
+We define interaction strength as:
 \begin{eqnarray}\label{eqn:pre}
 IAS = \frac{\mathbb{E}(L(\fh, \faleme))}{\mathbb{E}(L(\fh, f_0))}
 \end{eqnarray}
-Here, $f_0$ is the mean of the predictions.
+Here, $f_0$ is the mean of the predictions and can be interpreted as the functional decomposition where everything is set to zero.
 % =============================================================================
 % R2 special case
 % =============================================================================
-When we use the $L2$-loss, IAS is equivalent to 1 minus the R-squared measure:
-$$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(x) - c)^2} = 1 - R^2$$
-Here, c is the mean of the predictions.
+When $L$ is the $L2$-loss, IAS equals 1 minus the R-squared measure:
+$$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(x) - f_0)^2} = 1 - R^2$$
 % Interpretation of IAS
 % =============================================================================
-If $IAS=0$, then $L(\fh,\faleme)=0$ meaning we can perfectly approximate $\fh$ with a first order model and the model has no interactions. 
-If $IAS=0$, the a visualization of the ALE main effects captures the full model prediction function.
+If $IAS=0$, then $L(\fh,\faleme)=0$, which means that the first order ALE model perfectly approximates $\fh$ and the model has no interactions. 
 If $IAS=1$, all main effects are constant at value 0.
-A model that perfectly predicts the (class balanced) XOR problem would have $IAS=1$.
-Since the ALE effect is only estimated, we might slightly overestimate the first order approximation error, i.e. slightly overestimate $IAS$.
-A model without interactions might have $IAS>0$ because of an estimation error, which we observed in the multi-objective optimization setting in Section~\ref{sec:multiobj} ($IAS=0.01$).
-
+A model that perfectly predicts the (class-balanced) XOR problem would have $IAS=1$.
+ALEs are approximated with finite differences and are therefore prone to minor deviations from the true ALE components.
+For IAS, this means a slight overestimation, since part of the first order model error is due to the approximation of ALE with finite differences.
+For example, a model without interactions might have $IAS>0$, as observed in our multi-objective application in Section~\ref{sec:multiobj} ($IAS=0.01$).
+However, observed deviations for models with known, true $IAS=0$ were modest with an overestimation of $IAS=0.01$.
+We leave an in-depth investigation of ALE approximation properties as an open research question.
 % =============================================================================
 % =============================================================================
 % Further Material
@@ -45,7 +45,7 @@ A model without interactions might have $IAS>0$ because of an estimation error, 
 %There are other ways to estimate the additivity of a model.
 %One is via Sobol interaction strength \citep{sobol1993sensitivity} or Shapley \citep{owen2014sobol}.
 %We decided against Sobol and Shapley since they were computationally expensive and varied a lot from run to run.
-%Additonally it makes more sense to look at the PRL/PRE of the main effects of the decomposition, since then it is coherent with the plots that are shown and with the complexity, which is presented next.
+%Additionally it makes more sense to look at the PRL/PRE of the main effects of the decomposition, since then it is coherent with the plots that are shown and with the complexity, which is presented next.
 
 
 

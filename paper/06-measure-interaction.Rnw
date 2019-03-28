@@ -28,11 +28,6 @@ $$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(x) - f_0)^
 If $IAS=0$, then $L(\fh,\faleme)=0$, which means that the first order ALE model perfectly approximates $\fh$ and the model has no interactions. 
 If $IAS=1$, all main effects are constant at value 0.
 A model that perfectly predicts the (class-balanced) XOR problem would have $IAS=1$.
-ALEs are approximated with finite differences and are therefore prone to minor deviations from the true ALE components.
-For IAS, this means a slight overestimation, since part of the first order model error is due to the approximation of ALE with finite differences.
-For example, a model without interactions might have $IAS>0$, as observed in our multi-objective application in Section~\ref{sec:multiobj} ($IAS=0.01$).
-However, observed deviations for models with known, true $IAS=0$ were modest with an overestimation of $IAS=0.01$.
-We leave an in-depth investigation of ALE approximation properties as an open research question.
 % =============================================================================
 % =============================================================================
 % Further Material

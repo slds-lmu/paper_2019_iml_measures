@@ -13,7 +13,7 @@
 
 \begin{document}
 
-\title{Measuring interpretability for any machine learning model through functional decomposition}
+\title{Quantifying interpretability of arbitrary machine learning models through functional decomposition}
 \titlerunning{Interpretability measures}
 
 \author{Christoph~Molnar~\and~Giuseppe~Casalicchio~\and~Bernd~Bischl}
@@ -27,13 +27,14 @@
 \maketitle
 
 \begin{abstract}
-To make machine learning models interpretable, either interpretable models are considered (e.g. decision tree) or post-hoc interpretation methods such as partial depends plots are used.
-Both approaches implicitly trade-off performance for interpretability, since the class of interpretable models may not include the best performing model and post-hoc interpretation methods may be unreliable and verbose for complex models.
-We propose to make the compromise explicit by quantifying the complexity of machine learning models.
+To obtain interpretable machine learning models, either interpretable models are constructed from the outset -- e.g. shallow decision trees, rule lists, or sparse generalized linear models -- or post-hoc interpretation methods -- e.g. partial dependence or ALE plots -- are employed.
+Both approaches have disadvantages.
+While the former can restrict the hypothesis space too conservatively, leading to potentially suboptimal solutions, the latter can produce too verbose or misleading results if the resulting model is too complex, especially w.r.t. feature interactions.
+We propose to make the compromise between predictive power and interpretability explicit by quantifying the complexity / interpretability of machine learning models.
 Based on functional decomposition, we propose measures of number of features used, interaction strength and main effect complexity.
 We show that post-hoc interpretation of models that minimize the three measures becomes more reliable and compact.
-We show an application of complexity measures in multi-objective optimization.
-\keywords{Interpretable Machine Learning \and Explainable AI \and Accumulated Local Effects.}
+Furthermore, we demonstrate the application of such measures in a multi-objective optimization approach which considers predictive power and interpretability at the same time.
+\keywords{Interpretable Machine Learning \and Explainable AI \and Accumulated Local Effects \and Multi-Objective Optimization}
 \end{abstract}
 
 

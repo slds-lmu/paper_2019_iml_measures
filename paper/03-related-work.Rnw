@@ -7,7 +7,7 @@ In this section we introduce the notation, review related work and describe the 
 \subsubsection{Notation:} We consider machine learning prediction functions $f:x \mapsto y$, where $x \in \mathbb{R}^p$ is a p-dimensional feature vector and $y \in \mathbb{R}$ is the prediction.
 For the decomposition of this function, we write $f_S:x_S \mapsto y$, $S \subseteq\{1, \ldots, p\} \quad x_S \in \mathbb{R}^{|S|}$ to denote a function that maps a vector with a subset of features to a marginal prediction.
 For a single feature, we write $f_j$.
-We refer to the training data for the machine learning model with the tuples $\mathbb{D} = \{x^{(i)},y^{(i)}\}_{i=1}^n$ and refer to the value of the j-th feature from the i-th instance as $x_j^{(i)}$.
+We refer to the training data for the machine learning model with the tuples $\D = \{(x^{(i)},y^{(i)})\}_{i=1}^n$ and refer to the value of the j-th feature from the i-th instance as $x_j^{(i)}$.
 We write $X_j$ to refer to the j-th feature as a random variable.
 
 \subsection{Interpretability Measures}

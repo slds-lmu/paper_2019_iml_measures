@@ -146,28 +146,28 @@ Estimate ALE $\falej$\;
 	Set $K=1$ \tcp{Number of breakpoints}
 	\While{$K < max_{seg}$ AND $R^2 < (1- \epsilon)$}{
 		\tcp{Optimize intervals $Z_k$ via generalized simulated annealing, $\beta$'s per segment with ordinary least squares}
-		\tcp{For categorical feature, fix slope to zero} 
-		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\cdot\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$
+		\tcp{For categorical feature, fix slopes to zero} 
+		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\cdot\left(\hat{\beta}_{0,k} + \hat{\beta}_{1,k}\xij\right)$
 
 		Compute $R^2$ of $g_j$\;
 		Set $K = K+1$ \;
 	}
 	\tcp{Post-processing of slopes}
 	\For{$k \in 1,\ldots,K$}{
-		Set $\beta_{0}^k = \frac{1}{\sum_{i=1}^n\I_{\xi\in Z_k}}\sum_{i=1}^n\I_{\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{j1}^k = 0$ in $g_j$\;
+		Set $\beta_{0,k} = \frac{1}{\sum_{i=1}^n\I_{\xi\in Z_k}}\sum_{i=1}^n\I_{\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{1,k} = 0$ in $g_j$\;
 		\lIf{$R^2(g_j) > (1-\epsilon)$}
 		{
-			Use new $\hat{\beta}_{j0}^k$, $\hat{\beta}_{j1}^k$ in $g_j$
+			Use new $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$
 		}
 		\lElse{
-			Keep old $\hat{\beta}_{0}^k$, $\hat{\beta}_{1}^k$ in $g_j$	
+			Keep old $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$	
 			}
 			}
 \tcp{Sum of non-zero coefficients minus first intercept}
-$MEC_j = K - 1+ \sum_{k=1}^K \mathbb{I}_{\beta_j^k > 0}$\;
-$V_j = \frac{1}{n}\sum_{i=1}^n \left(\hat{f}^{ALE}_j(x^{(i)})\right)^2$\;
+	$MEC_j = K - 1+ \sum_{k=1}^K \mathbb{I}_{\beta_{1,k} > 0}$\;
+$V_j = \frac{1}{n}\sum_{i=1}^n \left(\falej(x^{(i)})\right)^2$\;
 }
-	\Return{$MEC = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_jMEC_j$\;}
+	\Return{$MEC = \frac{1}{\sum_{j=1}^pV_j}\sum_{j=1}^p V_j \cdot MEC_j$\;}
 \end{algorithm}
 
 

@@ -28,10 +28,9 @@ If the difference for any simple is different from zero, the feature was used fo
 \KwInput{Number of samples $M$, data $\D$}
 NF = 0\;
 	\For{$j \in 1,\ldots,p$}{
-		Draw $M$ instances $\{x^{(m)}\}_{m=1}^M$ from dataset $D$\;
-			Create $\{x^{(m)*}\}_{m=1}^M$ by permuting $x_j$\;
-			Compute prediction differences $d_j^{(m)} = f(x^{(m)*}) - f(x^{(m)})$\; 
-			\lIf{$\exists m \in {1,\ldots,M}:d_j^{(m)}\neq 0$}{$NF += 1$. 
+		Draw $M$ instances $\{x^{(m)}\}_{m=1}^M$ from dataset $\D$\;
+			Create $\{x^{(m)*}\}_{m=1}^M$ as $\{x^{(m)}\}_{m=1}^M$ with permuted values for the j-th feature\;
+			\lIf{$\exists m \in \{1,\ldots,M\}:\fh(x^{(m)*}) \neq \fh(x^{(m)})$}{$NF += 1$. 
 		}
 		}
 \Return NF	

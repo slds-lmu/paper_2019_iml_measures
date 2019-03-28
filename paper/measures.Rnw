@@ -10,7 +10,7 @@ In this section we motivate complexity measures based on the functional decompos
 % =============================================================================
 % Decomposition and Simplification
 % ============================================================================
-Based on Equation~\ref{eqn:decomp}, we decompose the prediction function into a constant (estimated as $f_0 = \frac{1}{n}\sum_{i=1}^n \hat{f}(\xi)$), plus the main effects (estimate with ALE), and a rest containing interactions (difference between full model and constant plus sum of main effects).
+Based on Equation~\ref{eqn:decomp}, we decompose the prediction function into a constant (estimated as $f_0 = \frac{1}{n}\sum_{i=1}^n \fh(\xi)$), plus the main effects (estimate with ALE), and a rest containing interactions (difference between full model and constant plus sum of main effects).
 
 \begin{eqnarray} f(x) % = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{S \subseteq \{1,\ldots,p\},|S| \geq 2} f_{S}(x_S)}^{\text{Higher order effects}} \\
 =&\underbrace{f_0 + \sum_{j=1}^p \overbrace{\falej(x_j)}^\text{AMEC: How complex?} + \overbrace{IA(x)}^{\text{IA: Interaction strength?}}}_{\text{NF: How many features were used}}

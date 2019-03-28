@@ -14,7 +14,7 @@
 \begin{document}
 
 \title{Quantifying interpretability of arbitrary machine learning models through functional decomposition}
-\titlerunning{Interpretability measures}
+\titlerunning{Quantifying interpretability}
 
 \author{Christoph~Molnar~\and~Giuseppe~Casalicchio~\and~Bernd~Bischl}
 \authorrunning{C. Molnar et al.}

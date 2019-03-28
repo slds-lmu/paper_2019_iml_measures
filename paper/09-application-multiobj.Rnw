@@ -140,7 +140,7 @@ ctrl = setMBOControlTermination(ctrl, iters = max.iters)
 
 
 
-<<mo-run, dependson=c("mo-setup"), results='hide', eval = TRUE>>=
+<<mo-run, dependson=c("mo-setup"), results='hide', eval = FALSE>>=
 # Start MBO
 mbo.iml = mbo(fun = obj.fun, control = ctrl)
 saveRDS(mbo.iml, file = "mbo-results.RDS")
@@ -216,6 +216,13 @@ best.models.print$sMEC  = best.models.print$MEC / max(best.models.print$MEC)
 # Because of featureless learner
 best.models.print$sMEC = pmax(0, best.models.print$sMEC)
 smeasure_names = c("sMAE", "sMEC", "sIAS", "sNF")
+
+# Best models first
+best.models.print = best.models.print[order(best.models.print$MAE),]
+
+# Model description with reference to the table
+best.models.print$descr.ref = sprintf("%s [row %i]", best.models.print$model, 1:nrow(best.models.print))
+
 @
 
 
@@ -239,8 +246,6 @@ single_obj = function(measure_df, lambdas){
   rowSums(as.matrix(measure_df) %*% lambdas)
 }
 
-# Best models first
-best.models.print = best.models.print[order(best.models.print$MAE),]
 measure_df = best.models.print[smeasure_names]
 
 best_perf = which.min(best.models.print$MAE)
@@ -254,13 +259,14 @@ best_4 = which(best.models.print$NF <=  7)[1]
 indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
 tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, ylim = c(-1.1, 1.1), height = 3, width=10, log_params = log_params)
-colnames(tab) = best.models.print$descr[indices]
+colnames(tab) = best.models.print$descr.ref[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)
-colnames(tab) = gsub("()", "",colnames(tab), fixed = TRUE)
-rownames(tab) = c("MAE", "NF", "IA", "MEC", setdiff(colnames(task.dat), "quality"))
+colnames(tab) = gsub("\\(\\)", "",colnames(tab), fixed = TRUE)
+colnames(tab)[1] = "Model"
+rownames(tab) = c("MAE", "NF", "IAS", "MEC", setdiff(colnames(task.dat), "quality"))
 
-cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models with best MAE, best MAE when $MEC \\leq 2$, best MAE when $IA =\\leq 0.1$, best MAE with $NF \\leq 7$.", length(indices))
+cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models with best MAE, best MAE when $MEC \\leq 2$, best MAE when $IAS =\\leq 0.1$, best MAE with $NF \\leq 7$. Hyperparameters are in Table~\ref{tab:pareto}.", length(indices))
 xtab = xtable(tab, caption = cap, label = "tab:spark-table-multiobj")
 align(xtab) <- "l|p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}"
 print.xtable(xtab, sanitize.text.function = as.is)

@@ -167,7 +167,7 @@ best.models = best.models[best.models$MEC != 0,]
 <<mo-results-rename, dependson="mo-results", results = "asis">>=
 #Improves the naming of the learners
 best.models.print = best.models
-log_params = c("regr.ksvm.C", "regr.ksvm.sigma", "regr.glmnet.lambda", "regr.xgboost.mod.eta")
+log_params = c("regr.ksvm.C", "regr.ksvm.sigma", "regr.glmnet.lambda")
 best.models.print[, log_params] = 2^best.models.print[, log_params]
 colnames(best.models.print) = gsub("regr.", "", colnames(best.models.print), fixed = TRUE)
 colnames(best.models.print) = gsub("mod.", "", colnames(best.models.print), fixed = TRUE)

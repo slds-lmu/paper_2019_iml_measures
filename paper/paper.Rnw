@@ -41,32 +41,29 @@ Furthermore, we demonstrate the application of such measures in a multi-objectiv
 <<01-intro, child = "01-intro.Rnw">>=
 @
 
-<<03-related-work, child = "03-related-work.Rnw">>=
+<<02-related-work, child = "02-related-work.Rnw">>=
 @
 
-<<measures, child = "measures.Rnw">>=
+<<03-measures, child = "03-measures.Rnw">>=
 @
 
-<<05-n-features, child = "05-n-features.Rnw">>=
+<<04-n-features, child = "04-n-features.Rnw">>=
 @
 
-<<06-measure-interaction, child = "06-measure-interaction.Rnw">>=
+<<05-measure-interaction, child = "05-measure-interaction.Rnw">>=
 @
 
-<<07-measure-curve-complexity, child = "07-measure-curve-complexity.Rnw">>=
+<<06-measure-curve-complexity, child = "06-measure-curve-complexity.Rnw">>=
 @
 
-<<08-application-post-hoc, child = "08-application-post-hoc.Rnw">>=
+<<07-application-post-hoc, child = "07-application-post-hoc.Rnw">>=
 @
 
 
-<<interpretability, child = "interpretability.Rnw", eval=FALSE>>=
+<<08-application-multiobj, child = "08-application-multiobj.Rnw">>=
 @
 
-<<09-application-multiobj, child = "09-application-multiobj.Rnw">>=
-@
-
-<<10-discussion, child = "10-discussion.Rnw">>=
+<<09-discussion, child = "09-discussion.Rnw">>=
 @
 
 

@@ -87,7 +87,7 @@ As one of the main applications of the proposed interpretability measures, we de
 % =============================================================================
 \subsubsection{Predicting Wine Quality.}
 We used the wine quality dataset \citep{cortez2009modeling} which contains physical-chemical properties such as alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
-The goal is to predict wine quality on a scale of 0 to 10, assessed by the median of three blind ratings.
+The goal was to predict wine quality on a scale of 0 to 10, assessed by the median of three blind ratings.
 
 % =============================================================================
 % Why like this?
@@ -103,7 +103,7 @@ The three measures of interpretability provide a detailed characterization of ma
 % =============================================================================
 \subsubsection{Optimization Setup.}
 We used a model-based optimization framework \citep{mlrMBO} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) on unseen data.
-We optimized over the space of following model classes (and hyperparameters): CART (maximum tree-depth, pruning cp), support vector machine (cost C and sigma), ridge regression (regularization alpha and penalization lambda), gradient boosted trees (maximum depth, number of iterations), gradient boosted generalized additive model (number of iterations) a random forest with 1000 trees (no tuning).
+We optimized over the space of following model classes (and hyperparameters): CART (maximum tree-depth, pruning cp), support vector machine (cost C and sigma), elastic net regression (regularization alpha and penalization lambda), gradient boosted trees (maximum depth, number of iterations), gradient boosted generalized additive model (number of iterations) a random forest with 1000 trees (no tuning).
 \subsubsection{Model-based Optimization Setup.}
 We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
 Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IA) were estimated in-sample.
@@ -180,7 +180,7 @@ best.models.print$selected.learner = gsub("regr.", "", best.models.print$selecte
 best.models.print$selected.learner = gsub("xgboost.mod", "xgboost", best.models.print$selected.learner, fixed  = TRUE)
 
 lrn_model_map = c("xgboost" = "gbt", "rpart" = "CART", "featureless" = "median", 
-		  "ksvm" = "svm", "gamboost" = "gamb", "glmnet" = "ridge", "ranger" = "rf")
+		  "ksvm" = "svm", "gamboost" = "gamb", "glmnet" = "elastic net", "ranger" = "rf")
 
 best.models.print$model = lrn_model_map[best.models.print$selected.learner]
 
@@ -232,7 +232,7 @@ best.models.print$descr.ref = sprintf("%s [row %i]", best.models.print$model, 1:
 \subsubsection{Results.}
 Table \ref{tab:pareto} shows the set of Pareto-optimal models along with their MAE, NF, IAS and MEC.
 If two models from the same class but with different hyperparameter had exactly the same MAE, NF, IAS and MEC, we randomly dropped one from the Pareto set.
-We also dropped constant models (e.g. ridge regression with strong penalization), with exception of the median model.
+We also dropped constant models (e.g. elastic net regression with strong penalization), with exception of the median model.
 For a more informative visualization, we propose to visualize the main effects together with the measures in Table~\ref{tab:spark-table-multiobj}.
 The four selected models show different trade-offs between the four measures.
 % =============================================================================

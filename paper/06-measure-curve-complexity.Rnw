@@ -15,7 +15,7 @@ pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x")
 app = AleNumApprox$new(ale = fe, max_seg = 2, epsilon = 0.05)
 @
-To determine the shape complexity of ALE main effects $\falej$, we propose the main effect complexity (MEC) measure.
+To determine the average shape complexity of ALE main effects $\falej$, we propose the main effect complexity (MEC) measure.
 For single ALE main effect, $\text{MEC}_j$ is the number of parameters needed to approximate the curve with linear segments.
 For the entire model, MEC is the average $\text{MEC}_j$ over all main effects, weighted with their variance.
 Figure~\ref{fig:c-demo} shows an ALE plot (= main effect) and its approximation with two linear segments.
@@ -102,7 +102,7 @@ p3 = plot(app3)  + scale_y_continuous(limits = c(-7,7))
 @
 
 
-<<c-demo, fig.cap = "ALE curve (black line) approximated by two linear segments. Segments are vertical lines, approximation the doted lines.", out.height ="4cm", out.width="10cm", fig.height=4, fig.width=10, fig.align="center", dependson="c-demo-prepare">>=
+<<c-demo, fig.cap = "ALE curve (black line) approximated by two linear segments. Segments are vertical lines, approximation the dotted lines.", out.height ="4cm", out.width="10cm", fig.height=4, fig.width=10, fig.align="center", dependson="c-demo-prepare">>=
 plot(app) + ggtitle("") + scale_y_continuous("ALE")
 @
 % =============================================================================
@@ -134,28 +134,25 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 % =============================================================================
 \begin{algorithm}
 \caption{Main Effect Complexity (MEC).}\label{algo:AMEC}
-	\KwInput{$\fh$, $\epsilon$, $max_{seg}$, $\D$}
+	\KwInput{prediction function $\fh$, approximation error $\epsilon$, maximum number of segments $max_{seg}$, data $\D$}
+	Define $R^2(g_j, \falej) := \sum_{i=1}^n (g_j(\xij) - \falej(\xij))^2 / \sum_{i=1}^n (\falej(\xij))^2$\;
 	\For{$j \in \pset$}{
-Estimate ALE $\falej$\;
-	%\If{$\falej(x_j) = 0$ for all $x$}{
-	%	$MEC_j = 0, V_j=0$\;
-	%	Continue with next feature\;
-	%	}
-	Approximate $\falej$ with $g_j(x_j) = \beta_0 + \beta_1 x_j$\;
-	Compute $R^2$ of $g_j(x_j)$\;
+        Estimate $\falej$\;
+	\tcp{Approximate ALE with linear model}
+	Fit $g_j(x_j) = \beta_0 + \beta_1 x_j$ predicting $\falej(\xij)$ from $\xij$, $i\in{1,\ldots,n}$\;
 	Set $K=1$ \tcp{Number of breakpoints}
-	\While{$K < max_{seg}$ AND $R^2 < (1- \epsilon)$}{
+	\tcp{Increase number of segments until approximation is good enough}
+	\While{$K < max_{seg}$ AND $R^2(g_j,\falej) < (1- \epsilon)$}{
 		\tcp{Optimize intervals $Z_k$ via generalized simulated annealing, $\beta$'s per segment with ordinary least squares}
-		\tcp{For categorical feature, fix slopes to zero} 
-		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\cdot\left(\hat{\beta}_{0,k} + \hat{\beta}_{1,k}\xij\right)$
-
-		Compute $R^2$ of $g_j$\;
+		\tcp{For categorical feature, fix slopes $\beta_{1,k}$ to zero} 
+		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\cdot\left(\beta_{0,k} + \beta_{1,k}\xij\right)$\;
 		Set $K = K+1$ \;
 	}
 	\tcp{Post-processing of slopes}
 	\For{$k \in 1,\ldots,K$}{
-		Set $\beta_{0,k} = \frac{1}{\sum_{i=1}^n\I_{\xi\in Z_k}}\sum_{i=1}^n\I_{\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{1,k} = 0$ in $g_j$\;
-		\lIf{$R^2(g_j) > (1-\epsilon)$}
+		\tcp{$n_k$ is number of instances in interval $Z_k$}
+		Set $\beta_{0,k} = \frac{1}{n_k}\sum_{i:\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{1,k} = 0$ in $g_j$\;
+		\lIf{$R^2(g_j, \falej) > (1-\epsilon)$}
 		{
 			Use new $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$
 		}

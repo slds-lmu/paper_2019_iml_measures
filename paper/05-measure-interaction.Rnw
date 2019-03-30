@@ -6,23 +6,23 @@
 % =============================================================================
 % First order model
 % =============================================================================
-Interaction between features means that the prediction cannot be expressed as a sum of independent feature effects, but the effect of a feature depends on values of other features \citep{molnar2019}.
+Interactions between features mean that the prediction cannot be expressed as a sum of independent feature effects, but the effect of a feature depends on values of other features \citep{molnar2019}.
 We propose to measure interaction strength as the scaled approximation error between the ALE main effect model and the prediction function $\fh$.
 Based on the ALE decomposition, the ALE main effect model is defined as the sum of first order ALE effects:
 $$\faleme(x) = f_0 + f_{1,ALE}(x_1) + \ldots + f_{p,ALE}(x_p)$$
 % =============================================================================
 % PRE / PRL
 % =============================================================================
-We define interaction strength as:
+We define interaction strength as the approximation error measured with loss $L$:
 \begin{eqnarray}\label{eqn:pre}
-IAS = \frac{\mathbb{E}(L(\fh, \faleme))}{\mathbb{E}(L(\fh, f_0))}
+IAS = \frac{\mathbb{E}(L(\fh, \faleme))}{\mathbb{E}(L(\fh, f_0))} \geq 0
 \end{eqnarray}
 Here, $f_0$ is the mean of the predictions and can be interpreted as the functional decomposition where everything is set to zero.
 % =============================================================================
 % R2 special case
 % =============================================================================
-When $L$ is the $L2$-loss, IAS equals 1 minus the R-squared measure:
-$$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(x) - f_0)^2} = 1 - R^2$$
+IAS with the $L2$ loss equals 1 minus the R-squared measure, where the true targets $y_i$ are replaced with $\fh(\xi)$:
+$$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(\xi) - f_0)^2} = 1 - R^2$$
 % Interpretation of IAS
 % =============================================================================
 If $IAS=0$, then $L(\fh,\faleme)=0$, which means that the first order ALE model perfectly approximates $\fh$ and the model has no interactions. 

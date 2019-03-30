@@ -5,39 +5,40 @@
 %==============================================================================
 % Interpretability requirement and tradeoff
 %==============================================================================
-Machine learning models are optimized for predictive performance, but it is often required to understand the models in order to debug them, gain trust in the predictions, satisfy regulatory requirements etc..
+Machine learning models are optimized for predictive performance, but it is often required to understand models in order to e.g. debug them, gain trust in the predictions and satisfy regulatory requirements.
 To meet these requirements, performance often has to be traded off for interpretability.
 %==============================================================================
 % Two flawed ways of increasing interpretability
 %==============================================================================
-In ares such as life sciences and social sciences, it is common to restrict model selection to interpretable models such as linear regression models \citep{Lipton2016}.
+In areas such as life sciences and social sciences, it is common to restrict model selection to interpretable models such as (generalized) linear regression models and decision trees \citep{Lipton2016}.
 Many researchers rely on an intuitive notion of interpretability.
-This leads to the use of structurally simpler models such as decision trees instead "black boxes" such as SVMs and neural networks \citep{bibal2016interpretability}.
-This has the drawback that better performing models can be excluded a priori from model selection.
+This leads to the use of structurally simpler models such as decision trees instead "black boxes" such as tree ensembles and neural networks \citep{bibal2016interpretability}.
+This has the drawback that better performing models are often excluded a priori from model selection.
 An alternative is to allow all models and apply post-hoc interpretation methods to explain model behavior and predictions.
-Interpretation methods quantify the effects that features have on the predictions, compute feature importances or explain individual predictions, see \citep{molnar2019} for an overview.
-While model-agnostic post-hoc interpretation methods can be used regardless of model complexity, their usefulness and reliability deteriorates when model use a high number of features, has strong interactions effects and complex main effects.
+Interpretation methods quantify effects that features have on predictions, compute feature importances or explain individual predictions, see \citep{molnar2019} for an overview.
+While model-agnostic post-hoc interpretation methods can -- in general -- be used regardless of model complexity, their usefulness and reliability deteriorates when models use a high number of features, have strong interactions effects and complex main effects.
 
 % =============================================================================
 % Need interpretability measures
 % =============================================================================
-We need model-agnostic interpretability measures to make the compromise between interpretability and predictive performance explicit when selecting models \citep{ruping2006learning,bibal2016interpretability}.
-Instead of fixing the trade-off by preselecting an interpretable model class, model-agnostic measures allow informed model selection with the desired balance between interpretability and predictive performance \citep{freitas2004critical}.
+In our opinion, model-agnostic interpretability measures are needed to make the compromise between interpretability and predictive performance explicit when selecting models \citep{ruping2006learning,bibal2016interpretability}.
+Instead of fixing the trade-off by preselecting an interpretable model class, model-agnostic measures would allow informed model selection with the desired balance between interpretability and predictive performance \citep{freitas2004critical}.
 
 % =============================================================================
 % Lack of definition of interpretability
 % =============================================================================
-Interpretability is not well defined \citep{Lipton2016} and depends on the domain \citep{rudin2018please, freitas2014comprehensible, huysmans2011empirical,ruping2006learning}.
-These observations support the conclusion in \citep{askira1998knowledge} that we cannot summarize interpretability with a single metric.
+Interpretability is not well defined \citep{Lipton2016} and depends on user preferences and domain \citep{rudin2018please, freitas2014comprehensible, huysmans2011empirical,ruping2006learning}.
+This supports the conclusion in \citep{askira1998knowledge} that we cannot summarize interpretability with a single metric.
 
 % =============================================================================
 % Our solution
 % =============================================================================
+\subsubsection{Contributions.}
 We propose several measures of interpretability as a tool for model selection and to address the lack of definition of interpretability.
-First we review related work on interpretability measures \ref{sec:other} and the background of functional decomposition \ref{sec:decomposition}, on which the three measures are based \ref{sec:measures}.
-For the \textbf{number of features used} by the model, we propose an estimation heuristic \ref{sec:nfeatures}.
-Based on the decomposition of the prediction function, we suggest measures for \textbf{interaction strength} \ref{sec:interaction} and for \textbf{average complexity of the feature main effects} \ref{sec:curve}.
-We demonstrate that minimizing these three measures improves the readability and reliability of post-hoc interpretation methods \ref{sec:post-hoc}.
-Finally, we illustrate the use of proposed measures in multi-objective optimization \ref{sec:multiobj} and discuss implications of interpretability measures for the field of interpretable machine learning \ref{sec:discussion}.
+First we review related work on interpretability measures and the background of functional decomposition, on which the three measures are based.
+For the \textbf{number of features used} by the model, we propose an estimation heuristic.
+Based on the decomposition of the prediction function, we suggest measures for \textbf{interaction strength} and for \textbf{average complexity of the feature main effects}.
+We demonstrate that minimizing these three measures improves the reliability and compactness of post-hoc interpretation methods.
+Finally, we illustrate the use of our proposed measures in multi-objective optimization and discuss implications of interpretability measures for the field of interpretable machine learning.
 
 

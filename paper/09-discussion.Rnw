@@ -10,7 +10,8 @@ We proposed three model-agnostic measures for machine learning model complexity 
 Due to their model-agnostic nature, the measures allow model comparison across different model classes.
 We argued that minimizing these measures for a machine learning model improves its post-hoc interpretation.
 We demonstrated that the measures can be optimized directly with multi-objective optimization to make the trade-off between interpretability and performance explicit, which helps in model selection.
-Our proposed measures can be applied to many model since they are model-agnostic, work for regression and binary classification (based on probabilities) and work for categorical and numerical features.
+Our proposed measures can be applied to many model since they are model-agnostic, work for regression and binary classification (based on probabilities).
+We formulated the measures with both continuous and categorical features in mind, but leave an in-depth investigation of categorical features open for future work.
 They can be used for model selection, but also in benchmarks for comparing model classes.
 
 

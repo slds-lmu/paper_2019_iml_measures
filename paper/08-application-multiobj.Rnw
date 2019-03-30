@@ -102,7 +102,7 @@ The three measures of interpretability provide a detailed characterization of ma
 % Objectives and Models
 % =============================================================================
 \subsubsection{Optimization Setup.}
-We used a model-based optimization framework \citep{mlrMBO} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) on unseen data.
+We used the mlrMBO model-based optimization framework \citep{horn2016multi} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) on unseen data.
 We optimized over the space of following model classes (and hyperparameters): CART (maximum tree-depth, pruning cp), support vector machine (cost C and sigma), elastic net regression (regularization alpha and penalization lambda), gradient boosted trees (maximum depth, number of iterations), gradient boosted generalized additive model (number of iterations) a random forest with 1000 trees (no tuning).
 \subsubsection{Model-based Optimization Setup.}
 We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
@@ -285,7 +285,7 @@ For MAE, we set $M_{inf}$ to the MAE when we predict the median and $M_{sup} = \
 For NF, we set $M_{inf}=0$ and $M_{sup}=p$.
 For MEC, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed MEC of all models.
 For IAS, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed IAS of all models.
-To combine the tree measures in a single dimension in Figure~\ref{fig:perf-interpret-tradeoff}, we defined interpretability ad-hoc as: $Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$
+To combine the three measures in a single dimension in Figure~\ref{fig:perf-interpret-tradeoff}, we defined interpretability ad-hoc as: $Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$
 This weights all three (scaled) measures equally.
 The maximum interpretability is 3 for the model that always predicts the median wine quality.
 The theoretical minimum interpretability is 0 for a model that uses all features and has the highest interaction strength and main effect complexity measure among all Pareto optimal models.

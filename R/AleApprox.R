@@ -22,18 +22,22 @@ AleApprox = R6::R6Class("AleApprox",
     max_complex = FALSE,
     feature_used = TRUE,
     approx_values = NULL,
+    # Number of iterations used to estimate if feature was used
+    m_nf = NULL,
     #' @param ale A FeatureEffet object
     #' @param epsilon The allowed approximation error
     #' @param max_breaks The maximum number of segments allowed
-    initialize = function(ale, epsilon, max_breaks){
+    initialize = function(ale, epsilon, max_breaks, m_nf){
       assert_class(ale, "FeatureEffect")
       assert_numeric(epsilon, lower = 0, upper = 1, len = 1,
                      any.missing = FALSE)
       assert_numeric(max_breaks, len = 1)
+      assert_numeric(m_nf, len = 1, lower = 1)
       self$ale = ale
       self$epsilon = epsilon
       self$max_breaks = max_breaks
       self$feature = ale$feature.name
+      self$m_nf = m_nf
       private$x = self$ale$predictor$data$X[, self$feature, with = FALSE][[1]]
       private$ale_values = self$ale$predict(private$x)
       self$ssq_ale  = ssq(private$ale_values)
@@ -45,7 +49,7 @@ AleApprox = R6::R6Class("AleApprox",
     x = NULL,
     ale_values = NULL,
     is_null_ale = function() {
-      if(!feature_used(self$ale$predictor, self$feature)) {
+      if(!feature_used(self$ale$predictor, self$feature, sample_size = self$m_nf)) {
         self$r2 = 1
         self$n_coefs = 0
         self$predict = function(X) {
@@ -68,9 +72,9 @@ AleCatApprox = R6::R6Class(classname = "AleCatApprox",
   public = list(
     # Table holding the level/new_level info
     tab = NULL,
-    initialize = function(ale, epsilon, max_seg) {
+    initialize = function(ale, epsilon, max_seg, m_nf) {
       assert_true(all.equal(ale$feature.type,"categorical", check.attributes = FALSE))
-      super$initialize(ale, epsilon, max_breaks = max_seg)
+      super$initialize(ale, epsilon, max_breaks = max_seg, m_nf = m_nf)
       if(!private$is_null_ale()) {
         self$approximate()
         self$n_coefs = ifelse(self$max_complex, max_seg - 1, length(unique(self$tab$lvl)) - 1)
@@ -152,12 +156,12 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
     breaks = NULL,
     # Table for intervals with intercept and slope
     segments = NULL,
-    initialize = function(ale, epsilon, max_seg) {
+    initialize = function(ale, epsilon, max_seg, m_nf) {
       assert_true(all.equal(ale$feature.type, "numerical", check.attributes = FALSE))
       assert_numeric(max_seg)
       # only makes
       max_breaks = max_seg  - 1
-      super$initialize(ale, epsilon, max_breaks)
+      super$initialize(ale, epsilon, max_breaks, m_nf = m_nf)
       if(!private$is_null_ale()) {
         self$approximate()
         # Don't count the intercept

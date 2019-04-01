@@ -23,17 +23,21 @@ FunComplexity = R6::R6Class(
     n_features = NULL,
     # The approximation models of the ALE plots
     approx_models = NULL,
+    # Number of sample for estimating whether a feature was used
+    m_nf = NULL,
     initialize = function(predictor, grid.size = 50, parallel = FALSE,
-      epsilon = 0.05, max_seg_cat = 5, max_seg_num = 5) {
+      epsilon = 0.05, max_seg_cat = 5, max_seg_num = 5, m_nf = 500) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
         stop("Please set class in Predictor")
       }
       assert_numeric(epsilon, lower = 0, upper = 1, any.missing = FALSE, len = 1)
       assert_numeric(max_seg_cat, len = 1, any.missing = FALSE, upper = grid.size)
       assert_numeric(max_seg_num, len = 1, any.missing = FALSE, upper = grid.size)
+      assert_numeric(m_nf, len = 1, any.missing = FALSE, lower = 1)
       self$max_seg_cat = max_seg_cat
       self$max_seg_num = max_seg_num
       self$epsilon = epsilon
+      self$m_nf = m_nf
       super$initialize(predictor, features = predictor$data$feature.names,
         method = "ale", grid.size = grid.size, center.at = NULL,
         parallel = parallel)
@@ -91,9 +95,9 @@ FunComplexity = R6::R6Class(
       self$approx_models = lapply(self$effects, function(eff) {
         feature_name = eff$feature.name
         if(eff$feature.type == "numerical") {
-          AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_num)
+          AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_num, m_nf = self$m_nf)
         } else {
-          AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_cat)
+          AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_cat, m_nf = self$m_nf)
         }
       })
       am_coefs = unlist(lapply(self$approx_models, function(x) x$n_coefs))

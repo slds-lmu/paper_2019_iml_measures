@@ -53,7 +53,6 @@ If we increase M to 500, the probability drops to $\approx 0.007$.
 
 <<NF-false-negatives>>=
 set.seed(42)
-
 n_repetitions = 100
 
 nf_tree = function(mlrmod){
@@ -69,18 +68,14 @@ data(Boston, package = "MASS")
 tsk =  makeRegrTask(data = Boston, target = "medv")
 lrn1c = makeLearner("regr.rpart", maxdepth = 1)
 lrn2c = makeLearner("regr.rpart", maxdepth = 2)
-lrn3c = makeLearner("regr.rpart", maxdepth = 3)
-lrn4c = makeLearner("regr.rpart", maxdepth = 4)
-lrn5c = makeLearner("regr.rpart", maxdepth = 5)
-lrn6c = makeLearner("regr.rpart", maxdepth = 6)
-
+lrn3c = makeLearner("regr.rpart", maxdepth = 10)
 lrn1 = makeLearner("regr.glmnet", lambda = 10)
 lrn2 = makeLearner("regr.glmnet", lambda = 5)
 lrn3 = makeLearner("regr.glmnet", lambda = 2)
 lrn4 = makeLearner("regr.glmnet", lambda = 1)
 lrn5 = makeLearner("regr.glmnet", lambda = 0.1)
 lrn6 = makeLearner("regr.glmnet", lambda = 0.001)
-lrns = list(lrn1c, lrn2c, lrn3c, lrn4c, lrn5c, lrn6c, lrn1, lrn2, lrn3, lrn4, lrn5, lrn6)
+lrns = list(lrn1c, lrn2c, lrn3c, lrn1, lrn2, lrn3, lrn4, lrn5, lrn6)
 mods = lapply(lrns, function(m) train(m, tsk))
 
 
@@ -99,7 +94,7 @@ NF_experiment = function(lrn){
     nf_true = nf_tree(mod)
   }
   pred = Predictor$new(mod, data = Boston)
-  res = lapply(1:100, function(i) {
+  res = lapply(1:n_repetitions, function(i) {
     fc10 = NF(pred, m = 10)
     fc50 = NF(pred, m = 50)
     fc500 = NF(pred, m = 500)
@@ -109,17 +104,14 @@ NF_experiment = function(lrn){
   res$model = model
   res
 }
-
 dfs = rbindlist(lapply(lrns, NF_experiment))
-aggr = dfs[,.(med = round(mean(abs(NF - NF.true)),1)),by = c("m", "model")]
-
-#ggplot(data.frame(dfs)) +
-#  geom_boxplot(aes(x = factor(m), y = NF.true - NF, group = factor(m)))
+aggr = dfs[,.(med = round(mean(abs(NF - NF.true)),2)),by = c("m", "model")]
 @
 
-We tested the NF heuristic on the Boston Housing data, on which we trained decision trees (CART) with maximum depths from 1 to 6 resulting in \Sexpr{nf_tree(mods[[1]])}, \Sexpr{nf_tree(mods[[2]])}, \Sexpr{nf_tree(mods[[3]])}, \Sexpr{nf_tree(mods[[4]])}, \Sexpr{nf_tree(mods[[5]])} and \Sexpr{nf_tree(mods[[6]])} number of features used and a LASSO model with penalization $\lambda\in\{10, 5, 2, 1, 0.1, 0.001\}$ resulting in \Sexpr{nf_glmnet(mods[[7]])}, \Sexpr{nf_glmnet(mods[[8]])}, \Sexpr{nf_glmnet(mods[[9]])}, \Sexpr{nf_glmnet(mods[[10]])}, \Sexpr{nf_glmnet(mods[[11]])} and \Sexpr{nf_glmnet(mods[[12]])} number of features. 
-We estimated NF, the number of features with sample sizes 10, 50, 500 and repeated each \Sexpr{n_repetitions} times.
-For elastic net, NF was always correct, independent of $m$.\Sexpr{stopifnot(all(aggr[model == "elastic net", med] == 0))}
-For CART and $m\in\{10, 50, 500\}$ the mean absolute error between NF and the true number of features used were \Sexpr{paste(aggr[model == "CART", med], collapse = ", ")}.
+We tested the NF heuristic with the Boston Housing data.
+We trained decision trees (CART) with maximum depths $\in\{1,2,10\}$ leading to \Sexpr{nf_tree(mods[[1]])}, \Sexpr{nf_tree(mods[[2]])} and  \Sexpr{nf_tree(mods[[3]])} features used and LASSO with penalty $\lambda\in\{10, 5, 2, 1, 0.1, 0.001\}$ leading to \Sexpr{nf_glmnet(mods[[4]])}, \Sexpr{nf_glmnet(mods[[5]])}, \Sexpr{nf_glmnet(mods[[6]])}, \Sexpr{nf_glmnet(mods[[7]])}, \Sexpr{nf_glmnet(mods[[8]])} and \Sexpr{nf_glmnet(mods[[9]])} features used. 
+For each model we estimated NF with sample sizes 10, 50, 500 and repeated each estimation \Sexpr{n_repetitions} times.
+For the elastic net models, NF was for all $m$ equal to the true number of features.\Sexpr{stopifnot(all(aggr[model == "elastic net", med] == 0))}
+For the  CART models and $m\in\{10, 50, 500\}$ the means of absolute differences between NF and the true number of features were \Sexpr{paste(aggr[model == "CART", med], collapse = ", ")}.
 
 

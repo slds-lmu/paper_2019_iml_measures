@@ -156,7 +156,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
     breaks = NULL,
     # Table for intervals with intercept and slope
     segments = NULL,
-    initialize = function(ale, epsilon, max_seg, m_nf, post_process) {
+    initialize = function(ale, epsilon, max_seg, m_nf = 200, post_process = TRUE) {
       assert_true(all.equal(ale$feature.type, "numerical", check.attributes = FALSE))
       assert_numeric(max_seg)
       # only makes

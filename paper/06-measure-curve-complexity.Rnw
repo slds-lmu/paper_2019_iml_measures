@@ -13,7 +13,7 @@ dat = data.frame(y = y, x = x, e = rnorm(n, sd = 0.1))
 mod = mgcv::gam(y ~ s(x), data = dat)
 pred = Predictor$new(mod, dat)
 fe = FeatureEffect$new(pred, "x")
-app = AleNumApprox$new(ale = fe, max_seg = 2, epsilon = 0.05)
+app = AleNumApprox$new(ale = fe, max_seg = 2, epsilon = 0.05, m_nf = 100, post_process = FALSE)
 @
 To determine the average shape complexity of ALE main effects $\falej$, we propose the main effect complexity (MEC) measure.
 For single ALE main effect, $\text{MEC}_j$ is the number of parameters needed to approximate the curve with linear segments.

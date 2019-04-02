@@ -40,7 +40,7 @@ A multi-dimensional view of interpretability solves the lack of definition of in
 % Implementation Note
 % =============================================================================
 \subsubsection{Implementation.}
-The paper and code of the experiments is available on Github: \url{https://github.com/compstat-lmu/paper_2018_autoiml}.
+This paper including code for experiments is online available at \url{https://github.com/compstat-lmu/paper_2018_autoiml}.
 All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2018}.
 % =============================================================================
 % Funding

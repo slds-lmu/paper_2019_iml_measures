@@ -271,7 +271,7 @@ colnames(tab) = gsub("\\(\\)", "",colnames(tab), fixed = TRUE)
 colnames(tab)[1] = "Model"
 rownames(tab) = c("MAE", "NF", "IAS", "MEC", setdiff(colnames(task.dat), "quality"))
 
-cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models with best MAE, best MAE when $MEC \\leq 2$, best MAE when $IAS =\\leq 0.1$, best MAE with $NF \\leq 7$. Hyperparameters are in Table~\ref{tab:pareto}.", length(indices))
+cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models with best MAE, best MAE when $MEC \\leq 2$, best MAE when $IAS =\\leq 0.1$, best MAE with $NF \\leq 7$. Hyperparameters are in Table~\\ref{tab:pareto}.", length(indices))
 xtab = xtable(tab, caption = cap, label = "tab:spark-table-multiobj")
 align(xtab) <- "l|p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}"
 print.xtable(xtab, sanitize.text.function = as.is)

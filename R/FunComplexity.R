@@ -26,7 +26,7 @@ FunComplexity = R6::R6Class(
     # Number of sample for estimating whether a feature was used
     m_nf = NULL,
     initialize = function(predictor, grid.size = 100, parallel = FALSE,
-      epsilon = 0.05, max_seg_cat = 5, max_seg_num = 5, m_nf = 500) {
+      epsilon = 0.05, max_seg_cat = 5, max_seg_num = 5, m_nf = 500, post_process = TRUE) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
         stop("Please set class in Predictor")
       }
@@ -44,7 +44,7 @@ FunComplexity = R6::R6Class(
       private$X = data.frame(self$predictor$data$get.x())
       private$mean_pred = mean(self$predictor$predict(private$X)[[1]])
       private$measure_r2_1st_ale()
-      private$measure_non_linearities()
+      private$measure_non_linearities(post_process)
       self$n_features = sum(unlist(lapply(self$approx_models, function(x) x$feature_used)))
     },
     # 1st-order ALE model predictions
@@ -91,11 +91,11 @@ FunComplexity = R6::R6Class(
         stop("Does not work for multiClass")
       }
     },
-    measure_non_linearities = function(){
+    measure_non_linearities = function(post_process){
       self$approx_models = lapply(self$effects, function(eff) {
         feature_name = eff$feature.name
         if(eff$feature.type == "numerical") {
-          AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_num, m_nf = self$m_nf)
+          AleNumApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_num, m_nf = self$m_nf, post_process)
         } else {
           AleCatApprox$new(ale = eff, epsilon = self$epsilon, max_seg = self$max_seg_cat, m_nf = self$m_nf)
         }

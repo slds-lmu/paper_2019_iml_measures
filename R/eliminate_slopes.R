@@ -14,14 +14,14 @@ eliminate_slopes = function(segments, x, ale_values, epsilon, breaks){
   }
 
   slope_order = order(abs(segments$slope))
-  for(i in slope_order) {
+  for (i in slope_order) {
     segments_new = segments
     segments_new[i, "slope"] = 0
     new_intercept = mean(ale_values[dat$interval == segments_new$interval[i]])
     segments_new[i, "intercept"] = new_intercept
-    if(any(is.na(pr(segments_new)))) browser()
-    if(any(is.na( ale_values))) browser()
-    if(get_r2(pr(segments_new), ale.values = ale_values) < epsilon) {
+    stopifnot(!any(is.na(pr(segments_new))))
+    stopifnot(!any(is.na( ale_values)))
+    if (get_r2(pr(segments_new), ale.values = ale_values) < epsilon) {
       segments = segments_new
     }
   }

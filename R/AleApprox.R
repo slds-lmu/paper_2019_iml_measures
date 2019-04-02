@@ -156,14 +156,14 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
     breaks = NULL,
     # Table for intervals with intercept and slope
     segments = NULL,
-    initialize = function(ale, epsilon, max_seg, m_nf) {
+    initialize = function(ale, epsilon, max_seg, m_nf, post_process) {
       assert_true(all.equal(ale$feature.type, "numerical", check.attributes = FALSE))
       assert_numeric(max_seg)
       # only makes
       max_breaks = max_seg  - 1
       super$initialize(ale, epsilon, max_breaks, m_nf = m_nf)
       if(!private$is_null_ale()) {
-        self$approximate()
+        self$approximate(post_process)
         # Don't count the intercept
         n_coefs = nrow(self$segments) + sum(self$segments$slope != 0) - 1
         self$n_coefs = min(max_seg * 2, n_coefs)
@@ -183,7 +183,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         self$r2 = 1 - ssq_approx_error / self$ssq_ale
       }
     },
-    approximate = function(){
+    approximate = function(post_process){
       x = private$x
       # test 0 breaks
       mod = lm(private$ale_values ~ x)
@@ -207,21 +207,24 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
           control = list(maxit = 500), self$ssq_ale ,
           x = x, ale_prediction = private$ale_values)
         pars = opt_gensa$par
-        if(opt_gensa$value <= self$epsilon)  break()
+        if (opt_gensa$value <= self$epsilon)  break()
       }
-      if(opt_gensa$value > self$epsilon)  self$max_complex = TRUE
+      if (opt_gensa$value > self$epsilon)  self$max_complex = TRUE
       # fit lm with par as cut points
       self$breaks = sort(unique(c(min(x), pars, max(x))))
       x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
       dat = data.frame(x = x, interval = x_interval, ale = private$ale_values)
-      # TODO: Try step model first
       model = lm(ale ~ x * interval, data = dat)
       segments = extract_segments(model, self$breaks, levels(x_interval))
-      self$segments = eliminate_slopes(segments, x, private$ale_values,
-        self$epsilon, self$breaks)
+      if (post_process) {
+        self$segments = eliminate_slopes(segments, x, private$ale_values,
+          self$epsilon, self$breaks)
+      } else {
+        self$segments = segments
+      }
     },
     plot = function(ylim = c(NA, NA), maxv = NULL) {
-      assert_numeric(maxv, null.ok=TRUE)
+      assert_numeric(maxv, null.ok = TRUE)
       fdat = self$ale$predictor$data$get.x()[[self$feature]]
       x = seq(from = min(fdat), to = max(fdat), length.out = 200)
       y = self$predict(x)

@@ -169,13 +169,89 @@ $V_j = \frac{1}{n}\sum_{i=1}^n \left(\falej(x^{(i)})\right)^2$\;
 
 
 
+% =============================================================================
+% Experiment 
+% =============================================================================
+<<MEC-experiment>>=
+data("BostonHousing", package = "mlbench")
+BostonHousing$chas = as.numeric(BostonHousing$chas)
+# Build different MARS model
+tsk = makeRegrTask(data = BostonHousing, target = "medv")
+lrn = makeLearner("regr.earth")
+
+mod = train(lrn, tsk)
+pred = Predictor$new(mod, data = BostonHousing)
+fc = FunComplexity$new(pred, epsilon = 0.001, grid.size = 200, max_seg_num = 5)
+
+extract_slope_approx = function(fc, dat, feature) {
+  if(is.null(fc$approx_models[[feature]]$segments)) return(0)
+  dat = data.frame(feature = dat[,feature])
+  dat$interval = cut(dat$feature, breaks = fc$approx_models[[feature]]$breaks, include.lowest = TRUE)
+  merge(data.table(dat), fc$approx_models[[feature]]$segments, sort = FALSE)$slope
+}
+
+coefs_approx = lapply(pred$data$feature.names, function(fname) {
+  extract_slope_approx(fc, BostonHousing, fname)
+})
+
+coefs_approx_df = data.frame(coefs_approx)
+colnames(coefs_approx_df) = pred$data$feature.names
+
+# Create table of coefficients for data for earth model
+mm = earth:::model.matrix.earth(mod$learner.model, BostonHousing)
+mm0 = sign(mm)
+dirs = rowSums(mod$learner.model$dirs)
+cfs = mod$learner.model$coefficients[,1]
+cfs = diag(dirs[names(cfs)] * cfs) 
+cfsm = mm0 %*% cfs 
+colnames(cfsm) = colnames(mm)
+cfsmm = melt(cfsm)
+cfsmm = cfsmm[cfsmm$Var2 != "(Intercept)",]
+cfsmm$Var2 = gsub("h(", "", cfsmm$Var2, fixed = TRUE)
+cfsmm$Var2 = gsub(")", "", cfsmm$Var2, fixed = TRUE)
+cfsmm$Var2 = gsub("[-\\.0-9]", "", cfsmm$Var2)
+cfsmm = data.table(cfsmm)
+cfsmm = cfsmm[,.(value = sum(value)),by = c("Var1", "Var2")]
+cfsmm = dcast(cfsmm, formula = Var1 ~ Var2) 
+earth_coefs  = data.frame(cfsmm)[,-1]
+
+coef_diffs = abs(earth_coefs - coefs_approx_df[,colnames(earth_coefs)])
+mean(coef_diffs > 0.01)
+
+## TODO: Make post-pruning optional, and switch off here
 
 
+cosines = angle(unlist(earth_coefs), unlist(coefs_approx_df[,colnames(earth_coefs)]))
+cosines = angle(unlist(coefs_approx_df[,colnames(earth_coefs)]), unlist(earth_coefs))
+quantile(cosines, probs = seq(from = 0, to = 1, length.out = 10))
+
+
+
+## Part two, extract the segments
+
+# extract breaks from earth; named list, one vector per feature
+# extract breaks from approx; named list, one vector per feature
+
+@
+
+We tested the extraction of linear segments with a model for which we can validate if the correct segments were extracted: Multivariate Adaptive Regression Splines (MARS).
+In our experiment, we used the Boston housing data, trained a MARS model, extracted MEC and compared the slopes estimated by MARS and the ones estimated by our ALE approximation which is computed for the MEC.
+For each datapoint and each feature, we computed both the slopes for MARS and ALE approximation, and compared both using the cosine similarity.
+
+
+
+% =============================================================================
+% =============================================================================
+% =============================================================================
+% Material
+% =============================================================================
+% =============================================================================
+% =============================================================================
 
 % =============================================================================
 % AMEC ignores internal model complexity and uses external complexity
 % =============================================================================
-<<tree-increase-data>>=
+<<tree-increase-data, eval=FALSE>>=
 set.seed(42)
 library(rpart)
 n = 1000
@@ -188,13 +264,6 @@ epsilon = 0.05
 @
 
 
-% =============================================================================
-% =============================================================================
-% =============================================================================
-% Material
-% =============================================================================
-% =============================================================================
-% =============================================================================
 
 %If all features in the data are uncorrelated, this has the nice interpretation that each feature main effect complexity (MEC) is weighted by the percentage it contributed to the variance of the complete main effects model.
 %In case of correlated features, it's more complicated.

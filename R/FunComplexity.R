@@ -25,7 +25,7 @@ FunComplexity = R6::R6Class(
     approx_models = NULL,
     # Number of sample for estimating whether a feature was used
     m_nf = NULL,
-    initialize = function(predictor, grid.size = 50, parallel = FALSE,
+    initialize = function(predictor, grid.size = 100, parallel = FALSE,
       epsilon = 0.05, max_seg_cat = 5, max_seg_num = 5, m_nf = 500) {
       if(predictor$task == "classification" & is.null(predictor$class)) {
         stop("Please set class in Predictor")

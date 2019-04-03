@@ -46,7 +46,7 @@ Figure \ref{fig:pdp-unreliable} shows an increasing interaction strength dependi
 This means that we prefer models with less interaction when using feature effect plots.
 
 
-<<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increases from left to right), the less representative the Partial Dependence Plot (light thick line) becomes for all individual instances represented by their Individual Conditional Expectation curves (dark think lines).", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm">>=
+<<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increases from left to right), the less representative the Partial Dependence Plot (light thick line) becomes for all individual instances represented by their Individual Conditional Expectation curves (dark think lines).", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm", dev = "CairoJPEG">>=
 lrn = makeLearner("regr.lm")
 mod.gamboost = train(lrn, task)
 pred = Predictor$new(mod.gamboost, datx2, class = 1)
@@ -59,7 +59,6 @@ p_gamboost = plot(fe$effects[[feature]], ylim = y_limit) +
 	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_gamboost), size = 10) + 
   ggtitle("Linear Model") + 
   scale_y_continuous("Prediction (centered at x=0)", limits = ylim)
-
 
 lrn = makeLearner("regr.ksvm", C = 0.05)
 mod.ranger = train(lrn, task)

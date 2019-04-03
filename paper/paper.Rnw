@@ -16,7 +16,7 @@
 \title{Quantifying Interpretability of Arbitrary Machine Learning Models Through Functional Decomposition}
 \titlerunning{Quantifying Interpretability}
 
-\author{Christoph~Molnar~\and~Giuseppe~Casalicchio~\and~Bernd~Bischl}
+\author{Christoph Molnar\inst{1}\orcidID{0000-0003-2331-868X} \and Giuseppe Casalicchio\inst{1}\orcidID{0000-0001-5324-5966}\and Bernd Bischl\orcidID{0000-0001-6002-6980}}
 \authorrunning{C. Molnar et al.}
 
 \institute{Department of Statistics, Ludwig-Maximilians-University Munich, \\

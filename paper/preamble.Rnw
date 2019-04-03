@@ -26,6 +26,7 @@
 % \bibliography{Bib}
 \usepackage[hyphens]{url}
 \usepackage{hyperref}
+\renewcommand\UrlFont{\color{blue}\rmfamily}
 \usepackage{colortbl}
 \usepackage{csquotes} %[autostyle=true,german=quotes]
 \usepackage{mathtools}
@@ -43,21 +44,7 @@
 \SetKwInput{KwOutput}{Output}              % set the Output
 \let\oldnl\nl% Store \nl in \oldnl
 \newcommand{\nonl}{\renewcommand{\nl}{\let\nl\oldnl}}% Remove line number for one
-%\usepackage{algorithm}
-%\usepackage[noend]{algpseudocode}
-%\usepackage[none]{hyphenat}
 \usepackage{cleveref}
-%Makes problems on Ubuntu
-%\usepackage{autonum}
-%
-% \usepackage{mathptmx}      % use Times fonts if available on your TeX system
-%
-% insert here the call for the packages your document requires
-%\usepackage{latexsym}
-% etc.
-%
-% please place your own definitions here and don't use \def but
-% \newcommand{}{}
 
 \input{./latex-math/basic-ml.tex}
 \input{./latex-math/basic-math.tex}
@@ -115,7 +102,7 @@ opts_chunk$set(size = "small",
                fig.height = 10,
                warning = DEBUG_MODE,
                message = DEBUG_MODE,
-               dev = "CairoJPEG")
+               dev = "postscript")
 
 ## ggplot black and white
 theme_set(ggplot2::theme_bw() +

@@ -109,6 +109,7 @@ plot(app) + ggtitle("") + scale_y_continuous("ALE")
 % Measure Intuition
 % =============================================================================
 Through the approximation with linear segments, the degrees of freedom required for describing a main effect curve becomes measurable.
+We measure the degrees of freedom as the number of non-zero coefficients for intercepts and slopes of the segments needed to describe linear segments.
 The approximation allows some error, e.g. an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)}  has $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
 The approximation quality is measured with R-squared.
 An approximation has to reach an R-squared of at least $1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
@@ -116,6 +117,8 @@ We also introduced parameter $max_{seg}$, the maximum number of segments.
 In the case that an approximation cannot reach an R-squared above $1-\epsilon$ with a given $max_{seg}$, $\text{MEC}_j$ is computed with the maximum number of segments.
 The selected maximum approximation error $\epsilon$ should be small, but not too small.
 We found $\epsilon$ between $0.01$ and $0.1$ visually meaningful.
+We apply a post-processing step that greedily sets slopes of the linear segments to zero, as long as the R-squared of the resulting approximation remains $\in\{1-\epsilon,1\}$.
+The step potentially decreases the $\text{MEC}_j$, especially for models with constant segments like decision trees or rule-based models.
 % =============================================================================
 % Measure Sum Up and Fix
 % =============================================================================

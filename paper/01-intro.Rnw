@@ -3,7 +3,7 @@
 \label{sec:introduction}
 
 %==============================================================================
-% Interpretability requirement and tradeoff
+% Interpretability requirement and trade-off
 %==============================================================================
 Machine learning models are optimized for predictive performance, but it is often required to understand models in order to e.g. debug them, gain trust in the predictions and satisfy regulatory requirements.
 To meet these requirements, performance often has to be traded off for interpretability.
@@ -23,7 +23,6 @@ While model-agnostic post-hoc interpretation methods can -- in general -- be use
 % =============================================================================
 In our opinion, model-agnostic interpretability measures are needed to make the compromise between interpretability and predictive performance explicit when selecting models \citep{ruping2006learning,bibal2016interpretability}.
 Instead of fixing the trade-off by preselecting an interpretable model class, model-agnostic measures would allow informed model selection with the desired balance between interpretability and predictive performance \citep{freitas2004critical}.
-
 % =============================================================================
 % Lack of definition of interpretability
 % =============================================================================

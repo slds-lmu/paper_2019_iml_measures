@@ -14,7 +14,8 @@ GRID.SIZE = 150
 
 # Parameters for mbo
 n.folds = 5
-max.iters = 600
+# Number of iterations should be at least 20 times number of hyperparameters
+max.iters = 400
 @
 
 <<mo-data>>=
@@ -160,7 +161,6 @@ best.models = best.models[best.models$MEC != 0,]
 
 <<mo-results-rename, dependson="mo-results", results = "asis">>=
 #Improves the naming of the learners
-
 best.models.print = best.models
 log_params = c("regr.ksvm.C", "regr.ksvm.sigma", "regr.glmnet.lambda")
 best.models.print[, log_params] = 2^best.models.print[, log_params]
@@ -285,11 +285,11 @@ The theoretical minimum interpretability is 0 for a model that uses all features
 Figure~\ref{fig:perf-interpret-tradeoff} maps each model and hyperparameter configuration from the Pareto set to the performance / interpretability space.
 
 <<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. interpretability tradeoff for predicting wine quality. Corresponding hyperparameters and measures are shown in Table~\\ref{tab:pareto}.",  fig.height=7, fig.width=12, fig.align="center", out.height="7cm", out.width="12cm">>=
-plot.dat = best.models.print[c("sMAE", "sNF", "sMEC", "sIAS", "descr")]
-plot.dat = rbind(plot.dat, data.frame(sMAE = 1, sNF = 0, sMEC = 0, sIAS = 0, descr = "median"))
+plot.dat = best.models.print[c("sMAE", "sNF", "sMEC", "sIAS", "descr.ref")]
+plot.dat = rbind(plot.dat, data.frame(sMAE = 1, sNF = 0, sMEC = 0, sIAS = 0, descr.ref = "median"))
 ggplot(plot.dat,aes(x = 1 - sMAE, y = 3 - (sNF + sMEC + sIAS))) +
   geom_point() + 
-  geom_text_repel(aes(label = descr.ref), size = 7) +
+  geom_text_repel(aes(label = descr.ref), size = 6) +
   scale_x_continuous("Performance", limits = c(NA, 1)) +
   scale_y_continuous("Interpretability", limits = c(0, 3))
 @

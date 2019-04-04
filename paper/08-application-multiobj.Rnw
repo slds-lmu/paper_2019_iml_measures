@@ -15,7 +15,7 @@ GRID.SIZE = 150
 # Parameters for mbo
 n.folds = 3
 # Number of iterations should be at least 20 times number of hyperparameters
-max.iters = 300
+max.iters = 310
 @
 
 <<mo-data>>=

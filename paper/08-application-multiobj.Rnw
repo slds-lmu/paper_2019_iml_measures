@@ -98,7 +98,7 @@ The goal was to predict wine quality on a scale of 0 to 10, assessed by the medi
 % Why like this?
 % =============================================================================
 \subsubsection{Motivation.}
-As \citep{freitas2014comprehensible} emphasizes, it is difficult to know the desired compromise between interpretability and performance before the modeling step and suggests multi-objective optimization.
+As \citep{freitas2014comprehensible} emphasizes, it is difficult to know the desired compromise between interpretability and performance before modeling the data and suggests multi-objective optimization.
 This stands in contrast to a priori selecting an interpretable model class (e.g. decision rules) and optimizing within this class or exclusively optimizing performance and applying post-hoc interpretations.
 We suggest searching over a wide spectrum of model classes and hyper parameter settings, presenting the set of Pareto optimal models, and allowing the practitioner to choose a suitable compromise between interpretability and performance.
 The three measures of interpretability provide a detailed characterization of machine learning models, which enables making informed decisions (e.g. how much does performance suffer if we use a model without interactions?).
@@ -107,11 +107,11 @@ The three measures of interpretability provide a detailed characterization of ma
 % Objectives and Models
 % =============================================================================
 \subsubsection{Optimization Setup.}
-We used the mlrMBO model-based optimization framework \citep{horn2016multi} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the mean absolute error (MAE) on unseen data.
-We optimized over the space of following model classes (and hyperparameters): CART (maximum tree-depth, pruning cp), support vector machine (cost C and sigma), elastic net regression (regularization alpha and penalization lambda), gradient boosted trees (maximum depth, number of iterations), gradient boosted generalized additive model (number of iterations) and a random forest (mtry, number of trees, mininmal node size)..
+We used the mlrMBO model-based optimization framework \citep{horn2016multi} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the cross-validated mean absolute error (MAE).
+We optimized over the space of following model classes (and hyperparameters): \textbf{CART} (maximum tree-depth and pruning cp), \textbf{s}upport \textbf{v}ector \textbf{m}achine (cost C and sigma), \textbf{elastic net} regression (regularization alpha and penalization lambda), \textbf{g}radient \textbf{b}oosted \textbf{t}rees (maximum depth, number of iterations), gradient \textbf{boost}ed \textbf{g}eneralized \textbf{a}dditive \textbf{m}odel (number of iterations) and \textbf{r}andom \textbf{f}orest (mtry, number of trees and minimum node size).
 \subsubsection{Model-based Optimization Setup.}
 We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
-Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IA) were estimated in-sample.
+Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IAS) were estimated using all data instances.
 We set the number of iterations of ParEGO to \Sexpr{max.iters}.
 For all other parameters of the model-based, multi-objective optimization, we relied on the sensitive defaults provided by \citep{mlrMBO}.
 
@@ -204,7 +204,7 @@ best.models.print$descr = apply(best.models.print, 1, function(row) {
 
 
 # Table of Pareto set + objective values
-tab.cap = "Pareto front of models minimizing mean absolute error (MAE), number of features (NF), main effect complexity (MEC) and interaction strength (IA)."
+tab.cap = "Pareto front of models minimizing mean absolute error (MAE), number of features (NF), main effect complexity (MEC) and interaction strength (IAS)."
 to.print = best.models.print[order(best.models.print$MAE), c("descr", measure_names)]
 rownames(to.print) = NULL
 baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
@@ -235,7 +235,7 @@ best.models.print$descr.ref = sprintf("%s [row %i]", best.models.print$model, 1:
 % =============================================================================
 \subsubsection{Results.}
 Table \ref{tab:pareto} shows the set of Pareto-optimal models along with their MAE, NF, IAS and MEC.
-If two models from the same class but with different hyperparameter had exactly the same MAE, NF, IAS and MEC, we randomly dropped one from the Pareto set.
+If two models from the same class with different hyperparameter values had exactly the same MAE, NF, IAS and MEC, we kept only one and dropped the others.
 We also dropped constant models (e.g. elastic net regression with strong penalization), with exception of the median model.
 For a more informative visualization, we propose to visualize the main effects together with the measures in Table~\ref{tab:spark-table-multiobj}.
 The four selected models show different trade-offs between the four measures.
@@ -269,7 +269,7 @@ colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)
 colnames(tab) = gsub("\\(\\)", "",colnames(tab), fixed = TRUE)
 rownames(tab) = c("MAE", "NF", "IAS", "MEC", setdiff(colnames(task.dat), "quality"))
 
-cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models with best MAE, best MAE when $MEC \\leq 2$, best MAE when $IAS =\\leq 0.1$, best MAE with $NF \\leq 7$. Hyperparameters are in Table~\\ref{tab:pareto}.", length(indices))
+cap = sprintf("A selection of four models from the Pareto optimal set. From left to right, the columns show models with 1) lowest MAE, 2) lowest MAE when $MEC \\leq 2$, 3) lowest MAE when $IAS =\\leq 0.1$, and 4) lowest MAE with $NF \\leq 7$. Corresponding hyperparameters can be found in Table~\\ref{tab:pareto}.", length(indices))
 xtab = xtable(tab, caption = cap, label = "tab:spark-table-multiobj")
 align(xtab) <- "l|p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}"
 print.xtable(xtab, sanitize.text.function = as.is)
@@ -280,22 +280,21 @@ print.xtable(xtab, sanitize.text.function = as.is)
 % =============================================================================
 \subsubsection{Performance-Interpretability Trade-off}
 The complexity measures allow to study the trade-off between interpretability and performance across different model classes and hyperparameter settings.
-We mapped each measure to the interval $[0,1]$ by scaling each measure with meaningful upper and lower bounds:
+We mapped each measure to the interval $[0,1]$ by scaling each measure $M$ with meaningful upper and lower bounds:
 
 $$M_{scaled}(M) = \frac{M - M_{inf}}{M_{sup} - M_{inf}}$$
 
-For MAE, we set $M_{inf}$ to the MAE when we predict the median and $M_{sup} = \sum_{i=1}^n|y_i - median(y)|$.
+For MAE, we set $M_{inf}$ to the lowest observed MAE of all models and $M_{sup} = \frac{1}{n}\sum_{i=1}^n|\yi - median(y)|$.
 For NF, we set $M_{inf}=0$ and $M_{sup}=p$.
 For MEC, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed MEC of all models.
 For IAS, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed IAS of all models.
-To combine the three measures in a single dimension in Figure~\ref{fig:perf-interpret-tradeoff}, we defined interpretability ad-hoc as: $Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$
+To combine the three measures in a single dimension, we mapped interpretability ad-hoc as: $Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$.
 This weights all three (scaled) measures equally.
-The maximum interpretability is 3 for the model that always predicts the median wine quality.
-The theoretical minimum interpretability is 0 for a model that uses all features and has the highest interaction strength and main effect complexity measure among all Pareto optimal models.
+The maximum interpretability is 3 for the constant model that always predicts the median wine quality.
+The theoretical minimum interpretability is 0 for a model that uses all features and has the highest interaction strength and highest main effect complexity measure among all Pareto optimal models.
 Figure~\ref{fig:perf-interpret-tradeoff} maps each model and hyperparameter configuration from the Pareto set to the performance / interpretability space.
 
-<<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. interpretability tradeoff for predicting wine quality.",  fig.height=7, fig.width=12, fig.align="center", out.height="7cm", out.width="12cm">>=
-
+<<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. interpretability tradeoff for predicting wine quality. Corresponding hyperparameters and measures are shown in Table~\\ref{tab:pareto}.",  fig.height=7, fig.width=12, fig.align="center", out.height="7cm", out.width="12cm">>=
 plot.dat = best.models.print[c("sMAE", "sNF", "sMEC", "sIAS", "descr")]
 plot.dat = rbind(plot.dat, data.frame(sMAE = 1, sNF = 0, sMEC = 0, sIAS = 0, descr = "median"))
 ggplot(plot.dat,aes(x = 1 - sMAE, y = 3 - (sNF + sMEC + sIAS))) +

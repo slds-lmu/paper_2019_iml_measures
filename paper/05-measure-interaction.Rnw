@@ -17,7 +17,7 @@ We define interaction strength as the approximation error measured with loss $L$
 \begin{eqnarray}\label{eqn:pre}
 IAS = \frac{\mathbb{E}(L(\fh, \faleme))}{\mathbb{E}(L(\fh, f_0))} \geq 0
 \end{eqnarray}
-Here, $f_0$ is the mean of the predictions and can be interpreted as the functional decomposition where everything is set to zero.
+Here, $f_0$ is the mean of the predictions and can be interpreted as the functional decomposition where all feature effects are set to zero.
 % =============================================================================
 % R2 special case
 % =============================================================================
@@ -26,8 +26,6 @@ $$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(\xi) - f_0
 % Interpretation of IAS
 % =============================================================================
 If $IAS=0$, then $L(\fh,\faleme)=0$, which means that the first order ALE model perfectly approximates $\fh$ and the model has no interactions. 
-If $IAS=1$, all main effects are constant at value 0.
-A model that perfectly predicts the (class-balanced) XOR problem would have $IAS=1$.
 % =============================================================================
 % =============================================================================
 % Further Material

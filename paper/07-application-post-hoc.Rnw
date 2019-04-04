@@ -2,7 +2,7 @@
 \section{Improving Post-hoc Interpretation}
 \label{sec:post-hoc}
 
-Minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (AMEC) improves readability, reliability and summarizability of post-hoc interpretation methods such as partial dependence plots, ALE plots, feature importance, interaction effects and local surrogate models.
+Minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (AMEC) improves reliability and compactness of post-hoc interpretation methods such as partial dependence plots, ALE plots, feature importance, interaction effects and local surrogate models.
 
 \subsubsection{The less features, the less verbose the interpretations.}
 Our NF measure improves the readability of post-hoc analysis results.
@@ -46,7 +46,7 @@ Figure \ref{fig:pdp-unreliable} shows an increasing interaction strength dependi
 This means that we prefer models with less interaction when using feature effect plots.
 
 
-<<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increases from left to right), the less representative the Partial Dependence Plot (light thick line) becomes for all individual instances represented by their Individual Conditional Expectation curves (dark think lines).", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm", dev = "CairoJPEG">>=
+<<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increases from left to right), the less representative the Partial Dependence Plot (light thick line) becomes for individual instances represented by their Individual Conditional Expectation curves (dark thin lines).", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm", dev = "CairoJPEG">>=
 lrn = makeLearner("regr.lm")
 mod.gamboost = train(lrn, task)
 pred = Predictor$new(mod.gamboost, datx2, class = 1)
@@ -94,7 +94,7 @@ grid.arrange(p_gamboost, p_ksvm, p_kknn, nrow = 1)
 \subsubsection{The less complex the main effects, the better summarizable.}
 In linear models, a feature effect can be expressed by a single number, the regression coefficient.
 If effects are non-linear the method of choice is visualization  \citep{apley2016visualizing,friedman2001greedy}.
-Summarizing the effects to a single number (e.g. average marginal effects \citep{leeper2017interpreting}) can be misleading, e.g. if the effect has a U-shape, the average effect might be zero.
-As a by-product of MEC, there is a third option: Instead of reporting a single number, the coefficients of the segmented linear model can be given.
+Summarizing the effects with a single number (e.g. average marginal effects \citep{leeper2017interpreting}) can be misleading, e.g. if the effect has a U-shape, the average effect might be zero.
+As a by-product of MEC, there is a third option: Instead of reporting a single number, the coefficients of the segmented linear model can be reported. 
 Minimizing MEC means preferring models with main effects that can be described with fewer numbers, offering a more compact model description.
 

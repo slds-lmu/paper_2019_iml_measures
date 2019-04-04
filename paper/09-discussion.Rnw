@@ -9,10 +9,10 @@
 We proposed three model-agnostic measures for machine learning model complexity based on functional decomposition: number of features used, interaction strength and main effect complexity.
 Due to their model-agnostic nature, the measures allow model comparison across different model classes.
 We argued that minimizing these measures for a machine learning model improves its post-hoc interpretation.
-We demonstrated that the measures can be optimized directly with multi-objective optimization to make the trade-off between interpretability and performance explicit, which helps in model selection.
-Our proposed measures can be applied to many model since they are model-agnostic, work for regression and binary classification (based on probabilities).
+We demonstrated that the measures can be optimized directly with multi-objective optimization to make the trade-off between interpretability and performance explicit.
+Our proposed measures can be applied to a wide range of models since they are model-agnostic and work for regression and binary classification (based on classification scores / probabilities).
 We formulated the measures with both continuous and categorical features in mind, but leave an in-depth investigation of categorical features open for future work.
-They can be used for model selection, for model benchmarks and as objectives in automated machine learning frameworks.
+The measures can be used for model selection, for model benchmarks and as objectives in automated machine learning frameworks.
 
 
 % =============================================================================
@@ -30,18 +30,18 @@ Furthermore, the complexity measures quantify machine learning models from a fun
 % =============================================================================
 \subsubsection{The bigger picture.}
 Interpretability is a high-dimensional concept (sparsity, additivity, fidelity, human simulability, ...) and we need several approaches to make interpretability measurable.
-In this context we see our work complementary to other approaches \citep{friedler2019assessing,dhurandhar2017tip,plumb2019regularizing}, which together form a basis for a more rigorous definition of interpretability as called by \citep{doshi2017towards,Lipton2016}.
+In this context we see our work complementary to other approaches \citep{friedler2019assessing,dhurandhar2017tip,plumb2019regularizing}, which together form a basis for a more rigorous definition of interpretability as demanded by \citep{doshi2017towards,Lipton2016}.
 Availability of different interpretability measures also fits in with the notion that interpretability depends on the audience and the context \citep{rudin2018please}.
 Different situations require differently weighted interpretability measures.
-In some situations we might prefer sparseness and a lack of interactions, in other it's important that we can represent the model as a decision list.
+In some situations we might prefer sparseness and a lack of interactions, in others it might be important that we can represent the model as a decision list.
 A multi-dimensional view of interpretability solves the lack of definition of interpretability and supports researcher to make quantified, verifiable and clearer statements about interpretability.
 
 % =============================================================================
 % Implementation Note
 % =============================================================================
 \subsubsection{Implementation.}
-This paper including code for experiments is online available at \url{https://github.com/compstat-lmu/paper_2018_autoiml}.
-All examples are done with mlr package \citep{JMLR:v17:15-066} in R \citep{r2018}.
+The code for this paper is available at \url{https://github.com/compstat-lmu/paper_2018_autoiml}.
+For the examples and experiments we relied on the mlr package \citep{JMLR:v17:15-066} in R \citep{r2018}.
 % =============================================================================
 % Funding
 % =============================================================================

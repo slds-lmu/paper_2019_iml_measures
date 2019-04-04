@@ -227,7 +227,6 @@ best.models.print = best.models.print[order(best.models.print$MAE),]
 
 # Model description with reference to the table
 best.models.print$descr.ref = sprintf("%s [row %i]", best.models.print$model, 1:nrow(best.models.print))
-
 @
 
 
@@ -268,7 +267,6 @@ colnames(tab) = best.models.print$descr.ref[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)
 colnames(tab) = gsub("\\(\\)", "",colnames(tab), fixed = TRUE)
-colnames(tab)[1] = "Model"
 rownames(tab) = c("MAE", "NF", "IAS", "MEC", setdiff(colnames(task.dat), "quality"))
 
 cap = sprintf("A selection of %i models from the Pareto optimal set. From left to right, the models with best MAE, best MAE when $MEC \\leq 2$, best MAE when $IAS =\\leq 0.1$, best MAE with $NF \\leq 7$. Hyperparameters are in Table~\\ref{tab:pareto}.", length(indices))

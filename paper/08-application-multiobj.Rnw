@@ -13,9 +13,9 @@ EPSILON = 0.05
 GRID.SIZE = 150
 
 # Parameters for mbo
-n.folds = 5
+n.folds = 3
 # Number of iterations should be at least 20 times number of hyperparameters
-max.iters = 400
+max.iters = 300
 @
 
 <<mo-data>>=
@@ -49,7 +49,6 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
   regr.xgboost.mod = makeParamSet(
     makeIntegerParam ("max_depth" , lower = 1, upper = 10),
     makeIntegerParam("nrounds", lower = 1, upper = 1000)
-#    makeNumericParam("eta", lower = -10, upper = -2, trafo = function(x) 2^x)
   ),
   regr.glmnet = makeParamSet(
     makeNumericParam("alpha", lower = 0, upper = 1),

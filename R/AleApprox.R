@@ -204,7 +204,7 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         upper = as.numeric(rep(max(x), times = n_breaks))
         init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
         opt_gensa = GenSA(par = init_breaks, segment_fn, lower, upper, ale = self$ale,
-          control = list(maxit = 500), self$ssq_ale ,
+          control = list(maxit = 300), self$ssq_ale ,
           x = x, ale_prediction = private$ale_values)
         pars = opt_gensa$par
         if (opt_gensa$value <= self$epsilon)  break()

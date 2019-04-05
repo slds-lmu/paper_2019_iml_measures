@@ -57,7 +57,8 @@ spark  = function(obj, ylim = c(NA, NA), approx = FALSE, color = "black", height
 get_spark_col = function(pred, ylim = c(NA, NA), width = 5, ...) {
   assert_class(pred, "Predictor")
   assert_numeric(ylim, len = 2)
-  fc = FunComplexity$new(pred, grid.size = 150, epsilon = 0.05)
+  # a bit smoother for plotting
+  fc = FunComplexity$new(pred, grid.size = 50, epsilon = 0.05)
   sparklns = sapply(fc$effects, function(eff) {
     if(all(eff$results$.ale == 0)) {
       ""
@@ -65,6 +66,7 @@ get_spark_col = function(pred, ylim = c(NA, NA), width = 5, ...) {
       spark(eff, width = width, ylim = ylim, ...)
     }
   })
+  fc = FunComplexity$new(pred, grid.size = 150, epsilon = 0.05)
   res = c("NF" = fc$n_features,
     "IA"= sprintf("%.2f", 1 - fc$r2),
     "AMEC" = sprintf("%.2f", fc$c_wmean),

@@ -89,7 +89,7 @@ get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA), log_params,...) {
     lrn = setHyperPars(lrn.regr, par.vals = pp)
     mod = train(lrn, task)
     pred = Predictor$new(mod, task.dat)
-    c(pareto_front[i, "MAE"], pareto_front[i, "NF"], pareto_front[i, "IAS"], pareto_front[i, "MEC"],
+    c(pareto_front[i, "MAE"], pareto_front[i, "MEC"], pareto_front[i, "IAS"], pareto_front[i, "NF"],
       unlist(get_spark_col(pred, ylim = ylim, ...)))
   })
   data.frame(res)

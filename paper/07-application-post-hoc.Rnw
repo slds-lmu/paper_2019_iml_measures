@@ -46,38 +46,41 @@ Figure \ref{fig:pdp-unreliable} shows an increasing interaction strength dependi
 This means that we prefer models with less interaction when using feature effect plots.
 
 
-<<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increases from left to right), the less representative the Partial Dependence Plot (light thick line) becomes for individual instances represented by their Individual Conditional Expectation curves (dark thin lines).", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm", dev = "cairo_pdf">>=
+<<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increases from left to right), the less representative the Partial Dependence Plot (light thick line) becomes for individual instances represented by their Individual Conditional Expectation curves (dark thin lines).", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm", dev = "CairoJPEG", dpi = 300>>=
 lrn = makeLearner("regr.lm")
 mod.gamboost = train(lrn, task)
-pred = Predictor$new(mod.gamboost, datx2, class = 1)
+# Subsample for nicer plotting
+subsample = sample(1:nrow(datx2), size = 60)
+datx2sub = datx2[subsample,]
+pred = Predictor$new(mod.gamboost, datx2sub, class = 1)
 
 ylim = c(-100, 1300)
 fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_gamboost = 1 - fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_gamboost = plot(fe$effects[[feature]], ylim = y_limit) +
+p_gamboost = plot(fe$effects[[feature]], ylim = y_limit, rug = FALSE) +
 	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_gamboost), size = 10) + 
   ggtitle("Linear Model") + 
   scale_y_continuous("Prediction (centered at x=0)", limits = ylim)
 
 lrn = makeLearner("regr.ksvm", C = 0.05)
 mod.ranger = train(lrn, task)
-pred = Predictor$new(mod.ranger, datx2)
+pred = Predictor$new(mod.ranger, datx2sub)
 fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_ksvm = 1- fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_ksvm = plot(fe$effects[[feature]], ylim = y_limit) +
+p_ksvm = plot(fe$effects[[feature]], ylim = y_limit, rug = FALSE) +
 	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_ksvm), size = 10) + 
   ggtitle("SVM") + 
   scale_y_continuous("", limits = ylim)
 
 lrn = makeLearner("regr.xgboost", nrounds = 1000)
 mod.kknn = train(lrn, task)
-pred = Predictor$new(mod.kknn, datx2, class = 1)
+pred = Predictor$new(mod.kknn, datx2sub, class = 1)
 fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_kknn = 1- fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
-p_kknn = plot(fe$effects[[feature]], ylim = y_limit) +
+p_kknn = plot(fe$effects[[feature]], ylim = y_limit, rug = FALSE) +
 	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_kknn), size = 10) + 
   ggtitle("gbt") + 
   scale_y_continuous("", limits = ylim)

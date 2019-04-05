@@ -199,7 +199,7 @@ to.print = best.models.print[order(best.models.print$MAE), c("descr", measure_na
 rownames(to.print) = NULL
 baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
 to.print = rbind(to.print, data.frame("descr" = "median", "MAE" = baseline_performance, "MEC" = 0, "IAS" = 0, "NF"=0))
-colnames(to.print) = "Model (Hyperparameters)"
+colnames(to.print)[1] = "Model (Hyperparameters)"
 xtable::xtable(to.print, caption = tab.cap, label = "tab:pareto")
 
 

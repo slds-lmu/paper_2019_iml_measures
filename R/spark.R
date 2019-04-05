@@ -66,12 +66,7 @@ get_spark_col = function(pred, ylim = c(NA, NA), width = 5, ...) {
       spark(eff, width = width, ylim = ylim, ...)
     }
   })
-  fc = FunComplexity$new(pred, grid.size = 150, epsilon = 0.05)
-  res = c("NF" = fc$n_features,
-    "IA"= sprintf("%.2f", 1 - fc$r2),
-    "AMEC" = sprintf("%.2f", fc$c_wmean),
-    sparklns)
-  as.character(res)
+  as.character(sparklns)
 }
 
 #' Compute model summaries for subset off pareto set
@@ -94,7 +89,8 @@ get_spark_table = function(mbo_obj, indices, ylim = c(NA, NA), log_params,...) {
     lrn = setHyperPars(lrn.regr, par.vals = pp)
     mod = train(lrn, task)
     pred = Predictor$new(mod, task.dat)
-    c(pareto_front[i, "MAE"], unlist(get_spark_col(pred, ylim = ylim, ...)))
+    c(pareto_front[i, "MAE"], pareto_front[i, "NF"], pareto_front[i, "IAS"], pareto_front[i, "MEC"],
+      unlist(get_spark_col(pred, ylim = ylim, ...)))
   })
   data.frame(res)
 }

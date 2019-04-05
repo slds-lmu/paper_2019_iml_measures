@@ -10,12 +10,12 @@ set.seed(42)
 MAX_SEG_CAT = 9
 MAX_SEG_NUM = 5
 EPSILON = 0.05
-GRID.SIZE = 150
+GRID.SIZE = 200
 
 # Parameters for mbo
 n.folds = 5
 # Number of iterations should be at least 20 times number of hyperparameters
-max.iters = 300
+max.iters = 350
 @
 
 <<mo-data>>=
@@ -36,6 +36,7 @@ base.learners.regr = list(
   makeLearner("regr.glmnet"),
   makeLearner("regr.xgboost.mod"),
   makeLearner("regr.rpart"),
+  makeLearner("regr.ranger"),
   makeLearner("regr.gamboost")
 )
 
@@ -60,6 +61,9 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
   ),
   regr.gamboost = makeParamSet(
     makeIntegerParam("mstop", lower = 1, upper = 500)
+  ),
+  regr.ranger = makeParamSet(
+    makeIntegerParam("mtry", lower = 1, upper = 11)
   )
 )
 
@@ -91,7 +95,9 @@ The three measures of interpretability provide a detailed characterization of ma
 % =============================================================================
 \subsubsection{Optimization Setup.}
 We used the mlrMBO model-based optimization framework \citep{horn2016multi} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the cross-validated mean absolute error (MAE).
-We optimized over the space of following model classes (and hyperparameters): \textbf{CART} (maximum tree-depth and pruning cp), \textbf{s}upport \textbf{v}ector \textbf{m}achine (cost C and sigma), \textbf{elastic net} regression (regularization alpha and penalization lambda), \textbf{g}radient \textbf{b}oosted \textbf{t}rees (maximum depth, number of iterations) and gradient \textbf{boost}ed \textbf{g}eneralized \textbf{a}dditive \textbf{m}odel (number of iterations).
+We optimized over the space of following model classes (and hyperparameters): \textbf{CART} (maximum tree-depth and pruning cp), \textbf{s}upport \textbf{v}ector \textbf{m}achine (cost C and sigma), \textbf{elastic net} regression (regularization alpha and penalization lambda), \textbf{g}radient \textbf{b}oosted \textbf{t}rees (maximum depth, number of iterations), gradient \textbf{boost}ed \textbf{g}eneralized \textbf{a}dditive \textbf{m}odel (number of iterations) and \textbf{r}andom \textbf{f}orest (mtry).
+
+
 \subsubsection{Model-based Optimization Setup.}
 We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
 Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IAS) were estimated using all data instances.
@@ -168,7 +174,8 @@ best.models.print$selected.learner = gsub("regr.", "", best.models.print$selecte
 best.models.print$selected.learner = gsub("xgboost.mod", "xgboost", best.models.print$selected.learner, fixed  = TRUE)
 
 lrn_model_map = c("xgboost" = "gbt", "rpart" = "CART", "featureless" = "median", 
-		  "ksvm" = "svm", "gamboost" = "gamb", "glmnet" = "elastic net")
+		  "ksvm" = "svm", "gamboost" = "gamb", "glmnet" = "elastic net",
+		  "ranger" = "rf")
 
 best.models.print$model = lrn_model_map[best.models.print$selected.learner]
 

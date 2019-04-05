@@ -9,22 +9,22 @@ All experiments are implemented with the R language, the paper is written using 
 
 To reproduce the results, first clone the repository:
 
-`bash
+```bash
 git clone git@github.com:compstat-lmu/paper_2019_iml_measures.git
-`
+```
 
 Assuming you have R installed, you can install the package dependencies with R via:
 
-`r
+```r
 install.packages("devtools")
 devtools::install_dev_deps()
-`
+```
 
 To reproduce the paper, go to the folder `paper/` and run follwing command in  R:
 
-`r
+```r
 knitr::knit2pdf('paper.Rnw')
-`
+```
 
 ## Abstract
 

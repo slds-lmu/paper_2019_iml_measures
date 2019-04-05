@@ -134,7 +134,7 @@ ctrl = setMBOControlTermination(ctrl, iters = max.iters)
 
 
 
-<<mo-run, dependson=c("mo-setup"), results='hide', eval = TRUE>>=
+<<mo-run, dependson=c("mo-setup"), results='hide', eval = FALSE>>=
 # Start MBO
 mbo.iml = mbo(fun = obj.fun, control = ctrl)
 saveRDS(mbo.iml, file = "mbo-results.RDS")
@@ -178,7 +178,6 @@ lrn_model_map = c("xgboost" = "gbt", "rpart" = "CART", "featureless" = "median",
 		  "ranger" = "rf")
 
 best.models.print$model = lrn_model_map[best.models.print$selected.learner]
-
 
 # Shorter description of learner
 best.models.print$descr = apply(best.models.print, 1, function(row) {

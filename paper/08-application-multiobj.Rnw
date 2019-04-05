@@ -131,11 +131,11 @@ ctrl = setMBOControlTermination(ctrl, iters = max.iters)
 <<mo-run, dependson=c("mo-setup"), results='hide', eval = TRUE>>=
 # Start MBO
 mbo.iml = mbo(fun = obj.fun, control = ctrl)
-saveRDS(mbo.iml, file = "mbo-results2.RDS")
+saveRDS(mbo.iml, file = "mbo-results.RDS")
 @
 
 <<mo-results, dependson="mo-run">>=
-mbo.iml = readRDS("mbo-results2.RDS")
+mbo.iml = readRDS("mbo-results.RDS")
 pareto.set = rbindlist(lapply(mbo.iml$pareto.set, data.frame))
 best.models = data.frame(cbind(round(mbo.iml$pareto.front, 2), pareto.set))
 

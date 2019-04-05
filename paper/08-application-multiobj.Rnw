@@ -169,7 +169,7 @@ param_cols = setdiff(colnames(best.models.print), c(measure_names, "selected.lea
 numeric_params = sapply(best.models.print[,param_cols], function(x) is.numeric(x))
 numeric_params = names(numeric_params[which(numeric_params)])
 best.models.print = data.frame(best.models.print)
-best.models.print[,numeric_params] = round(best.models.print[,numeric_params], 2)
+best.models.print[,numeric_params] = round(best.models.print[,numeric_params], 4)
 best.models.print$selected.learner = gsub("regr.", "", best.models.print$selected.learner, fixed = TRUE)
 best.models.print$selected.learner = gsub("xgboost.mod", "xgboost", best.models.print$selected.learner, fixed  = TRUE)
 

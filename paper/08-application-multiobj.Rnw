@@ -200,8 +200,8 @@ rownames(to.print) = NULL
 baseline_performance = measureMAE(task.dat[,task$task.desc$target], response = mean(task.dat[,task$task.desc$target]))
 to.print = rbind(to.print, data.frame("descr" = "median", "MAE" = baseline_performance, "MEC" = 0, "IAS" = 0, "NF"=0))
 colnames(to.print)[1] = "Model (Hyperparameters)"
-xtable::xtable(to.print, caption = tab.cap, label = "tab:pareto")
-
+tab = xtable::xtable(to.print, caption = tab.cap, label = "tab:pareto")
+print(tab, caption.placement = "top")
 
 # Compute scaled version of measures
 best_performance = min(best.models.print$MAE)
@@ -263,18 +263,18 @@ rownames(tab) = c("MAE", "NF", "IAS", "MEC", setdiff(colnames(task.dat), "qualit
 cap = sprintf("A selection of four models from the Pareto optimal set, along with their ALE main effect curves. From left to right, the columns show models with 1) lowest MAE, 2) lowest MAE when $MEC=1$, 3) lowest MAE when $IAS =\\leq 0.1$, and 4) lowest MAE with $NF \\leq 7$. Corresponding hyperparameters can be found in Table~\\ref{tab:pareto}.", length(indices))
 xtab = xtable(tab, caption = cap, label = "tab:spark-table-multiobj")
 align(xtab) <- "l|p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}"
-print.xtable(xtab, sanitize.text.function = as.is)
+print.xtable(xtab, sanitize.text.function = as.is, caption.placement = "top")
 @
 
 % =============================================================================
 % Visualization of Pareto Front
 % =============================================================================
-\subsubsection{Performance-Interpretability Trade-off}
+\subsubsection{Performance-Interpretability Trade-off.}
 The complexity measures allow to study the trade-off between interpretability and performance across different model classes and hyperparameter settings.
 We mapped each measure to the interval $[0,1]$ by scaling each measure $M$ with meaningful upper and lower bounds:
-
+%
 $$M_{scaled}(M) = \frac{M - M_{inf}}{M_{sup} - M_{inf}}$$
-
+%
 For MAE, we set $M_{inf}$ to the lowest observed MAE of all models and $M_{sup} = \frac{1}{n}\sum_{i=1}^n|\yi - median(y)|$.
 For NF, we set $M_{inf}=0$ and $M_{sup}=p$.
 For MEC, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed MEC of all models.

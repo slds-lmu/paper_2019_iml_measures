@@ -21,7 +21,7 @@ For the entire model, MEC is the average $\text{MEC}_j$ over all main effects, w
 Figure~\ref{fig:c-demo} shows an ALE plot (= main effect) and its approximation with two linear segments.
 In the remainder, main effect ALE curves are represented by sparklines, e.g. Figure~\ref{fig:c-demo} by \Sexpr{spark(app$ale)}.
 Vertical bars, if present, e.g. \Sexpr{spark(app)}, show borders between the segments of an approximation.
-
+%
 <<epsilons,  fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
 n = 1000
 grid.size = 50
@@ -45,7 +45,7 @@ fc3 = FunComplexity$new(pred.ksvm, epsilon = eps3, grid.size = grid.size, max_se
 #p2 = plot(fc$approx_models$V3)
 #gridExtra::grid.arrange(p1, p2, nrow = 1)
 @
-
+%
 <<c-demo2, fig.cap = "Two identical ALE curves with the difference that one has a jump at 0.5. The measures complexity is higher for the left curve, since we need more segments to describe the variance of the curve. Both have an R squared above 0.95">>=
 n = 3000
 grid.size = 100
@@ -69,8 +69,8 @@ app2_jump = AleNumApprox$new(ale = fe, max_seg = 5, epsilon = 0.05)
 #p2 = plot(app2) + scale_y_continuous(limits = c(-7,7))
 #grid.arrange(p1, p2, nrow = 1)
 @
-
-
+%
+%
 <<c-demo3, fig.cap = "Three ALE curves that only differ by a scaling factor in  dicrection of the y-axis. All three need the same amount of segments to be approximated with R squared above 0.95">>=
 n = 3000
 grid.size = 100
@@ -100,8 +100,8 @@ app3 = AleNumApprox$new(ale = fe, max_seg = 6, epsilon = 0.05)
 p3 = plot(app3)  + scale_y_continuous(limits = c(-7,7))
 #grid.arrange(p1, p2, p3, nrow  = 1)
 @
-
-
+%
+%
 <<c-demo, fig.cap = "ALE curve (solid line) approximated by two linear segments (dotted line).", out.height ="4cm", out.width="10cm", fig.height=4, fig.width=10, fig.align="center", dependson="c-demo-prepare">>=
 plot(app) + ggtitle("") + scale_y_continuous("ALE")
 @

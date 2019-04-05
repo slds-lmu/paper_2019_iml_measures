@@ -45,7 +45,7 @@ For the examples and experiments we relied on the mlr package \citep{JMLR:v17:15
 % =============================================================================
 % Funding
 % =============================================================================
-\subsubsection{Funding.}
+\subsubsection{Acknowledgements.}
 This work is funded by the Bavarian State Ministry of Science and the Arts in the framework of the Centre Digitisation.Bavaria (ZD.B) and supported by the German Federal Ministry of Education and Research (BMBF) under Grant No. 01IS18036A.
 The authors of this work take full responsibilities for its content.
 

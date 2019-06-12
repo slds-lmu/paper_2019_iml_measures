@@ -31,7 +31,7 @@
 \maketitle
 
 \begin{abstract}
-To obtain interpretable machine learning models, either interpretable models are constructed from the outset -- e.g. shallow decision trees, rule lists, or sparse generalized linear models -- or post-hoc interpretation methods -- e.g. partial dependence or ALE plots -- are employed.
+To obtain interpretable machine learning models, either interpretable models are constructed from the outset -- e.g. shallow decision trees, rule lists, or sparse generalized linear models -- or post-hoc interpretation methods -- e.g. partial dependence plots -- are employed.
 Both approaches have disadvantages.
 While the former can restrict the hypothesis space too conservatively, leading to potentially suboptimal solutions, the latter can produce too verbose or misleading results if the resulting model is too complex, especially w.r.t. feature interactions.
 We propose to make the compromise between predictive power and interpretability explicit by quantifying the complexity / interpretability of machine learning models.

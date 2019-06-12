@@ -73,7 +73,7 @@ The ALE decomposition is unique under an orthogonality-like property further des
 
 The ALE main effect $f_{j,ALE}$ of a feature $x_j, j \in \{1,\ldots,p\}$ for a prediction function $\fh$ is defined as 
 \begin{eqnarray}\label{eqn:ale}
-\falej(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\delta \fh(X_1,\ldots,X_p)}{\delta X_j}\middle|X_j = z_j\right]dz_j-c_j
+\falej(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\partial \fh(X_1,\ldots,X_p)}{\partial X_j}\middle|X_j = z_j\right]dz_j-c_j
 \end{eqnarray}
 Here, $z_{0,j}$ is a lower bound of $X_j$ (usually the minimum observed value of $x_j$) and the expectation $\mathbb{E}$ is computed conditional on the value for $x_j$ and over the marginal distribution of all other features.
 The constant $c_j$ is chosen so that the mean of $f_{j,ALE}(x_j)$ with respect to the marginal distribution of $X_j$ is zero.

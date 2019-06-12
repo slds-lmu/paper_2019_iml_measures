@@ -73,19 +73,16 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
 % Motivation for application
 % =============================================================================
 As one of the main applications of the proposed interpretability measures, we demonstrate model selection for performance and interpretability in a multi-objective optimization approach.
-
 % =============================================================================
 % Wine Data
 % =============================================================================
-\subsubsection{Predicting Wine Quality.}
-We used the wine quality dataset \citep{cortez2009modeling} which contains physical-chemical properties such as alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
-The goal was to predict wine quality on a scale of 0 to 10, assessed by the median of three blind ratings.
-
+%\subsubsection{Predicting Wine Quality.}
+For this example, we predict wine quality (scale from 0 to 10) \citep{cortez2009modeling} from the wines physical-chemical properties such as alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
 % =============================================================================
 % Why like this?
 % =============================================================================
-\subsubsection{Motivation.}
-As \citep{freitas2014comprehensible} emphasizes, it is difficult to know the desired compromise between interpretability and performance before modeling the data and suggests multi-objective optimization.
+%\subsubsection{Motivation.}
+As \citep{freitas2014comprehensible} emphasizes, it is difficult to know the desired compromise between model complexity and performance before modeling the data and suggests multi-objective optimization.
 This stands in contrast to a priori selecting an interpretable model class (e.g. decision rules) and optimizing within this class or exclusively optimizing performance and applying post-hoc interpretations.
 We suggest searching over a wide spectrum of model classes and hyper parameter settings, presenting the set of Pareto optimal models, and allowing the practitioner to choose a suitable compromise between interpretability and performance.
 The three measures of interpretability provide a detailed characterization of machine learning models, which enables making informed decisions (e.g. how much does performance suffer if we use a model without interactions?).
@@ -94,15 +91,14 @@ The three measures of interpretability provide a detailed characterization of ma
 % Objectives and Models
 % =============================================================================
 \subsubsection{Optimization Setup.}
-We used the mlrMBO model-based optimization framework \citep{horn2016multi} to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the cross-validated mean absolute error (MAE).
+We used the mlrMBO model-based optimization framework \citep{horn2016multi} with ParEGO \citep{knowles2006parego} (\Sexpr{max.iters} iterations) to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the cross-validated mean absolute error (MAE) (\Sexpr{n.folds}-fold cross-validated).
 We optimized over the space of following model classes (and hyperparameters): \textbf{CART} (maximum tree-depth and pruning cp), \textbf{s}upport \textbf{v}ector \textbf{m}achine (cost C and sigma), \textbf{elastic net} regression (regularization alpha and penalization lambda), \textbf{g}radient \textbf{b}oosted \textbf{t}rees (maximum depth, number of iterations), gradient \textbf{boost}ed \textbf{g}eneralized \textbf{a}dditive \textbf{m}odel (number of iterations) and \textbf{r}andom \textbf{f}orest (mtry).
+%For all other parameters of the model-based, multi-objective optimization, we relied on the sensible defaults provided by \citep{mlrMBO}.
 
-
-\subsubsection{Model-based Optimization Setup.}
-We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
-Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IAS) were estimated using all data instances.
-We set the number of iterations of ParEGO to \Sexpr{max.iters}.
-For all other parameters of the model-based, multi-objective optimization, we relied on the sensitive defaults provided by \citep{mlrMBO}.
+%\subsubsection{Model-based Optimization Setup.}
+%We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
+%Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IAS) were estimated using all data instances.
+%We set the number of iterations of ParEGO to \Sexpr{max.iters}.
 
 <<mo-setup, dependson=c("params", "mo-learners", "mo-data")>>=
 fn = function(x){

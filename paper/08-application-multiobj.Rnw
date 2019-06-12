@@ -268,23 +268,23 @@ print.xtable(xtab, sanitize.text.function = as.is, caption.placement = "top")
 % =============================================================================
 % Visualization of Pareto Front
 % =============================================================================
-\subsubsection{Performance-Interpretability Trade-off.}
-The complexity measures allow to study the trade-off between interpretability and performance across different model classes and hyperparameter settings.
-We mapped each measure to the interval $[0,1]$ by scaling each measure $M$ with meaningful upper and lower bounds:
+%\subsubsection{Performance-Interpretability Trade-off.}
+%The complexity measures allow to study the trade-off between interpretability and performance across different model classes and hyperparameter settings.
+%We mapped each measure to the interval $[0,1]$ by scaling each measure $M$ with meaningful upper and lower bounds:
 %
-$$M_{scaled}(M) = \frac{M - M_{inf}}{M_{sup} - M_{inf}}$$
+%$$M_{scaled}(M) = \frac{M - M_{inf}}{M_{sup} - M_{inf}}$$
 %
-For MAE, we set $M_{inf}$ to the lowest observed MAE of all models and $M_{sup} = \frac{1}{n}\sum_{i=1}^n|\yi - median(y)|$.
-For NF, we set $M_{inf}=0$ and $M_{sup}=p$.
-For MEC, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed MEC of all models.
-For IAS, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed IAS of all models.
-To combine the three measures in a single dimension, we mapped interpretability ad-hoc as: $Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$.
-This weights all three (scaled) measures equally.
-The maximum interpretability is 3 for the constant model that always predicts the median wine quality.
-The theoretical minimum interpretability is 0 for a model that uses all features and has the highest interaction strength and highest main effect complexity measure among all Pareto optimal models.
-Figure~\ref{fig:perf-interpret-tradeoff} maps each model and hyperparameter configuration from the Pareto set to the performance / interpretability space.
+%For MAE, we set $M_{inf}$ to the lowest observed MAE of all models and $M_{sup} = \frac{1}{n}\sum_{i=1}^n|\yi - median(y)|$.
+%For NF, we set $M_{inf}=0$ and $M_{sup}=p$.
+%For MEC, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed MEC of all models.
+%For IAS, we set $M_{inf}=0$ and $M_{sup}$ to the highest observed IAS of all models.
+%To combine the three measures in a single dimension, we mapped interpretability ad-hoc as: $Interpretability = 3 - (NF_{scaled} + IAS_{scaled} + MEC_{scaled})$.
+%This weights all three (scaled) measures equally.
+%The maximum interpretability is 3 for the constant model that always predicts the median wine quality.
+%The theoretical minimum interpretability is 0 for a model that uses all features and has the highest interaction strength and highest main effect complexity measure among all Pareto optimal models.
+%Figure~\ref{fig:perf-interpret-tradeoff} maps each model and hyperparameter configuration from the Pareto set to the performance / interpretability space.
 
-<<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. interpretability tradeoff for predicting wine quality. Corresponding hyperparameters and measures are shown in Table~\\ref{tab:pareto}.",  fig.height=7, fig.width=12, fig.align="center", out.height="7cm", out.width="12cm">>=
+<<perf-interpret-tradeoff, dependson="mo-results-rename", fig.cap="Performance vs. interpretability tradeoff for predicting wine quality. Corresponding hyperparameters and measures are shown in Table~\\ref{tab:pareto}.",  fig.height=7, fig.width=12, fig.align="center", out.height="7cm", out.width="12cm", eval=FALSE>>=
 plot.dat = best.models.print[c("sMAE", "sNF", "sMEC", "sIAS", "descr.ref")]
 plot.dat = rbind(plot.dat, data.frame(sMAE = 1, sNF = 0, sMEC = 0, sIAS = 0, descr.ref = "median"))
 ggplot(plot.dat,aes(x = 1 - sMAE, y = 3 - (sNF + sMEC + sIAS))) +

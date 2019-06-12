@@ -28,13 +28,13 @@ Furthermore, the complexity measures quantify machine learning models from a fun
 % =============================================================================
 % What's next
 % =============================================================================
-\subsubsection{The bigger picture.}
-Interpretability is a high-dimensional concept (sparsity, additivity, fidelity, human simulability, ...) and we need several approaches to make interpretability measurable.
-In this context we see our work complementary to other approaches \citep{friedler2019assessing,dhurandhar2017tip,plumb2019regularizing}, which together form a basis for a more rigorous definition of interpretability as demanded by \citep{doshi2017towards,Lipton2016}.
-Availability of different interpretability measures also fits in with the notion that interpretability depends on the audience and the context \citep{rudin2018please}.
-Different situations require differently weighted interpretability measures.
-In some situations we might prefer sparseness and a lack of interactions, in others it might be important that we can represent the model as a decision list.
-A multi-dimensional view of interpretability solves the lack of definition of interpretability and supports researcher to make quantified, verifiable and clearer statements about interpretability.
+%\subsubsection{The bigger picture.}
+%Interpretability is a high-dimensional concept (sparsity, additivity, fidelity, human simulability, ...) and we need several approaches to make interpretability measurable.
+%In this context we see our work complementary to other approaches \citep{friedler2019assessing,dhurandhar2017tip,plumb2019regularizing}, which together form a basis for a more rigorous definition of interpretability as demanded by \citep{doshi2017towards,Lipton2016}.
+%Availability of different interpretability measures also fits in with the notion that interpretability depends on the audience and the context \citep{rudin2018please}.
+%Different situations require differently weighted interpretability measures.
+%In some situations we might prefer sparseness and a lack of interactions, in others it might be important that we can represent the model as a decision list.
+%A multi-dimensional view of interpretability solves the lack of definition of interpretability and supports researcher to make quantified, verifiable and clearer statements about interpretability.
 
 % =============================================================================
 % Implementation Note

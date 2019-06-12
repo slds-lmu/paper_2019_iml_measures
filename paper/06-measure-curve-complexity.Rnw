@@ -137,7 +137,7 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 % =============================================================================
 \begin{algorithm}
 \caption{Main Effect Complexity (MEC).}\label{algo:AMEC}
-	\KwInput{Prediction function $\fh$, approximation error $\epsilon$, maximum number of segments $max_{seg}$, data $\D$}
+	\KwInput{Model $\fh$, approximation error $\epsilon$, max. segments $max_{seg}$, data $\D$}
 	Define $R^2(g_j, \falej) := \sum_{i=1}^n (g_j(\xij) - \falej(\xij))^2 / \sum_{i=1}^n (\falej(\xij))^2$\;
 	\For{$j \in \pset$}{
         Estimate $\falej$\;
@@ -151,18 +151,19 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xj\in Z_k}\cdot\left(\beta_{0,k} + \beta_{1,k}\xj\right)$\;
 		Set $K = K+1$ \;
 	}
-	\tcp{Post-processing of slopes}
-	\For{$k \in 1,\ldots,K$}{
-		\tcp{$n_k$ is number of instances in interval $Z_k$}
-		Set $\beta_{0,k} = \frac{1}{n_k}\sum_{i:\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{1,k} = 0$ in $g_j$\;
-		\lIf{$R^2(g_j, \falej) > (1-\epsilon)$}
-		{
-			Use new $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$
-		}
-		\lElse{
-			Keep old $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$	
-			}
-			}
+	Post process slopes
+	%\tcp{Post-processing of slopes}
+	%\For{$k \in 1,\ldots,K$}{
+	%	\tcp{$n_k$ is number of instances in interval $Z_k$}
+	%	Set $\beta_{0,k} = \frac{1}{n_k}\sum_{i:\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{1,k} = 0$ in $g_j$\;
+	%	\lIf{$R^2(g_j, \falej) > (1-\epsilon)$}
+	%	{
+	%		Use new $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$
+	%	}
+	%	\lElse{
+	%		Keep old $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$	
+	%		}
+	%		}
 \tcp{Sum of non-zero coefficients minus first intercept}
 	$MEC_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_{1,k} > 0} - 1$\;
 $V_j = \frac{1}{n}\sum_{i=1}^n (\falej(x^{(i)}))^2$\;

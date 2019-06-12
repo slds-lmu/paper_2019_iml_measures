@@ -6,13 +6,15 @@
 % About sparsity
 % =============================================================================
 We propose an approach based on feature permutation to determine how many features are used by a model.
-We regard features as "used" by the model when changing a feature changes the prediction, which may differ from the numbers of features available during training.
+We regard features as "used" when changing a feature changes the prediction.
+If available, model-specific extraction of number of feature used is preferable.
+The model-agnostic version is useful when e.g. the prediction function is only accessible via API or when the feature transformation pipeline is very complex.
 
 % =============================================================================
 % Why model-agnostic
 % =============================================================================\
-If available, a model-specific method for extracting the number of features used by the model is preferable, e.g. counting the number of non-zero weights in a sparse linear regression model.
-A model-agnostic heuristic is useful when the prediction function is accessible but not the internal structure of the model (e.g. prediction via API call), or when combining preprocessing steps and models complicates programmatic extraction (e.g. training a decision tree on sparse principal components). 
+%f available, a model-specific method for extracting the number of features used by the model is preferable, e.g. counting the number of non-zero weights in a sparse linear regression model.
+% model-agnostic heuristic is useful when the prediction function is accessible but not the internal structure of the model (e.g. prediction via API call), or when combining preprocessing steps and models complicates programmatic extraction (e.g. training a decision tree on sparse principal components). 
 
 % =============================================================================
 % Feature-count heuristic: intuition
@@ -43,17 +45,17 @@ NF = 0\;
 % =============================================================================
 % False negatives
 % =============================================================================
-The rate of false positives is zero, i.e. the probability that the heuristic counts a feature as used, but the model did not use the feature is zero.
-The probability of a false negative, i.e. the heuristic overlooks a feature, depends on the number of samples $M$, the model function $f$ and the data distribution.
-Let $P_{dep}^j$ be the probability that the prediction of a random instance depends on the value of $x_j$.
-For an instance that depends on $x_j$ for its prediction, let $P_{change}^j$ be the probability that a sample from $X_j$ changes the prediction for an instance i.
-Then the probability of overlooking feature j is: $P_{fn}^j=(1 - P_{dep}^j + P_{dep}^j (1 - P_{change}^j))^M$
-With the simplifying assumption that $P_{fn}^j = P_{fn} \forall j \in 1,\ldots,p$, the probability that we miss at least one feature is $1 - (1 - P_{fn})^p$.
-For a linear model without interactions and only numerical features, the false negative rate is 0:
-$P_{dep}^j=1$ and $P_{change}^j = 1$, so that $P_{fn}^j = (1 - 1 + 0)^M = 0$.
-Let us assume a non-linear model where only one percent of instances rely on feature $\xj$ ($P_{dep}^j=0.01$) and these instances have a probability of 0.02 that the feature permutation changes the prediction ($P_{change}^j=0.02$).
-If we set $M=100$, then $P_{fn}^j = (0.99 + 0.01\cdot 0.01)^{100} \approx 0.37$.
-If we increase M to 500, the probability that NF counts too few features drops to $\approx 0.007$.
+%The rate of false positives is zero, i.e. the probability that the heuristic counts a feature as used, but the model did not use the feature is zero.
+%The probability of a false negative, i.e. the heuristic overlooks a feature, depends on the number of samples $M$, the model function $f$ and the data distribution.
+%Let $P_{dep}^j$ be the probability that the prediction of a random instance depends on the value of $x_j$.
+%For an instance that depends on $x_j$ for its prediction, let $P_{change}^j$ be the probability that a sample from $X_j$ changes the prediction for an instance i.
+%Then the probability of overlooking feature j is: $P_{fn}^j=(1 - P_{dep}^j + P_{dep}^j (1 - P_{change}^j))^M$
+%With the simplifying assumption that $P_{fn}^j = P_{fn} \forall j \in 1,\ldots,p$, the probability that we miss at least one feature is $1 - (1 - P_{fn})^p$.
+%For a linear model without interactions and only numerical features, the false negative rate is 0:
+%$P_{dep}^j=1$ and $P_{change}^j = 1$, so that $P_{fn}^j = (1 - 1 + 0)^M = 0$.
+%Let us assume a non-linear model where only one percent of instances rely on feature $\xj$ ($P_{dep}^j=0.01$) and these instances have a probability of 0.02 that the feature permutation changes the prediction ($P_{change}^j=0.02$).
+%If we set $M=100$, then $P_{fn}^j = (0.99 + 0.01\cdot 0.01)^{100} \approx 0.37$.
+%If we increase M to 500, the probability that NF counts too few features drops to $\approx 0.007$.
 
 <<NF-false-negatives>>=
 set.seed(42)
@@ -114,7 +116,7 @@ maes_cart = sprintf("%.3f", aggr[model == "CART", med])
 @
 
 We tested the NF heuristic with the Boston Housing data.
-We trained decision trees (CART) with maximum depths $\in\{1,2,10\}$ leading to \Sexpr{nf_tree(mods[[1]])}, \Sexpr{nf_tree(mods[[2]])} and  \Sexpr{nf_tree(mods[[3]])} features used and L1-regularized linear model with penalty $\lambda\in\{10, 5, 2, 1, 0.1, 0.001\}$ leading to \Sexpr{nf_glmnet(mods[[4]])}, \Sexpr{nf_glmnet(mods[[5]])}, \Sexpr{nf_glmnet(mods[[6]])}, \Sexpr{nf_glmnet(mods[[7]])}, \Sexpr{nf_glmnet(mods[[8]])} and \Sexpr{nf_glmnet(mods[[9]])} features used. 
+We trained decision trees (CART) with maximum depths $\in\{1,2,10\}$ leading to \Sexpr{nf_tree(mods[[1]])}, \Sexpr{nf_tree(mods[[2]])} and  \Sexpr{nf_tree(mods[[3]])} features used and an L1-regularized linear model with penalty $\lambda\in\{10, 5, 2, 1, 0.1, 0.001\}$ leading to \Sexpr{nf_glmnet(mods[[4]])}, \Sexpr{nf_glmnet(mods[[5]])}, \Sexpr{nf_glmnet(mods[[6]])}, \Sexpr{nf_glmnet(mods[[7]])}, \Sexpr{nf_glmnet(mods[[8]])} and \Sexpr{nf_glmnet(mods[[9]])} features used. 
 For each model we estimated NF with sample sizes $M\in\{10, 50, 500\}$ and repeated each estimation \Sexpr{n_repetitions} times.
 For the elastic net models, NF was always equal to the true number of features.\Sexpr{stopifnot(all(aggr[model == "elastic net", med] == 0))}
 For the CART models the mean absolute differences between NF and the true number of features were \Sexpr{maes_cart[1]} ($M=10$), \Sexpr{maes_cart[2]} ($M=50$) and \Sexpr{maes_cart[3]} ($M=500$).

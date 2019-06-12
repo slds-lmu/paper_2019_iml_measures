@@ -34,7 +34,7 @@ Furthermore, the complexity measures quantify machine learning models from a fun
 %Availability of different interpretability measures also fits in with the notion that interpretability depends on the audience and the context \citep{rudin2018please}.
 %Different situations require differently weighted interpretability measures.
 %In some situations we might prefer sparseness and a lack of interactions, in others it might be important that we can represent the model as a decision list.
-%A multi-dimensional view of interpretability solves the lack of definition of interpretability and supports researcher to make quantified, verifiable and clearer statements about interpretability.
+%A multi-dimensional view of interpretability solves the lack of definition of interpretability and supports researchers to make quantified, verifiable and clearer statements about interpretability.
 
 % =============================================================================
 % Implementation Note

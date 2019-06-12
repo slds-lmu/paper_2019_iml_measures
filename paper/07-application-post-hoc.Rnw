@@ -2,16 +2,16 @@
 \section{Improving Post-hoc Interpretation}
 \label{sec:post-hoc}
 
-Minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (AMEC) improves reliability and compactness of post-hoc interpretation methods such as partial dependence plots, ALE plots, feature importance, interaction effects and local surrogate models.
+Minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (MEC) improves reliability and compactness of post-hoc interpretation methods such as partial dependence plots, ALE plots, feature importance, interaction effects and local surrogate models.
 
-\subsubsection{The less features, the less verbose the interpretations.}
+\subsubsection{Fewer features, less verbosity.}
 Our NF measure improves the readability of post-hoc analysis results.
 The computational complexity and output size of most interpretation methods scales with $O(\text{NF})$, like feature effect plots \citep{apley2016visualizing,friedman2001greedy} or feature importance \citep{fisher2018all,casalicchio2018visualizing}.
-As shown in Table~\ref{tab:spark-table-multiobj}, a model with fewer features has a more compact representation and if additionally $IAS=0$, the ALE main effects fully characterize the prediction function.
+As demonstrated in Table~\ref{tab:spark-table-multiobj}, a model with fewer features has a more compact representation and if additionally $IAS=0$, the ALE main effects fully characterize the prediction function.
 Interpretation methods that analyze 2-way feature interactions scale with $O(\text{NF}^2)$.
 A complete functional decomposition \citep{hooker2007generalized,apley2016visualizing} would require to estimate $\sum_{k=1}^{NF} {NF\choose k}$ components which has a computational complexity of $O(2^{NF})$.
 
-\subsubsection{The less interaction, the more reliable feature effects.}
+\subsubsection{Less interaction, more reliable feature effects.}
 Feature effect plots, such as partial dependence plots and ALE plots visualize the marginal relationship between a feature and the prediction.
 The estimated effects are averages across instances.
 The effects can vary greatly for individual instances and even have opposite directions when the model includes feature interactions.
@@ -40,8 +40,8 @@ feature = "x2"
 
 In the following simulation, we trained three models with different capabilities of modeling interactions between features: a linear regression model, a support vector machine (radial basis kernel, C=0.05) and gradient boosted trees.
 We simulated \Sexpr{n} data points with 4 features and a continuous target based on Friedman et. al (1991)\citep{friedman1991multivariate}.
-The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
-The target was simulated as: $y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$, where $ e \sim N(0,125)$.
+%The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
+%The target was simulated as: $y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$, where $ e \sim N(0,125)$.
 Figure \ref{fig:pdp-unreliable} shows an increasing interaction strength depending on the model used.
 This means that we prefer models with less interaction when using feature effect plots.
 

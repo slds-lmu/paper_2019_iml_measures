@@ -130,7 +130,7 @@ print(xtab, add.to.row = addtorow, include.colnames = FALSE, include.rownames = 
 @
 
 Table \ref{tab:exp} shows the performance and complexity measures.
-As desired, the mean effect complexity for (regularized) linear models is always 1 (except whe categorical features with 2+ categories are present as in the bike data), and higher for more flexible methods like boosted models or random forest.
+As desired, the main effect complexity for (regularized) linear models is 1 (except whe categorical features with 2+ categories are present as in the bike data), and higher for more flexible methods like boosted models or random forest.
 Also the interaction strength (IAS) is zero for additive models (boosted GAM, (regularized) linear models).
 Across the datasets we observe that the underlying complexity of the dataset varies, when measured as the range of MEC and IAS across the models.
 For example, the bike dataset seems to be adequately described by only additive effects, since even random forests, which often model strong interactions don't cover interactions.

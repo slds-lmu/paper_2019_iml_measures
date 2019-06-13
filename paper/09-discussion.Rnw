@@ -6,13 +6,10 @@
 % =============================================================================
 % Key findings
 % =============================================================================
-We proposed three model-agnostic measures for machine learning model complexity based on functional decomposition: number of features used, interaction strength and main effect complexity.
-Due to their model-agnostic nature, the measures allow model comparison across different model classes.
+We proposed three measures for machine learning model complexity based on functional decomposition: number of features used, interaction strength and main effect complexity.
+Due to their model-agnostic nature, the measures allow model selection and comparison across different types of models and they can be used as objectives in automated machine learning frameworks.
 We argued that minimizing these measures for a machine learning model improves its post-hoc interpretation.
 We demonstrated that the measures can be optimized directly with multi-objective optimization to make the trade-off between interpretability and performance explicit.
-Our proposed measures can be applied to a wide range of models since they are model-agnostic and work for regression and binary classification (based on classification scores / probabilities).
-We formulated the measures with both continuous and categorical features in mind, but leave an in-depth investigation of categorical features open for future work.
-The measures can be used for model selection, for model benchmarks and as objectives in automated machine learning frameworks.
 
 % =============================================================================
 % Limitations
@@ -20,7 +17,6 @@ The measures can be used for model selection, for model benchmarks and as object
 \textbf{Limitations.}
 The proposed decomposition of the prediction function and definition of the complexity measures will not be appropriate in every situation.
 For example, all higher order effects are combined into a single interaction strength measure that does not distinguish between two-way interactions and higher order interactions.
-Two models can have the same interaction strength, but one has a  single two-way interaction, the other many different higher order interactions.
 However, the framework of accumulated local effect decomposition allows to estimate higher order effects and to construct different interaction measures.
 The main effect complexity measure only considers linear segments but not e.g. seasonal components or other structures.
 Furthermore, the complexity measures quantify machine learning models from a functional point of view and ignore the structure of the model (e.g. whether it can be represented by a tree).

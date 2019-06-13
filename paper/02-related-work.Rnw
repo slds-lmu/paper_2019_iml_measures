@@ -16,7 +16,7 @@ We write $X_j$ to refer to the j-th feature as a random variable.
 % Model-specific or class-specific measures of interpretability
 % =============================================================================
 Many complexity measures are model-specific, i.e. only models of the same class can be compared (e.g. decision trees).
-Model size is often used as a measure for interpretability (e.g. number of decision rules, tree depth, number of non-zero coefficients) \citep{huysmans2012empirical,ruping2006learning,askira1998knowledge,yang2017scalable,schielzeth2010simple}. 
+Model size is often used as a measure for interpretability (e.g. number of decision rules, tree depth, number of non-zero coefficients) \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable,schielzeth2010simple}. 
 Akaikes Information Criterion (AIC) %\citep{akaike1998information}
 and the Bayesian Information Criterion (BIC)
 %\citep{schwarz1978estimating}
@@ -27,7 +27,7 @@ In \citep{zhou2018measuring} the authors propose an interpretability evaluation 
 % Model-agnostic measures
 % =============================================================================
 In \citep{philipp2018measuring} the authors propose model-agnostic measures of model stability.
-In \citep{plumb2019regularizing} the authors propose explanation fidelity and stability of local explanation models \citep{ribeiro2016should}.
+In \citep{plumb2019regularizing} the authors propose explanation fidelity and stability of local explanation models. 
 % =============================================================================
 % Other approaches
 % =============================================================================

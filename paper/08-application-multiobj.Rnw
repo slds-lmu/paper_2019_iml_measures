@@ -69,35 +69,13 @@ ps.regr = makeModelMultiplexerParamSet(lrn.regr,
 
 @
 
-% =============================================================================
-% Motivation for application
-% =============================================================================
-We demonstrate model selection for performance and complexity in a multi-objective optimization approach.
-% =============================================================================
-% Wine Data
-% =============================================================================
-%\subsubsection{Predicting Wine Quality.}
-For this example, we predict wine quality (scale from 0 to 10) \citep{cortez2009modeling} from the wines physical-chemical properties such as alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
-% =============================================================================
-% Why like this?
-% =============================================================================
-%\subsubsection{Motivation.}
-It is difficult to know the desired compromise between model complexity and performance before modeling the data and suggests multi-objective optimization \citep{freitas2014comprehensible}.
-A solution is multi-objective optimization.
-We suggest searching over a wide spectrum of model classes and hyper parameter settings and allow the practitioner to choose a suitable compromise between model complexity and performance.
-The three complexity measures provide a detailed characterization of machine learning models, which enables making informed decisions (e.g. how much does performance suffer if we use a model without interactions?).
-% =============================================================================
-% Objectives and Models
-% =============================================================================
-We used the mlrMBO model-based optimization framework \citep{horn2016multi} with ParEGO \citep{knowles2006parego} (\Sexpr{max.iters} iterations) to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the cross-validated mean absolute error (MAE) (\Sexpr{n.folds}-fold cross-validated).
-We optimized over the space of following model classes (and hyperparameters): \textbf{CART} (maximum tree-depth and pruning cp), \textbf{s}upport \textbf{v}ector \textbf{m}achine (cost C and sigma), \textbf{elastic net} regression (regularization alpha and penalization lambda), \textbf{g}radient \textbf{b}oosted \textbf{t}rees (maximum depth, number of iterations), gradient \textbf{boost}ed \textbf{g}eneralized \textbf{a}dditive \textbf{m}odel (number of iterations) and \textbf{r}andom \textbf{f}orest (mtry).
 %For all other parameters of the model-based, multi-objective optimization, we relied on the sensible defaults provided by \citep{mlrMBO}.
-
+%
 %\subsubsection{Model-based Optimization Setup.}
 %We used the ParEGO algorithm \citep{knowles2006parego} for multi-objective optimization.
 %Within the fitness function, the MAE was estimated using \Sexpr{n.folds}-fold cross-validation and the other measures (NF, MEC, IAS) were estimated using all data instances.
 %We set the number of iterations of ParEGO to \Sexpr{max.iters}.
-
+%
 <<mo-setup, dependson=c("params", "mo-learners", "mo-data")>>=
 fn = function(x){
   # removes unused params
@@ -125,15 +103,15 @@ ctrl = makeMBOControl(n.objectives = 4L, y.name = measure_names)
 ctrl = setMBOControlMultiObj(ctrl, method = "parego")
 ctrl = setMBOControlTermination(ctrl, iters = max.iters)
 @
-
-
-
+%
+%
+%
 <<mo-run, dependson=c("mo-setup"), results='hide', eval = FALSE>>=
 # Start MBO
 mbo.iml = mbo(fun = obj.fun, control = ctrl)
 saveRDS(mbo.iml, file = "mbo-results.RDS")
 @
-
+%
 <<mo-results, dependson="mo-run">>=
 mbo.iml = readRDS("mbo-results.RDS")
 pareto.set = rbindlist(lapply(mbo.iml$pareto.set, data.frame))
@@ -150,8 +128,8 @@ best.models = best.models[!dups,]
 # We are not interested in constant models
 best.models = best.models[best.models$MEC != 0,]
 @
-
-
+%
+%
 <<mo-results-rename, dependson="mo-results", results = "asis", results = "hide">>=
 #Improves the naming of the learners
 best.models.print = best.models
@@ -212,12 +190,34 @@ best.models.print = best.models.print[order(best.models.print$MAE),]
 # Model description with reference to the table
 best.models.print$descr.ref = sprintf("%s [row %i]", best.models.print$model, 1:nrow(best.models.print))
 @
-
-
 % =============================================================================
 % Pareto Front Table
 % =============================================================================
-\textbf{Results.}
+% =============================================================================
+% Motivation for application
+% =============================================================================
+We demonstrate model selection for performance and complexity in a multi-objective optimization approach.
+% =============================================================================
+% Wine Data
+% =============================================================================
+%\subsubsection{Predicting Wine Quality.}
+For this example, we predict wine quality (scale from 0 to 10) \citep{cortez2009modeling} from the wines physical-chemical properties such as alcohol and residual sugar of \Sexpr{nrow(wine)} white wines.
+% =============================================================================
+% Why like this?
+% =============================================================================
+%\subsubsection{Motivation.}
+It is difficult to know the desired compromise between model complexity and performance before modeling the data and suggests multi-objective optimization \citep{freitas2014comprehensible}.
+A solution is multi-objective optimization.
+We suggest searching over a wide spectrum of model classes and hyper parameter settings and allow the practitioner to choose a suitable compromise between model complexity and performance.
+The three complexity measures provide a detailed characterization of machine learning models, which enables making informed decisions (e.g. how much does performance suffer if we use a model without interactions?).
+
+% =============================================================================
+% Objectives and Models
+% =============================================================================
+We used the mlrMBO model-based optimization framework \citep{horn2016multi} with ParEGO \citep{knowles2006parego} (\Sexpr{max.iters} iterations) to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the cross-validated mean absolute error (MAE) (\Sexpr{n.folds}-fold cross-validated).
+We optimized over the space of following model classes (and hyperparameters): \textbf{CART} (maximum tree-depth and pruning cp), \textbf{s}upport \textbf{v}ector \textbf{m}achine (cost C and sigma), \textbf{elastic net} regression (regularization alpha and penalization lambda), \textbf{g}radient \textbf{b}oosted \textbf{t}rees (maximum depth, number of iterations), gradient \textbf{boost}ed \textbf{g}eneralized \textbf{a}dditive \textbf{m}odel (number of iterations) and \textbf{r}andom \textbf{f}orest (mtry).
+
+\textbf{Results}.
 The multi-objective optimization resulted in \Sexpr{nrow(best.models.print)} models.
 The measures had the following ranges: MAE \Sexpr{min(best.models.print$MAE)} - \Sexpr{max(best.models.print$MAE)}, number of features \Sexpr{min(best.models.print$NF)} -  \Sexpr{max(best.models.print$NF)}, mean effect complexity \Sexpr{min(best.models.print$MEC)} - \Sexpr{max(best.models.print$MEC)} and interaction strength \Sexpr{min(best.models.print$IAS)} - \Sexpr{max(best.models.print$IAS)}.
 For a more informative visualization, we propose to visualize the main effects together with the measures in Table~\ref{tab:spark-table-multiobj}.

@@ -151,7 +151,7 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xj\in Z_k}\cdot\left(\beta_{0,k} + \beta_{1,k}\xj\right)$\;
 		Set $K = K+1$ \;
 	}
-	Post process slopes
+	Post process slopes\;
 	%\tcp{Post-processing of slopes}
 	%\For{$k \in 1,\ldots,K$}{
 	%	\tcp{$n_k$ is number of instances in interval $Z_k$}

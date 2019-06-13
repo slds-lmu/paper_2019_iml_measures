@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Optimization of Performance and Interpretability}
+\section{Application: Multi-objective optimization}
 \label{sec:multiobj}
 
 <<params>>=
@@ -82,7 +82,7 @@ For this example, we predict wine quality (scale from 0 to 10) \citep{cortez2009
 % Why like this?
 % =============================================================================
 %\subsubsection{Motivation.}
-It is difficult to know the desired compromise between model complexity and performance before modeling the data and suggests multi-objective optimization \citep{freitas2014comprehensible}
+It is difficult to know the desired compromise between model complexity and performance before modeling the data and suggests multi-objective optimization \citep{freitas2014comprehensible}.
 A solution is multi-objective optimization.
 We suggest searching over a wide spectrum of model classes and hyper parameter settings and allow the practitioner to choose a suitable compromise between model complexity and performance.
 The three complexity measures provide a detailed characterization of machine learning models, which enables making informed decisions (e.g. how much does performance suffer if we use a model without interactions?).
@@ -217,7 +217,7 @@ best.models.print$descr.ref = sprintf("%s [row %i]", best.models.print$model, 1:
 % =============================================================================
 % Pareto Front Table
 % =============================================================================
-\subsubsection{Results.}
+\textbf{Results.}
 The multi-objective optimization resulted in \Sexpr{nrow(best.models.print)} models.
 The measures had the following ranges: MAE \Sexpr{min(best.models.print$MAE)} - \Sexpr{max(best.models.print$MAE)}, number of features \Sexpr{min(best.models.print$NF)} -  \Sexpr{max(best.models.print$NF)}, mean effect complexity \Sexpr{min(best.models.print$MEC)} - \Sexpr{max(best.models.print$MEC)} and interaction strength \Sexpr{min(best.models.print$IAS)} - \Sexpr{max(best.models.print$IAS)}.
 For a more informative visualization, we propose to visualize the main effects together with the measures in Table~\ref{tab:spark-table-multiobj}.

@@ -30,7 +30,7 @@ This supports the conclusion in \citep{askira1998knowledge} that we cannot summa
 % =============================================================================
 % Our solution
 % =============================================================================
-\subsubsection{Contributions.}
+\textbf{Contributions.}
 %We propose three model-agnostic measures of machine learning model interpretability.
 %The measures can be used to compare trained models or to explicitly optimize interpretability during hyperparameter tuning and model selection.
 First we review related work on interpretability measures and the background of functional decomposition, on which our proposed measures are based.

@@ -4,13 +4,13 @@
 
 In this section we introduce the notation, review related work and describe the functional decomposition on which we base the proposed complexity measures.
 
-\subsubsection{Notation:} We consider machine learning prediction functions $\fh:x \mapsto y$, where $x \in \mathbb{R}^p$ is a p-dimensional feature vector and $y \in \mathbb{R}$ is the prediction (e.g. regression output or a classification score).
+\textbf{Notation:} We consider machine learning prediction functions $\fh:x \mapsto y$, where $x \in \mathbb{R}^p$ is a p-dimensional feature vector and $y \in \mathbb{R}$ is the prediction (e.g. regression output or a classification score).
 For the decomposition of this function, we write $f_S:x_S \mapsto y$, $S \subseteq\{1, \ldots, p\}$, $x_S \in \mathbb{R}^{|S|}$ to denote a function that maps a vector with a subset of features to a marginal prediction.
 If subset $S$ contains a single feature, we write $f_j$.
 We refer to the training data for the machine learning model with the tuples $\D = \{(x^{(i)},y^{(i)})\}_{i=1}^n$ and refer to the value of the j-th feature from the i-th instance as $x_j^{(i)}$.
 We write $X_j$ to refer to the j-th feature as a random variable.
 
-\subsubsection{Interpretability Measures:}
+\textbf{Interpretability Measures:}
 \label{sec:other}
 % =============================================================================
 % Model-specific or class-specific measures of interpretability
@@ -32,7 +32,7 @@ Further approaches measure interpretability as the usability of a (interpretable
 In \citep{friedler2019assessing} an interpretability measure based on runtime operation count is proposed and evaluated in user studies.
 To our best knowledge there are no model-agnostic measures that describe the interaction strength, complexity of main effects and number of features.
 
-\subsubsection{Functional Decomposition:}
+\textbf{Functional Decomposition:}
 \label{sec:decomposition}
 % =============================================================================
 % General decomposition

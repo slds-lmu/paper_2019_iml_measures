@@ -14,11 +14,10 @@ Our proposed measures can be applied to a wide range of models since they are mo
 We formulated the measures with both continuous and categorical features in mind, but leave an in-depth investigation of categorical features open for future work.
 The measures can be used for model selection, for model benchmarks and as objectives in automated machine learning frameworks.
 
-
 % =============================================================================
 % Limitations
 % =============================================================================
-\subsubsection{Limitations.}
+\textbf{Limitations.}
 The proposed decomposition of the prediction function and definition of the complexity measures will not be appropriate in every situation.
 For example, all higher order effects are combined into a single interaction strength measure that does not distinguish between two-way interactions and higher order interactions.
 Two models can have the same interaction strength, but one has a  single two-way interaction, the other many different higher order interactions.
@@ -39,13 +38,14 @@ Furthermore, the complexity measures quantify machine learning models from a fun
 % =============================================================================
 % Implementation Note
 % =============================================================================
-\subsubsection{Implementation.}
+\textbf{Implementation.}
 The code for this paper is available at \url{https://github.com/compstat-lmu/paper_2019_iml_measures}.
 For the examples and experiments we relied on the mlr package \citep{JMLR:v17:15-066} in R \citep{r2018}.
 % =============================================================================
 % Funding
 % =============================================================================
-\subsubsection{Acknowledgements.}
+
+\textbf{Acknowledgements.}
 This work is funded by the Bavarian State Ministry of Science and the Arts in the framework of the Centre Digitisation.Bavaria (ZD.B) and supported by the German Federal Ministry of Education and Research (BMBF) under Grant No. 01IS18036A.
 The authors of this work take full responsibilities for its content.
 

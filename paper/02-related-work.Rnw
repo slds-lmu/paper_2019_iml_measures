@@ -46,7 +46,6 @@ Any high-dimensional prediction function can be decomposed into a sum of compone
 % Some useful decompositions
 % =============================================================================
 This decomposition is only unique with additional constraints regarding the components.
-Varying constraints have been proposed that yield a unique decomposition \citep{stone1994use,hooker2007generalized,apley2016visualizing}.
 %For example, you can set all components to 0, and define the last component as the difference between the arbitrary decomposition and the true model function.
 %Stone \citep{stone1994use} suggested orthogonality constraints and approximating the prediction function with weighted integrals.
 %Hooker \citep{hooker2007generalized} defined centering, orthogonality and variance decomposition as desirable properties, resulting in unique and hierarchically orthogonal components under the correlation inner product.

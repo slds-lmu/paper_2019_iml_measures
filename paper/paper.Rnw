@@ -60,6 +60,10 @@ Furthermore, we demonstrate the application of such measures in a multi-objectiv
 <<06-measure-curve-complexity, child = "06-measure-curve-complexity.Rnw">>=
 @
 
+<<experiments, child = "experiments.Rnw">>=
+@
+
+
 <<07-application-post-hoc, child = "07-application-post-hoc.Rnw">>=
 @
 

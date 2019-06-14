@@ -25,9 +25,9 @@ bike$yr = factor(bike$yr)
 
 bike = dplyr::select(bike, -instant, -dteday, -registered, -casual, -atemp)
 bike.task = makeRegrTask(data = bike, target = "cnt")
-abalone <- read.csv("http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data", 
+abalone <- read.csv("http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data",
 		       header = FALSE)
-names(abalone) <- c("sex", "length", "diameter", "height", "weight.whole", "weight.shucked", 
+names(abalone) <- c("sex", "length", "diameter", "height", "weight.whole", "weight.shucked",
 		        "weight.viscera", "weight.shell", "rings")
 abalone.task = makeRegrTask(data = abalone, target = "rings")
 
@@ -71,7 +71,7 @@ fn = function(lrn, tsk){
     MEC = round(imeasure$c_wmean, 1),
     IAS = round(1 - imeasure$r2, 2),
     NF = imeasure$n_features,
-    task = tsk$task.desc[[1]], 
+    task = tsk$task.desc[[1]],
     learner = lrn$short.name)
 }
 @
@@ -139,7 +139,7 @@ In comparison the models that predict the wine dataset the best include a lot of
 cors = cor(results[, c("MSE", "MEC", "IAS", "NF")], method = "spearman")
 xtable(cors, label = "tab:cor", 'Spearman rank correlations between the measures')
 @
-Table \ref{tab:cor} describes the correlations between the performance and complexity measures across the \Sexpr{length(tasks)} datasets and \Sexpr{length(learners)}.
+Table \ref{tab:cor} describes the correlations between the performance and complexity measures across the \Sexpr{length(tasks)} datasets and \Sexpr{length(learners)} models.
 All of the complexity measures are negatively correlated with the performance, most of all the interaction strength.
 Number of features has very little correlation with IAS and MEC.
 The interaction strength and the main effect have a medium correlation.

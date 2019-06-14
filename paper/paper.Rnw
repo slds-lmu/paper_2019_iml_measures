@@ -13,7 +13,7 @@
 
 \begin{document}
 
-\title{Quantifying Model Complexity via Functional Decomposition for Better Post-Hoc Interpretation}
+\title{Quantifying Model Complexity via Functional Decomposition for Better Post-Hoc Interpretability}
 \titlerunning{Quantifying Model Complexity}
 
 \author{
@@ -35,9 +35,9 @@ Post-hoc model-agnostic interpretation methods such as partial dependence plots 
 %Both approaches have disadvantages.
 While these interpretation methods can be applied regardless of model complexity, they can produce misleading and verbose results if the model is too complex, especially w.r.t. feature interactions.
 %We propose to make the compromise between predictive power and interpretability explicit by quantifying the complexity / interpretability of machine learning models.
-To quantify the complexity for arbitrary machine learning models, we propose model-agnostic complexity measures based on functional decomposition:number of features used, interaction strength and main effect complexity.
-We show that post-hoc interpretation of models that minimize the three measures becomes is reliable and compact.
-Furthermore, we demonstrate the application of such measures in a multi-objective optimization approach which minimizes loss and model complexity simultaneously.
+To quantify the complexity of arbitrary machine learning models, we propose model-agnostic complexity measures based on functional decomposition: number of features used, interaction strength and main effect complexity.
+We show that post-hoc interpretation of models that minimize the three measures is more reliable and compact.
+Furthermore, we demonstrate the application of such measures in a multi-objective optimization approach which minimizes loss and complexity simultaneously.
 \keywords{Model Complexity \and Interpretable Machine Learning \and Explainable AI \and Accumulated Local Effects \and Multi-Objective Optimization}
 \end{abstract}
 

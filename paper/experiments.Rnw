@@ -77,7 +77,7 @@ fn = function(lrn, tsk){
 @
 
 
-<<eval = TRUE, cache = FALSE, results = "hide">>=
+<<eval = FALSE, cache = FALSE, results = "hide">>=
 library(parallel)
 lrn.runs = mclapply(learners, function(lrn) {
   print(lrn$short.name)
@@ -91,8 +91,8 @@ results = data.table::rbindlist(lrn.runs)
 saveRDS(results, file = "experiment.RDS")
 @
 
-In the following experiment, we train various different learners machine learning models on different prediction tasks and compute the model complexities.
-The goal is to analyze how the complexity measures behave across different dataset and learners.
+In the following experiment, we train various machine learning models on different prediction tasks and compute the model complexities.
+The goal is to analyze how the complexity measures behave across different datasets and models.
 The dataset are:
 Bike Rentals \citep{bike} (n=\Sexpr{nrow(bike)}; \Sexpr{bike.task$task.desc$n.feat["numerics"]} numerical, \Sexpr{bike.task$task.desc$n.feat["factors"]} categorical features),
 Boston Housing (n=\Sexpr{nrow(bh)}; \Sexpr{bh.task$task.desc$n.feat["numerics"]} numerical, \Sexpr{bh.task$task.desc$n.feat["factors"]} categorical features),
@@ -124,24 +124,24 @@ row1 = paste0("learner", paste0('& ', colnames(tab)[-1], collapse=''), '\\\\')
 addtorow$command = c(row0, row1)
 al = c("|","", "r|", rep(c("r", "r", "r", "r|"), times = 4))
 dig = c(0, 0, c(0, 1, 2, 0), rep(c(1, 1, 2, 0), times = 3))
-xtab = xtable(tab, align = al, caption = "Model performance and complexity for various learners on 4 regression tasks. The learners cover linear models (lm and glmnet), kernel support vector machine (ksvm), random forest (rf), gradient boosted generalized additive model (gamboost), decision tree (CART) and decision tree with depth 2 (CART2).", digits = dig, label = "tab:exp")
+xtab = xtable(tab, align = al, caption = "Model performance and complexity for various learners on 4 regression tasks. The learners cover linear models (lm), cross-validated regularized linear models (cvglmnet), kernel support vector machine (ksvm), random forest (rf), gradient boosted generalized additive model (gamboost), decision tree (CART) and decision tree with depth 2 (CART2).", digits = dig, label = "tab:exp")
 print(xtab, add.to.row = addtorow, include.colnames = FALSE, include.rownames = FALSE, size="\\fontsize{8pt}{9pt}\\selectfont")
 @
 
-Table \ref{tab:exp} shows the performance and complexity measures.
-As desired, the main effect complexity for (regularized) linear models is 1 (except whe categorical features with 2+ categories are present as in the bike data), and higher for more flexible methods like boosted models or random forest.
-Also the interaction strength (IAS) is zero for additive models (boosted GAM, (regularized) linear models).
-Across the datasets we observe that the underlying complexity of the dataset varies, when measured as the range of MEC and IAS across the models.
-For example, the bike dataset seems to be adequately described by only additive effects, since even random forests, which often model strong interactions don't cover interactions.
-In comparison the models that predict the wine dataset the best include a lot of interactions.
+Table \ref{tab:exp} shows performance and complexity of the models.
+As desired, the main effect complexity for linear models is 1 (except when categorical features with 2+ categories are present as in the bike data), and higher for more flexible methods like random forests.
+The interaction strength (IAS) is zero for additive models (boosted GAM, (regularized) linear models).
+Across datasets we observe that the underlying complexity measured as the range of MEC and IAS across the models varies.
+The bike dataset seems to be adequately described by only additive effects, since even random forests, which often model strong interactions show low interaction strength here.
+In contrast, the superconductivity dataset is better explained by models with more interactions.
+For the abalone dataset there are two best models based on MSE: the support vector machine and the random forest.
+We might prefer the SVM, since main effects can be described with single numbers ($MEC = 1$) and interaction strength is low.
 
 <<results = 'asis', cache = FALSE>>=
 cors = cor(results[, c("MSE", "MEC", "IAS", "NF")], method = "spearman")
 xtable(cors, label = "tab:cor", 'Spearman rank correlations between the measures')
 @
-Table \ref{tab:cor} describes the correlations between the performance and complexity measures across the \Sexpr{length(tasks)} datasets and \Sexpr{length(learners)} models.
-All of the complexity measures are negatively correlated with the performance, most of all the interaction strength.
-Number of features has very little correlation with IAS and MEC.
-The interaction strength and the main effect have a medium correlation.
-
+Table \ref{tab:cor} describes correlations between the measures across the \Sexpr{length(tasks)} datasets and \Sexpr{length(learners)} models.
+Interaction strength and main effect complexity have a medium positive correlation, all other correlations are small.
+This analysis merely provides a first hint, more datasets and models are needed to provide reliable results.
 

@@ -52,7 +52,7 @@ learners = list(
 )
 
 MAX_SEG_CAT = 10
-MAX_NUM_CAT = 5
+MAX_SEG_NUM = 5
 EPSILON = 0.05
 GRID.SIZE = 70
 n.folds = 3
@@ -77,8 +77,7 @@ fn = function(lrn, tsk){
 @
 
 
-<<eval = TRUE>>=
-library(parallel)
+<<eval = TRUE, cache = FALSE>>=
 lrn.runs = lapply(learners, function(lrn) {
   print(lrn$short.name)
   task.runs = lapply(tasks, function(tsk) {
@@ -87,7 +86,6 @@ lrn.runs = lapply(learners, function(lrn) {
   })
   data.table::rbindlist(task.runs)
 })
-
 results = data.table::rbindlist(lrn.runs)
 saveRDS(results, file = "experiment.RDS")
 @

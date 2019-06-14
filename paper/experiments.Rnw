@@ -38,8 +38,8 @@ tasks = list(bike.task, bh.task, sc.task, abalone.task)
 
 lrn.ranger = makeLearner("regr.ranger")
 rpart2 = makeLearner("regr.rpart", maxdepth = 2)
+rpart2$short.name = "rpart2"
 rpart.lrn = makeLearner("regr.rpart")
-
 
 learners = list(
   makeLearner("regr.lm"),
@@ -77,7 +77,7 @@ fn = function(lrn, tsk){
 @
 
 
-<<eval = FALSE>>=
+<<eval = TRUE>>=
 library(parallel)
 lrn.runs = lapply(learners, function(lrn) {
   print(lrn$short.name)
@@ -92,7 +92,7 @@ results = data.table::rbindlist(lrn.runs)
 saveRDS(results, file = "experiment.RDS")
 @
 
-In the following experiment, we apply different learners (linear model, decision tree, ...) to different prediction tasks and compute the model complexities.
+In the following experiment, we train various different learners machine learning models on different prediction tasks and compute the model complexities.
 The goal is to analyze how the complexity measures behave across different dataset and learners.
 The dataset are:
 Bike Rentals \citep{bike} (n=\Sexpr{nrow(bike)}; \Sexpr{bike.task$task.desc$n.feat["numerics"]} numerical, \Sexpr{bike.task$task.desc$n.feat["factors"]} categorical features),

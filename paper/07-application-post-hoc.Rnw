@@ -2,10 +2,10 @@
 \section{Improving Post-hoc Interpretation}
 \label{sec:post-hoc}
 
-Minimizing the number of features (NF), the interaction strength (IAS) and the main effect complexity (MEC) improves reliability and compactness of post-hoc interpretation methods such as partial dependence plots, ALE plots, feature importance, interaction effects and local surrogate models.
+Minimizing the number of features (NF), the interaction strength (IAS), and the main effect complexity (MEC) improves reliability and compactness of post-hoc interpretation methods such as partial dependence plots, ALE plots, feature importance, interaction effects and local surrogate models.
 
 \textbf{Fewer features, less verbosity.}
-Our NF measure improves the readability of post-hoc analysis results.
+Minimizing the number of features improves the readability of post-hoc analysis results.
 The computational complexity and output size of most interpretation methods scales with $O(\text{NF})$, like feature effect plots \citep{apley2016visualizing,friedman2001greedy} or feature importance \citep{fisher2018all,casalicchio2018visualizing}.
 As demonstrated in Table~\ref{tab:spark-table-multiobj}, a model with fewer features has a more compact representation and if additionally $IAS=0$, the ALE main effects fully characterize the prediction function.
 Interpretation methods that analyze 2-way feature interactions scale with $O(\text{NF}^2)$.
@@ -37,8 +37,8 @@ y_limit = c(-200, 1200)
 grid.size = 100
 feature = "x2"
 @
-In the following simulation, we trained three models with different capabilities of modeling interactions between features: a linear regression model, a support vector machine (radial basis kernel, C=0.05) and gradient boosted trees.
-We simulated \Sexpr{n} data points with 4 features and a continuous target based on Friedman et. al (1991)\citep{friedman1991multivariate}.
+In the following simulation, we trained three models with different capabilities of modeling interactions between features: a linear regression model, a support vector machine (radial basis kernel, C=0.05), and gradient boosted trees.
+We simulated \Sexpr{n} data points with 4 features and a continuous target based on \citep{friedman1991multivariate}.
 %The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
 %The target was simulated as: $y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$, where $ e \sim N(0,125)$.
 Figure \ref{fig:pdp-unreliable} shows an increasing interaction strength depending on the model used.
@@ -58,8 +58,8 @@ fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_gamboost = 1 - fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
 p_gamboost = plot(fe$effects[[feature]], ylim = y_limit, rug = FALSE) +
-	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_gamboost), size = 10) + 
-  ggtitle("Linear Model") + 
+	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_gamboost), size = 10) +
+  ggtitle("Linear Model") +
   scale_y_continuous("Prediction (centered at x=0)", limits = ylim)
 
 lrn = makeLearner("regr.ksvm", C = 0.05)
@@ -69,8 +69,8 @@ fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_ksvm = 1- fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
 p_ksvm = plot(fe$effects[[feature]], ylim = y_limit, rug = FALSE) +
-	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_ksvm), size = 10) + 
-  ggtitle("SVM") + 
+	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_ksvm), size = 10) +
+  ggtitle("SVM") +
   scale_y_continuous("", limits = ylim)
 
 lrn = makeLearner("regr.xgboost", nrounds = 1000)
@@ -80,8 +80,8 @@ fc = FunComplexity$new(pred, grid.size = grid.size)
 r2_kknn = 1- fc$r2
 fe = FeatureEffects$new(pred, method = "pdp+ice", center.at = 0)
 p_kknn = plot(fe$effects[[feature]], ylim = y_limit, rug = FALSE) +
-	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_kknn), size = 10) + 
-  ggtitle("gbt") + 
+	geom_label(x = 700, y = 1000, label = sprintf("IAS = %.2f", r2_kknn), size = 10) +
+  ggtitle("gbt") +
   scale_y_continuous("", limits = ylim)
 
 mae.gamboost = measureMAE(datx2$y, getPredictionResponse(predict(mod.gamboost, task2)))
@@ -96,7 +96,7 @@ grid.arrange(p_gamboost, p_ksvm, p_kknn, nrow = 1)
 \textbf{The less complex the main effects, the better summarizable.}
 In linear models, a feature effect can be expressed by a single number, the regression coefficient.
 If effects are non-linear the method of choice is visualization  \citep{apley2016visualizing,friedman2001greedy}.
-Summarizing the effects with a single number (e.g. average marginal effects \citep{leeper2017interpreting}) can be misleading, e.g. if the effect has a U-shape, the average effect might be zero.
-As a by-product of MEC, there is a third option: Instead of reporting a single number, the coefficients of the segmented linear model can be reported. 
+Summarizing the effects with a single number (e.g., using average marginal effects \citep{leeper2017interpreting}) can be misleading, e.g., the average effect might be zero for U-shaped feature effects.
+As a by-product of MEC, there is a third option: Instead of reporting a single number, the coefficients of the segmented linear model can be reported.
 Minimizing MEC means preferring models with main effects that can be described with fewer numbers, offering a more compact model description.
 

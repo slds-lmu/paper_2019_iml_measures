@@ -5,8 +5,8 @@
 %==============================================================================
 % Interpretability requirement and trade-off
 %==============================================================================
-Machine learning models are optimized for predictive performance, but it is often required to understand models in order to e.g. debug them, gain trust in the predictions and satisfy regulatory requirements.
-Post-hoc interpretation methods e.g. quantify effects that features have on predictions, compute feature importances or explain individual predictions, see \citep{molnar2019} for an overview.
+Machine learning models are optimized for predictive performance, but it is often required to understand models, e.g., to debug them, gain trust in the predictions, or satisfy regulatory requirements.
+Many post-hoc interpretation methods either quantify effects of features on predictions, compute feature importances, or explain individual predictions, see \citep{molnar2019} for a more comprehensive overview.
 While model-agnostic post-hoc interpretation methods can be applied regardless of model complexity, their reliability and compactness deteriorates when models use a high number of features, have strong feature interactions and complex feature main effects.
 % =============================================================================
 % Need interpretability measures
@@ -20,7 +20,7 @@ Model-agnostic interpretability measures are needed to make the compromise betwe
 \textbf{Contributions.}
 %We propose three model-agnostic measures of machine learning model interpretability.
 %The measures can be used to compare trained models or to explicitly optimize interpretability during hyperparameter tuning and model selection.
-First we review related work on interpretability measures and the background of functional decomposition, on which our proposed measures are based.
+We review related work on interpretability measures and the background of functional decomposition, on which our proposed measures are based.
 For the \textbf{number of features used} by the model, we propose an estimation heuristic.
 Based on the decomposition of the prediction function, we suggest measures for \textbf{interaction strength} and for \textbf{average complexity of the feature main effects}.
 We argue that minimizing these three measures improves the reliability and compactness of post-hoc interpretation methods.

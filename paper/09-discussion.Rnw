@@ -18,8 +18,8 @@ We demonstrated that the measures can be optimized directly with multi-objective
 The proposed decomposition of the prediction function and definition of the complexity measures will not be appropriate in every situation.
 For example, all higher order effects are combined into a single interaction strength measure that does not distinguish between two-way interactions and higher order interactions.
 However, the framework of accumulated local effect decomposition allows to estimate higher order effects and to construct different interaction measures.
-The main effect complexity measure only considers linear segments but not e.g. seasonal components or other structures.
-Furthermore, the complexity measures quantify machine learning models from a functional point of view and ignore the structure of the model (e.g. whether it can be represented by a tree).
+The main effect complexity measure only considers linear segments but not, e.g., seasonal components or other structures.
+Furthermore, the complexity measures quantify machine learning models from a functional point of view and ignore the structure of the model (e.g., whether it can be represented by a tree).
 % =============================================================================
 % What's next
 % =============================================================================

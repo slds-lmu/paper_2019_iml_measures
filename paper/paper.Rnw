@@ -13,7 +13,7 @@
 
 \begin{document}
 
-\title{Quantifying Model Complexity via Functional Decomposition for Better Post-Hoc Interpretation}
+\title{Quantifying Model Complexity via Functional Decomposition for Better Post-Hoc Interpretability}
 \titlerunning{Quantifying Model Complexity}
 
 \author{

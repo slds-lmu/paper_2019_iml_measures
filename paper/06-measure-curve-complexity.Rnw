@@ -111,13 +111,13 @@ plot(app) + ggtitle("") + scale_y_continuous("ALE")
 Through the approximation with linear segments, the degrees of freedom required for describing a main effect curve become measurable.
 We measure the degrees of freedom as the number of non-zero coefficients for intercepts and slopes of the linear segments.
 The approximation allows some error, e.g. an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)} may have $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
-The approximation quality is measured with R-squared, i.e. the proportion of variance of $\falej$ that is explained by the approximation with linear segments.
-An approximation has to reach an R-squared of at least $1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
+The approximation quality is measured with R-squared ($R^2$), i.e. the proportion of variance of $\falej$ that is explained by the approximation with linear segments.
+An approximation has to reach an $R^2 \geq 1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
 We also introduced parameter $max_{seg}$, the maximum number of segments.
-In the case that an approximation cannot reach an R-squared above $1-\epsilon$ with a given $max_{seg}$, $\text{MEC}_j$ is computed with the maximum number of segments.
+In the case that an approximation cannot reach an $R^2 \geq 1-\epsilon$ with a given $max_{seg}$, $\text{MEC}_j$ is computed with the maximum number of segments.
 The selected maximum approximation error $\epsilon$ should be small, but not too small.
-We found $\epsilon$ between $0.01$ and $0.1$ visually meaningful.
-We apply a post-processing step that greedily sets slopes of the linear segments to zero, as long as R-squared $\in\{1-\epsilon,1\}$.
+We found $\epsilon$ between $0.01$ and $0.1$ visually meaningful and used $\epsilon=0.05$ throughout the paper.
+We apply a post-processing step that greedily sets slopes of the linear segments to zero, as long as $R^2\in\{1-\epsilon,1\}$.
 This post-processing step potentially decreases the $\text{MEC}_j$, especially for models with constant segments like decision trees or rule-based models.
 % =============================================================================
 % Measure Sum Up and Fix
@@ -143,7 +143,7 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
         Estimate $\falej$\;
 	\tcp{Approximate ALE with linear model}
 	Fit $g_j(x_j) = \beta_0 + \beta_1 x_j$ predicting $\falej(\xij)$ from $\xij$, $i\in{1,\ldots,n}$\;
-	Set $K=1$
+	Set $K=1$\;
 	\tcp{Increase number of segments until approximation is good enough}
 	\While{$K < max_{seg}$ AND $R^2(g_j,\falej) < (1- \epsilon)$}{
 		\tcp{Optimize intervals $Z_k$ via generalized simulated annealing, estimate $\beta$'s per segment with ordinary least squares}
@@ -151,7 +151,7 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xj\in Z_k}\cdot\left(\beta_{0,k} + \beta_{1,k}\xj\right)$\;
 		Set $K = K+1$ \;
 	}
-	Post process slopes\;
+	Greedily set slopes to zero while $R^2>1-\epsilon$\;
 	%\tcp{Post-processing of slopes}
 	%\For{$k \in 1,\ldots,K$}{
 	%	\tcp{$n_k$ is number of instances in interval $Z_k$}

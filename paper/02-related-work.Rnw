@@ -76,7 +76,7 @@ For the estimation see \citep{apley2016visualizing}.
 % =============================================================================
 % ALE is best
 % =============================================================================
-We base our proposed measures on the ALE decomposition, because ALE are computationally cheap (worst case $O(n)$ per main effect), can be computed sequentially instead of simultaneously, does not require knowledge of the joint distribution and has software implementations \citep{iml,alepackage}.
+We base our proposed measures on the ALE decomposition, because ALE are computationally cheap (worst case $O(n)$ per main effect), can be computed sequentially instead of simultaneously, do not require knowledge of the joint distribution and have software implementations \citep{iml,alepackage}.
 
 % =============================================================================
 % =============================================================================

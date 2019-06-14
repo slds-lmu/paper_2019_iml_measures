@@ -5,7 +5,7 @@
 Minimizing the number of features (NF), the interaction strength (IAS), and the main effect complexity (MEC) improves reliability and compactness of post-hoc interpretation methods such as partial dependence plots, ALE plots, feature importance, interaction effects and local surrogate models.
 
 \textbf{Fewer features, less verbosity.}
-Our NF measure improves the readability of post-hoc analysis results.
+Minimizing the number of features improves the readability of post-hoc analysis results.
 The computational complexity and output size of most interpretation methods scales with $O(\text{NF})$, like feature effect plots \citep{apley2016visualizing,friedman2001greedy} or feature importance \citep{fisher2018all,casalicchio2018visualizing}.
 As demonstrated in Table~\ref{tab:spark-table-multiobj}, a model with fewer features has a more compact representation and if additionally $IAS=0$, the ALE main effects fully characterize the prediction function.
 Interpretation methods that analyze 2-way feature interactions scale with $O(\text{NF}^2)$.

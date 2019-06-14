@@ -77,15 +77,16 @@ fn = function(lrn, tsk){
 @
 
 
-<<eval = TRUE, cache = FALSE>>=
-lrn.runs = lapply(learners, function(lrn) {
+<<eval = TRUE, cache = FALSE, results = "hide">>=
+library(parallel)
+lrn.runs = mclapply(learners, function(lrn) {
   print(lrn$short.name)
   task.runs = lapply(tasks, function(tsk) {
     print(tsk$task.desc[[1]])
     fn(lrn, tsk)
   })
   data.table::rbindlist(task.runs)
-})
+}, mc.cores = 3)
 results = data.table::rbindlist(lrn.runs)
 saveRDS(results, file = "experiment.RDS")
 @

@@ -1,6 +1,6 @@
-# Quantifying Interpretability
+# Quantifying Model Complexity
 
-This repository contains the code, files and data for the paper "Quantifying Interpretability of Arbitrary Machine Learning Models Through Functional Decomposition".
+This repository contains the code, files and data for the paper *Quantifying Model Complexity via Functional Decomposition for Better Post-Hoc Interpretability* 
 
 
 ## Reproduce

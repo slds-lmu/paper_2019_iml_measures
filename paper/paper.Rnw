@@ -37,7 +37,7 @@ While these interpretation methods can be applied regardless of model complexity
 %We propose to make the compromise between predictive power and interpretability explicit by quantifying the complexity / interpretability of machine learning models.
 To quantify the complexity of arbitrary machine learning models, we propose model-agnostic complexity measures based on functional decomposition: number of features used, interaction strength and main effect complexity.
 We show that post-hoc interpretation of models that minimize the three measures is more reliable and compact.
-Furthermore, we demonstrate the application of such measures in a multi-objective optimization approach which minimizes loss and complexity simultaneously.
+Furthermore, we demonstrate the application of these measures in a multi-objective optimization approach which minimizes loss and complexity simultaneously.
 \keywords{Model Complexity \and Interpretable Machine Learning \and Explainable AI \and Accumulated Local Effects \and Multi-Objective Optimization}
 \end{abstract}
 

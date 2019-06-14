@@ -6,24 +6,23 @@
 % Interpretability requirement and trade-off
 %==============================================================================
 Machine learning models are optimized for predictive performance, but it is often required to understand models, e.g., to debug them, gain trust in the predictions, or satisfy regulatory requirements.
-Many post-hoc interpretation methods either quantify effects of features on predictions, compute feature importances, or explain individual predictions, see \citep{molnar2019} for a more comprehensive overview.
-While model-agnostic post-hoc interpretation methods can be applied regardless of model complexity, their reliability and compactness deteriorates when models use a high number of features, have strong feature interactions and complex feature main effects.
+Many post-hoc interpretation methods either quantify effects of features on predictions, compute feature importances, or explain individual predictions, see \citep{molnar2019,guidotti2018survey} for more comprehensive overviews.
+While model-agnostic post-hoc interpretation methods can be applied regardless of model complexity \citep{ribeiro2016model}, their reliability and compactness deteriorates when models use a high number of features, have strong feature interactions and complex feature main effects.
+Therefore, model complexity and interpretability are deeply intertwined and reducing complexity can help to make model interpretation more reliable and compact.
 % =============================================================================
 % Need interpretability measures
 % =============================================================================
-Model-agnostic interpretability measures are needed to make the compromise between model complexity and predictive performance explicit when selecting models \citep{ruping2006learning,bibal2016interpretability}.
-
+Model-agnostic complexity measures are needed to strike a balance between interpretability and predictive performance explicit when selecting models \citep{ruping2006learning,bibal2016interpretability}.
 
 % =============================================================================
 % Our solution
 % =============================================================================
 \textbf{Contributions.}
-%We propose three model-agnostic measures of machine learning model interpretability.
-%The measures can be used to compare trained models or to explicitly optimize interpretability during hyperparameter tuning and model selection.
-We review related work on interpretability measures and the background of functional decomposition, on which our proposed measures are based.
-For the \textbf{number of features used} by the model, we propose an estimation heuristic.
-Based on the decomposition of the prediction function, we suggest measures for \textbf{interaction strength} and for \textbf{average complexity of the feature main effects}.
+We propose and implement three model-agnostic measures of machine learning model complexity which are related to post-hoc interpretability.
+To our best knowledge, these are the first model-agnostic measures that describe the interaction strength, complexity of main effects and number of features.
+%For the \textbf{number of features used} by the model, we propose an estimation heuristic.
+%Based on the decomposition of the prediction function, we suggest measures for \textbf{interaction strength} and for \textbf{average complexity of the feature main effects}.
+We apply the measures to different datasets and machine learning models.
 We argue that minimizing these three measures improves the reliability and compactness of post-hoc interpretation methods.
 Finally, we illustrate the use of our proposed measures in multi-objective optimization.
-
 

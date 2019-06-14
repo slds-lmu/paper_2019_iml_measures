@@ -6,23 +6,23 @@ In this section, we introduce the notation, review related work, and describe th
 
 \textbf{Notation:} We consider machine learning prediction functions $\fh:x \mapsto y$, where $x \in \mathbb{R}^p$ is a $p$-dimensional feature vector and $y \in \mathbb{R}$ is the prediction (e.g., regression output or a classification score).
 For the decomposition of $\fh$, we write $f_S:x_S \mapsto y$, $S \subseteq\{1, \ldots, p\}$, $x_S \in \mathbb{R}^{|S|}$ to denote a function that maps a vector with a subset of features to a marginal prediction.
-If subset $S$ contains a single feature, we write $f_j$.
-We refer to the training data for the machine learning model with the tuples $\D = \{(x^{(i)},y^{(i)})\}_{i=1}^n$ and refer to the value of the $j$-th feature from the $i$-th instance as $x_j^{(i)}$.
+If subset $S$ contains a single feature $j$, we write $f_j$.
+We refer to the training data of the machine learning model with the tuples $\D = \{(x^{(i)},y^{(i)})\}_{i=1}^n$ and refer to the value of the $j$-th feature from the $i$-th instance as $x_j^{(i)}$.
 We write $X_j$ to refer to the $j$-th feature as a random variable.
 
-\textbf{Interpretability Measures:}
+\textbf{Complexity and Interpretability Measures:}
 \label{sec:other}
 % =============================================================================
 % Model-specific or class-specific measures of interpretability
 % =============================================================================
+In the literature, model complexity and (lack of) model interpretability are often equated.
 Many complexity measures are model-specific, i.e., only models of the same class can be compared (e.g., decision trees).
-Model size is often used as a measure for interpretability (e.g., number of decision rules, tree depth, number of non-zero coefficients) \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable,schielzeth2010simple}.
+Model size is often used as a measure for interpretability (e.g., number of decision rules, tree depth, number of non-zero coefficients) \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable,schielzeth2010simple,lakkaraju2017interpretable,furnkranz2012foundations,ustun2016supersparse}.
 Akaikes Information Criterion (AIC) %\citep{akaike1998information}
 and the Bayesian Information Criterion (BIC)
 %\citep{schwarz1978estimating}
 are more widely applicable measures for the trade-off between goodness of fit and degrees of freedom.
 %AIC and BIC fix a certain compromise between interpretability and performance, and consider only one dimension of interpretability, the degrees of freedom.
-In \citep{zhou2018measuring}, the authors propose an interpretability evaluation model that considers the (model-specific) structural complexity of machine learning models.
 % =============================================================================
 % Model-agnostic measures
 % =============================================================================
@@ -31,9 +31,7 @@ In \citep{plumb2019regularizing}, the authors propose explanation fidelity and s
 % =============================================================================
 % Other approaches
 % =============================================================================
-Further approaches measure interpretability as the usability of a model to support a human in a task, which is usually measured in a survey as response time, correctness of the response, and task difficulty \citep{zhou2018measuring,huysmans2011empirical,dhurandhar2017tip}.
-In \citep{friedler2019assessing}, an interpretability measure based on runtime operation count is proposed.
-To our best knowledge there are no model-agnostic measures that describe the interaction strength, complexity of main effects and number of features.
+Further approaches measure interpretability based on experimental studies with humans, e.g., whether humans can predict the outcome of the model \citep{zhou2018measuring,huysmans2011empirical,dhurandhar2017tip,poursabzi2018manipulating,friedler2019assessing}.
 
 \textbf{Functional Decomposition:}
 \label{sec:decomposition}

@@ -4,10 +4,11 @@
 
 Minimizing the number of features (NF), the interaction strength (IAS), and the main effect complexity (MEC) improves reliability and compactness of post-hoc interpretation methods such as partial dependence plots, ALE plots, feature importance, interaction effects and local surrogate models.
 
-\textbf{Fewer features, less verbosity.}
+\textbf{Fewer features, more compact interpretations.}
 Minimizing the number of features improves the readability of post-hoc analysis results.
 The computational complexity and output size of most interpretation methods scales with $O(\text{NF})$, like feature effect plots \citep{apley2016visualizing,friedman2001greedy} or feature importance \citep{fisher2018all,casalicchio2018visualizing}.
-As demonstrated in Table~\ref{tab:spark-table-multiobj}, a model with fewer features has a more compact representation and if additionally $IAS=0$, the ALE main effects fully characterize the prediction function.
+As demonstrated in Table~\ref{tab:spark-table-multiobj}, a model with fewer features has a more compact representation.
+If additionally $IAS=0$, the ALE main effects fully characterize the prediction function.
 Interpretation methods that analyze 2-way feature interactions scale with $O(\text{NF}^2)$.
 A complete functional decomposition would require to estimate $\sum_{k=1}^{NF} {NF\choose k}$ components which has a computational complexity of $O(2^{NF})$.
 
@@ -97,5 +98,5 @@ In linear models, a feature effect can be expressed by a single number, the regr
 If effects are non-linear the method of choice is visualization  \citep{apley2016visualizing,friedman2001greedy}.
 Summarizing the effects with a single number (e.g., using average marginal effects \citep{leeper2017interpreting}) can be misleading, e.g., the average effect might be zero for U-shaped feature effects.
 As a by-product of MEC, there is a third option: Instead of reporting a single number, the coefficients of the segmented linear model can be reported.
-Minimizing MEC means preferring models with main effects that can be described with fewer numbers, offering a more compact model description.
+Minimizing MEC means preferring models with main effects that can be described with fewer coefficients, offering a more compact model description.
 

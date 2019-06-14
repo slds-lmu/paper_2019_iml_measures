@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Analysis of Complexity Measures}
+\section{Application of Complexity Measures}
 \label{sec:experiment}
 
 
@@ -137,11 +137,11 @@ In contrast, the superconductivity dataset is better explained by models with mo
 For the abalone dataset there are two best models based on MSE: the support vector machine and the random forest.
 We might prefer the SVM, since main effects can be described with single numbers ($MEC = 1$) and interaction strength is low.
 
-<<results = 'asis', cache = FALSE>>=
+<<results = 'asis', cache = FALSE, eval = FALSE>>=
 cors = cor(results[, c("MSE", "MEC", "IAS", "NF")], method = "spearman")
 xtable(cors, label = "tab:cor", 'Spearman rank correlations between the measures')
 @
-Table \ref{tab:cor} describes correlations between the measures across the \Sexpr{length(tasks)} datasets and \Sexpr{length(learners)} models.
-Interaction strength and main effect complexity have a medium positive correlation, all other correlations are small.
-This analysis merely provides a first hint, more datasets and models are needed to provide reliable results.
+%Table \ref{tab:cor} describes correlations between the measures across the \Sexpr{length(tasks)} datasets and \Sexpr{length(learners)} models.
+%Interaction strength and main effect complexity have a medium positive correlation, all other correlations are small.
+%This analysis merely provides a first hint, more datasets and models are needed to provide reliable results.
 

@@ -7,7 +7,7 @@
 % =============================================================================
 We propose an approach based on feature permutation to determine how many features are used by a model.
 We regard features as "used" when changing a feature changes the prediction.
-If available, model-specific extraction of the number of used features is preferable.
+If available, the model-specific number of features is preferable.
 The model-agnostic version is useful when the prediction function is only accessible via API or when the feature transformation pipeline is very complex.
 
 % =============================================================================

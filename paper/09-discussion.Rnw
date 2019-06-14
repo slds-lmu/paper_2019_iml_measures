@@ -9,7 +9,7 @@
 We proposed three measures for machine learning model complexity based on functional decomposition: number of features used, interaction strength and main effect complexity.
 Due to their model-agnostic nature, the measures allow model selection and comparison across different types of models and they can be used as objectives in automated machine learning frameworks.
 We argued that minimizing these measures for a machine learning model improves its post-hoc interpretation.
-We demonstrated that the measures can be optimized directly with multi-objective optimization to make the trade-off between interpretability and performance explicit.
+We demonstrated that the measures can be optimized directly with multi-objective optimization to make the trade-off between performance and post-hoc interpretability explicit.
 
 % =============================================================================
 % Limitations

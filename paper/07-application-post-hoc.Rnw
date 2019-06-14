@@ -9,10 +9,10 @@ Minimizing the number of features improves the readability of post-hoc analysis 
 The computational complexity and output size of most interpretation methods scales with $O(\text{NF})$, like feature effect plots \citep{apley2016visualizing,friedman2001greedy} or feature importance \citep{fisher2018all,casalicchio2018visualizing}.
 As demonstrated in Table~\ref{tab:spark-table-multiobj}, a model with fewer features has a more compact representation and if additionally $IAS=0$, the ALE main effects fully characterize the prediction function.
 Interpretation methods that analyze 2-way feature interactions scale with $O(\text{NF}^2)$.
-A complete functional decomposition \citep{hooker2007generalized,apley2016visualizing} would require to estimate $\sum_{k=1}^{NF} {NF\choose k}$ components which has a computational complexity of $O(2^{NF})$.
+A complete functional decomposition would require to estimate $\sum_{k=1}^{NF} {NF\choose k}$ components which has a computational complexity of $O(2^{NF})$.
 
 \textbf{Less interaction, more reliable feature effects.}
-Feature effect plots, such as partial dependence plots and ALE plots visualize the marginal relationship between a feature and the prediction.
+Feature effect plots such as partial dependence plots and ALE plots visualize the marginal relationship between a feature and the prediction.
 The estimated effects are averages across instances.
 The effects can vary greatly for individual instances and even have opposite directions when the model includes feature interactions.
 <<prepare-pdp-unreliable, out.height="3cm", cache=FALSE>>=
@@ -42,8 +42,7 @@ We simulated \Sexpr{n} data points with 4 features and a continuous target based
 %The features are uniformly distributed in the following intervals: $0\leq x_1 \leq 100$, $ 40\pi \leq x_2 \leq 560 \pi$, $ 0 \leq x_3 \leq 1$, $ 1 \leq x_4 \leq 11$.
 %The target was simulated as: $y = (x_1^2 + (x_2 \cdot x_3 - (1/(x_2 \cdot x_4)))^2)^{0.5} + e$, where $ e \sim N(0,125)$.
 Figure \ref{fig:pdp-unreliable} shows an increasing interaction strength depending on the model used.
-This means that we prefer models with less interaction when using feature effect plots.
-
+More interaction means that the feature effect curves become a less reliable summary of the model behavior.
 
 <<pdp-unreliable, fig.cap="The higher the interaction strength in a model (IAS increases from left to right), the less representative the Partial Dependence Plot (light thick line) becomes for individual instances represented by their Individual Conditional Expectation curves (dark thin lines).", fig.height=4.5, fig.width=12, fig.align="center", out.height="4.5cm", out.width="12cm", dev = "CairoJPEG", dpi = 300>>=
 lrn = makeLearner("regr.lm")

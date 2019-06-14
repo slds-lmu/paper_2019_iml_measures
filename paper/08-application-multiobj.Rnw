@@ -1,5 +1,5 @@
 \Sexpr{set_parent('paper.Rnw')}
-\section{Application: Multi-objective optimization}
+\section{Application: Multi-objective Optimization}
 \label{sec:multiobj}
 
 <<params>>=
@@ -206,10 +206,9 @@ For this example, we predict wine quality (scale from 0 to 10) \citep{cortez2009
 % Why like this?
 % =============================================================================
 %\subsubsection{Motivation.}
-It is difficult to know the desired compromise between model complexity and performance before modeling the data and suggests multi-objective optimization \citep{freitas2014comprehensible}.
-A solution is multi-objective optimization.
-We suggest searching over a wide spectrum of model classes and hyper parameter settings and allow the practitioner to choose a suitable compromise between model complexity and performance.
-The three complexity measures provide a detailed characterization of machine learning models, which enables making informed decisions (e.g., how much does performance suffer if we use a model without interactions?).
+It is difficult to know the desired compromise between model complexity and performance before modeling the data.
+A solution is multi-objective optimization \citep{freitas2014comprehensible}.
+We suggest searching over a wide spectrum of model classes and hyperparameter settings, which allows to select a suitable compromise between model complexity and performance.
 
 % =============================================================================
 % Objectives and Models

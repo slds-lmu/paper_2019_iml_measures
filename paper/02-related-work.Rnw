@@ -2,50 +2,43 @@
 \section{Related Work and Background}
 \label{sec:related}
 
-In this section we introduce the notation, review related work and describe the functional decomposition on which we base the proposed complexity measures.
+In this section, we introduce the notation, review related work, and describe the functional decomposition on which we base the proposed complexity measures.
 
-\subsubsection{Notation:} We consider machine learning prediction functions $\fh:x \mapsto y$, where $x \in \mathbb{R}^p$ is a p-dimensional feature vector and $y \in \mathbb{R}$ is the prediction (e.g. regression output or a classification score).
-For the decomposition of this function, we write $f_S:x_S \mapsto y$, $S \subseteq\{1, \ldots, p\}$, $x_S \in \mathbb{R}^{|S|}$ to denote a function that maps a vector with a subset of features to a marginal prediction.
-If subset $S$ contains a single feature, we write $f_j$.
-We refer to the training data for the machine learning model with the tuples $\D = \{(x^{(i)},y^{(i)})\}_{i=1}^n$ and refer to the value of the j-th feature from the i-th instance as $x_j^{(i)}$.
-We write $X_j$ to refer to the j-th feature as a random variable.
+\textbf{Notation:} We consider machine learning prediction functions $\fh:x \mapsto y$, where $x \in \mathbb{R}^p$ is a $p$-dimensional feature vector and $y \in \mathbb{R}$ is the prediction (e.g., regression output or a classification score).
+For the decomposition of $\fh$, we write $f_S:x_S \mapsto y$, $S \subseteq\{1, \ldots, p\}$, $x_S \in \mathbb{R}^{|S|}$ to denote a function that maps a vector with a subset of features to a marginal prediction.
+If subset $S$ contains a single feature $j$, we write $f_j$.
+We refer to the training data of the machine learning model with the tuples $\D = \{(x^{(i)},y^{(i)})\}_{i=1}^n$ and refer to the value of the $j$-th feature from the $i$-th instance as $x_j^{(i)}$.
+We write $X_j$ to refer to the $j$-th feature as a random variable.
 
-\subsection{Interpretability Measures}
+\textbf{Complexity and Interpretability Measures:}
 \label{sec:other}
-
-This section provides a non-exhaustive overview of approaches for measuring and optimizing interpretability.
 % =============================================================================
 % Model-specific or class-specific measures of interpretability
 % =============================================================================
-Many measures of interpretability are model-specific, i.e. only models of the same class can be compared (e.g. decision trees).
-Model size is often used as a measure for interpretability (e.g. number of decision rules, tree depth, ...) \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable}. 
-Akaikes Information Criterion (AIC) \citep{akaike1998information} and the Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are more widely applicable measures for the trade-off between goodness of fit and degrees of freedom.
-AIC and BIC fix a certain compromise between interpretability and performance, and consider only one dimension of interpretability, the degrees of freedom.
-In \citep{zhou2018measuring} the authors propose an interpretability evaluation model that considers the (model-specific) structural complexity of machine learning models.
-In additive models (e.g. linear regression), the number of features is often used as a measure of interpretability \citep{schielzeth2010simple}.
+In the literature, model complexity and (lack of) model interpretability are often equated.
+Many complexity measures are model-specific, i.e., only models of the same class can be compared (e.g., decision trees).
+Model size is often used as a measure for interpretability (e.g., number of decision rules, tree depth, number of non-zero coefficients) \citep{huysmans2011empirical,ruping2006learning,askira1998knowledge,yang2017scalable,schielzeth2010simple,lakkaraju2017interpretable,furnkranz2012foundations,ustun2016supersparse}.
+Akaikes Information Criterion (AIC) %\citep{akaike1998information}
+and the Bayesian Information Criterion (BIC)
+%\citep{schwarz1978estimating}
+are more widely applicable measures for the trade-off between goodness of fit and degrees of freedom.
+%AIC and BIC fix a certain compromise between interpretability and performance, and consider only one dimension of interpretability, the degrees of freedom.
 % =============================================================================
 % Model-agnostic measures
 % =============================================================================
-In \citep{philipp2018measuring} the authors propose model-agnostic measures of model stability, based on the semantic similarity of predictions when the model is re-trained on different subsamples of the training data.
-Similar to our approach, the measures are based on the predictions, not on the structure of the model.
-
-In \citep{plumb2019regularizing} the authors propose explanation fidelity and explanation stability metrics of local explanation models \citep{ribeiro2016should}.
-They propose to incorporate the metrics as a regularizer into the loss function of a neural network to simultaneously optimize for predictive performance and higher quality of local explanations.
-Their local explainability metrics complement ours, since we consider global model properties.
-
+In \citep{philipp2018measuring}, the authors propose model-agnostic measures of model stability.
+In \citep{plumb2019regularizing}, the authors propose explanation fidelity and stability of local explanation models.
 % =============================================================================
 % Other approaches
 % =============================================================================
-Further approaches measure interpretability as the usability of a (interpretable) model to support a human in a task, usually measured in a survey as response time, correctness of the response and task difficulty \citep{zhou2018measuring,huysmans2011empirical,dhurandhar2017tip}.
-In \citep{friedler2019assessing} an interpretability measure based on runtime operation count is proposed and evaluated in user studies.
+Further approaches measure interpretability based on experimental studies with humans, e.g., whether humans can predict the outcome of the model \citep{zhou2018measuring,huysmans2011empirical,dhurandhar2017tip,poursabzi2018manipulating,friedler2019assessing}.
 
-\subsection{Functional Decomposition}
+\textbf{Functional Decomposition:}
 \label{sec:decomposition}
-
 % =============================================================================
 % General decomposition
 % =============================================================================
-Any high-dimensional prediction function can be decomposed into a sum of components with increasing dimensionality: an intercept, first-order feature effects, second-order effects and so on up to the p-th order effect:
+Any high-dimensional prediction function can be decomposed into a sum of components with increasing dimensionality:
 
 \begin{eqnarray}\label{eqn:decomp} f(x)  = &\overbrace{f_0}^\text{Intercept} + \overbrace{\sum_{j=1}^p f_j(x_j)}^\text{1st order effects} + \overbrace{\sum_{j<k}^p f_{jk}(x_j, x_k)}^\text{2nd order effects} + \ldots + \overbrace{f_{1,\ldots,p}(x_1, \ldots, x_p)}^\text{p-th order effect}
 %\\ =  & \sum_{S \subseteq \{1,\ldots,p\}} f_S(x_S)
@@ -55,14 +48,13 @@ Any high-dimensional prediction function can be decomposed into a sum of compone
 % =============================================================================
 This decomposition is only unique with additional constraints regarding the components.
 %For example, you can set all components to 0, and define the last component as the difference between the arbitrary decomposition and the true model function.
-Stone \citep{stone1994use} suggested orthogonality constraints and approximating the prediction function with weighted integrals.
-Hooker \citep{hooker2007generalized} defined centering, orthogonality and variance decomposition as desirable properties, resulting in unique and hierarchically orthogonal components under the correlation inner product.
-
+%Stone \citep{stone1994use} suggested orthogonality constraints and approximating the prediction function with weighted integrals.
+%Hooker \citep{hooker2007generalized} defined centering, orthogonality and variance decomposition as desirable properties, resulting in unique and hierarchically orthogonal components under the correlation inner product.
 % =============================================================================
 % ALE decompositions
 % =============================================================================
-Accumulated Local Effects (ALE) were proposed in \cite{apley2016visualizing} as a tool for visualizing feature effects (e.g. Figure~\ref{fig:c-demo}) and as an alternative unique decomposition of the prediction function with components $f_S = f_{S,ALE}$.
-The ALE decomposition is unique under an orthogonality-like property further described in \citep{apley2016visualizing}.
+Accumulated Local Effects (ALE) were proposed in \cite{apley2016visualizing} as a tool for visualizing feature effects (e.g., Figure~\ref{fig:c-demo}) and as unique decomposition of the prediction function with components $f_S = f_{S,ALE}$.
+The ALE decomposition is unique under an orthogonality-like property described in \citep{apley2016visualizing}.
 
 %\begin{eqnarray}
 %f(x)  = & f_0 + \sum_{j=1}^p \falej(x_j)+ \sum_{j\neq k}^p f_{ALE,jk}(x_j, x_k) + \ldots + f_{ALE,1,\ldots,p}(x_1, \ldots, x_p)
@@ -71,19 +63,17 @@ The ALE decomposition is unique under an orthogonality-like property further des
 % ALE definition
 % =============================================================================
 
-The ALE main effect $f_{j,ALE}$ of a feature $x_j, j \in \{1,\ldots,p\}$ for a prediction function $\fh$ is defined as 
+The ALE main effect $f_{j,ALE}$ of a feature $x_j, j \in \{1,\ldots,p\}$ for a prediction function $\fh$ is defined as
 \begin{eqnarray}\label{eqn:ale}
-\falej(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\delta \fh(X_1,\ldots,X_p)}{\delta X_j}\middle|X_j = z_j\right]dz_j-c_j
+\falej(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\partial \fh(X_1,\ldots,X_p)}{\partial X_j}\middle|X_j = z_j\right]dz_j-c_j
 \end{eqnarray}
-Here, $z_{0,j}$ is a lower bound of $X_j$ (usually the minimum observed value of $x_j$) and the expectation $\mathbb{E}$ is computed conditional on the value for $x_j$ and over the marginal distribution of all other features.
+Here, $z_{0,j}$ is a lower bound of $X_j$ (usually the minimum of $x_j$) and the expectation $\mathbb{E}$ is computed conditional on the value for $x_j$ and over the marginal distribution of all other features.
 The constant $c_j$ is chosen so that the mean of $f_{j,ALE}(x_j)$ with respect to the marginal distribution of $X_j$ is zero.
-The ALE main effects are defined as the gradients of $\fh$  with respect to the features, but are estimated with finite differences, i.e. access to the gradients of the model is not required.
-For the estimation we refer to \citep{apley2016visualizing}.
+ALE main effects are estimated with finite differences, i.e., access to the gradient of a prediction function is not required (see \citep{apley2016visualizing}).
 % =============================================================================
 % ALE is best
 % =============================================================================
-We base our proposed measures on the ALE decomposition, because ALE are computationally cheap (worst case $O(n)$ for a feature main effect), the effects can be computed sequentially instead of simultaneously as in \citep{hooker2007generalized} and, most importantly, ALEs do not require knowledge of the joint data distribution.
-Additionally, ALE have software implementations \citep{iml,alepackage}.
+We base our proposed measures on the ALE decomposition, because ALE are computationally cheap (worst case $O(n)$ per main effect), they can be computed sequentially instead of simultaneously, they do not require knowledge of the joint distribution, and several software implementations exist \citep{iml,alepackage}.
 
 % =============================================================================
 % =============================================================================

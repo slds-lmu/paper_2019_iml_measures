@@ -1,0 +1,147 @@
+\Sexpr{set_parent('paper.Rnw')}
+\section{Application of Complexity Measures}
+\label{sec:experiment}
+
+
+<<>>=
+set.seed(123)
+superconductivity= read.csv("../data/superconductor.csv")
+superconductivity = superconductivity[sample(1:nrow(superconductivity), 2000), ]
+sc.task = makeRegrTask(data = superconductivity, target = "critical_temp")
+bike = read.csv('../data/bike-sharing-daily.csv', stringsAsFactors = FALSE)
+# See http://archive.ics.uci.edu/ml/datasets/Bike+Sharing+Dataset
+
+bike$weekday = factor(bike$weekday, levels=0:6, labels = c('SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'))
+bike$holiday = factor(bike$holiday, levels = c(0,1), labels = c('NO HOLIDAY', 'HOLIDAY'))
+bike$workingday = factor(bike$workingday, levels = c(0,1), labels = c('NO WORKING DAY', 'WORKING DAY'))
+# otherwise its rank defiicient
+bike$workingday = NULL
+bike$season = factor(bike$season, levels = 1:4, labels = c('SPRING', 'SUMMER', 'FALL', 'WINTER'))
+bike$weathersit = factor(bike$weathersit, levels = 1:3, labels = c('GOOD', 'MISTY', 'RAIN/SNOW/STORM'))
+bike$mnth = factor(bike$mnth, levels = 1:12, labels = c('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OKT', 'NOV', 'DEZ'))
+bike$yr[bike$yr == 0] = 2011
+bike$yr[bike$yr == 1] = 2012
+bike$yr = factor(bike$yr)
+
+bike = dplyr::select(bike, -instant, -dteday, -registered, -casual, -atemp)
+bike.task = makeRegrTask(data = bike, target = "cnt")
+abalone <- read.csv("http://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data",
+		       header = FALSE)
+names(abalone) <- c("sex", "length", "diameter", "height", "weight.whole", "weight.shucked",
+		        "weight.viscera", "weight.shell", "rings")
+abalone.task = makeRegrTask(data = abalone, target = "rings")
+
+bh.task$task.desc[[1]] = "Boston Housing"
+bh = getTaskData(bh.task)
+tasks = list(bike.task, bh.task, sc.task, abalone.task)
+
+
+lrn.ranger = makeLearner("regr.ranger")
+rpart2 = makeLearner("regr.rpart", maxdepth = 2)
+rpart2$short.name = "rpart2"
+rpart.lrn = makeLearner("regr.rpart")
+
+learners = list(
+  makeLearner("regr.lm"),
+  makeLearner("regr.ksvm"),
+  makeLearner("regr.cvglmnet"),
+  lrn.ranger,
+  makeLearner("regr.gamboost"),
+  rpart2,
+  rpart.lrn
+)
+
+MAX_SEG_CAT = 10
+MAX_SEG_NUM = 5
+EPSILON = 0.05
+GRID.SIZE = 70
+n.folds = 3
+resampDescr = makeResampleDesc(method = "CV", iters = n.folds)
+
+fn = function(lrn, tsk){
+  rin = makeResampleInstance(resampDescr, tsk)
+  loss = resample(learner = lrn, show.info = FALSE,
+    task = tsk , resampling = rin ,
+    measures = list(mlr::mse))$aggr
+  mod = train(lrn, tsk)
+  pred = Predictor$new(mod, getTaskData(tsk), y = tsk$task.desc$target, class = 1)
+  imeasure = FunComplexity$new(pred, max_seg_cat = MAX_SEG_CAT, max_seg_num = MAX_SEG_NUM, epsilon = EPSILON, grid.size = GRID.SIZE)
+  data.frame(
+    MSE = round(loss, 3),
+    MEC = round(imeasure$c_wmean, 1),
+    IAS = round(1 - imeasure$r2, 2),
+    NF = imeasure$n_features,
+    task = tsk$task.desc[[1]],
+    learner = lrn$short.name)
+}
+@
+
+
+<<eval = FALSE, cache = FALSE, results = "hide">>=
+library(parallel)
+lrn.runs = mclapply(learners, function(lrn) {
+  print(lrn$short.name)
+  task.runs = lapply(tasks, function(tsk) {
+    print(tsk$task.desc[[1]])
+    fn(lrn, tsk)
+  })
+  data.table::rbindlist(task.runs)
+}, mc.cores = 3)
+results = data.table::rbindlist(lrn.runs)
+saveRDS(results, file = "experiment.RDS")
+@
+
+In the following experiment, we train various machine learning models on different prediction tasks and compute the model complexities.
+The goal is to analyze how the complexity measures behave across different datasets and models.
+The dataset are:
+Bike Rentals \citep{bike} (n=\Sexpr{nrow(bike)}; \Sexpr{bike.task$task.desc$n.feat["numerics"]} numerical, \Sexpr{bike.task$task.desc$n.feat["factors"]} categorical features),
+Boston Housing (n=\Sexpr{nrow(bh)}; \Sexpr{bh.task$task.desc$n.feat["numerics"]} numerical, \Sexpr{bh.task$task.desc$n.feat["factors"]} categorical features),
+(downsampled) Superconductivity \citep{hamidieh2018data} (n=\Sexpr{nrow(superconductivity)}; \Sexpr{sc.task$task.desc$n.feat["numerics"]} numerical, \Sexpr{sc.task$task.desc$n.feat["factors"]} categorical features) and
+Abalone \citep{uci} (n=\Sexpr{nrow(abalone)}; \Sexpr{abalone.task$task.desc$n.feat["numerics"]} numerical, \Sexpr{abalone.task$task.desc$n.feat["factors"]} categorical features).
+
+<<tab-res, results='asis', cache = FALSE>>=
+results = readRDS("experiment.RDS")
+results.m = melt(results, measure.vars = c("MSE", "MEC", "IAS", "NF"))
+
+results.m$learner = as.character(results.m$learner)
+
+results.m$learner[results.m$learner == 'rpart'] = 'CART'
+results.m$learner[results.m$learner == 'rpart2'] = 'CART2'
+results.m$learner[results.m$learner == 'ranger'] = 'RF'
+
+tsks = unique(results.m$task)
+t1 = data.table::dcast(results.m[results.m$task == tsks[1], ], learner ~ variable, value.var = "value")
+t2 = data.table::dcast(results.m[results.m$task == tsks[2], ], learner ~ variable, value.var = "value")
+t3 = data.table::dcast(results.m[results.m$task == tsks[3], ], learner ~ variable, value.var = "value")
+t4 = data.table::dcast(results.m[results.m$task == tsks[4], ], learner ~ variable, value.var = "value")
+#t5 = data.table::dcast(results.m[results.m$task == tsks[5], ], learner ~ variable, value.var = "value")
+#knitr::kable(list(t1, t2, t3, t4), format = "latex", caption = 1:4)
+addtorow <- list()
+addtorow$pos <- list(0,0)
+row0 = paste0(paste0('& \\multicolumn{4}{c|}{', tsks, '}', collapse=''), '\\\\')
+tab = cbind(t1, t2[,-1], t3[,-1], t4[,-1])
+row1 = paste0("learner", paste0('& ', colnames(tab)[-1], collapse=''), '\\\\')
+addtorow$command = c(row0, row1)
+al = c("|","", "r|", rep(c("r", "r", "r", "r|"), times = 4))
+dig = c(0, 0, c(0, 1, 2, 0), rep(c(1, 1, 2, 0), times = 3))
+xtab = xtable(tab, align = al, caption = "Model performance and complexity for various learners on 4 regression tasks. The learners cover linear models (lm), cross-validated regularized linear models (cvglmnet), kernel support vector machine (ksvm), random forest (rf), gradient boosted generalized additive model (gamboost), decision tree (CART) and decision tree with depth 2 (CART2).", digits = dig, label = "tab:exp")
+print(xtab, add.to.row = addtorow, include.colnames = FALSE, include.rownames = FALSE, size="\\fontsize{8pt}{9pt}\\selectfont")
+@
+
+Table \ref{tab:exp} shows performance and complexity of the models.
+As desired, the main effect complexity for linear models is 1 (except when categorical features with 2+ categories are present as in the bike data), and higher for more flexible methods like random forests.
+The interaction strength (IAS) is zero for additive models (boosted GAM, (regularized) linear models).
+Across datasets we observe that the underlying complexity measured as the range of MEC and IAS across the models varies.
+The bike dataset seems to be adequately described by only additive effects, since even random forests, which often model strong interactions show low interaction strength here.
+In contrast, the superconductivity dataset is better explained by models with more interactions.
+For the abalone dataset there are two best models based on MSE: the support vector machine and the random forest.
+We might prefer the SVM, since main effects can be described with single numbers ($MEC = 1$) and interaction strength is low.
+
+<<results = 'asis', cache = FALSE, eval = FALSE>>=
+cors = cor(results[, c("MSE", "MEC", "IAS", "NF")], method = "spearman")
+xtable(cors, label = "tab:cor", 'Spearman rank correlations between the measures')
+@
+%Table \ref{tab:cor} describes correlations between the measures across the \Sexpr{length(tasks)} datasets and \Sexpr{length(learners)} models.
+%Interaction strength and main effect complexity have a medium positive correlation, all other correlations are small.
+%This analysis merely provides a first hint, more datasets and models are needed to provide reliable results.
+

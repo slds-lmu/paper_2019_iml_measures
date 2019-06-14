@@ -21,13 +21,13 @@ Here, $f_0$ is the mean of the predictions and can be interpreted as the functio
 % =============================================================================
 % R2 special case
 % =============================================================================
-IAS with the $L2$ loss equals 1 minus the R-squared measure, where the true targets $y_i$ are replaced with $\fh(\xi)$:
+IAS with the $L2$ loss equals 1 minus the R-squared measure, where the true targets $y_i$ are replaced with $\fh(\xi)$.
 $$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(\xi) - f_0)^2} = 1 - R^2$$
 % Interpretation of IAS
 % =============================================================================
 If $IAS=0$, then $L(\fh,\faleme)=0$, which means that the first order ALE model perfectly approximates $\fh$ and the model has no interactions.
-IAS can be larger than $0$ for additive models for which we would expect $IAS=0$, as observed in e.g. Table~\ref{tab:pareto} (e.g. $IAS=0.01$).
-This small deviation can occur when the true ALEs (see Equation~\ref{eqn:ale}) are not perfectly approximated by finite differences.
+%IAS can be larger than $0$ for additive models for which we would expect $IAS=0$, as observed in e.g. Table~\ref{tab:pareto} (e.g. $IAS=0.01$).
+%This small deviation can occur when the true ALEs (see Equation~\ref{eqn:ale}) are not perfectly approximated by finite differences.
 % =============================================================================
 % =============================================================================
 % Further Material

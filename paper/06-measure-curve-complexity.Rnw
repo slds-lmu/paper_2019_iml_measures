@@ -19,8 +19,8 @@ To determine the average shape complexity of ALE main effects $\falej$, we propo
 For a single ALE main effect, we define $\text{MEC}_j$ as the number of parameters needed to approximate the curve with linear segments.
 For the entire model, MEC is the average $\text{MEC}_j$ over all main effects, weighted with their variance.
 Figure~\ref{fig:c-demo} shows an ALE plot (= main effect) and its approximation with two linear segments.
-In the remainder, main effect ALE curves are represented by sparklines, e.g. Figure~\ref{fig:c-demo} by \Sexpr{spark(app$ale)}.
-Vertical bars, if present, e.g. \Sexpr{spark(app)}, show borders between the segments of an approximation.
+In the remainder, main effect ALE curves are represented by sparklines, e.g., Figure~\ref{fig:c-demo} by \Sexpr{spark(app$ale)}.
+Vertical bars, if present (e.g., \Sexpr{spark(app)}) show borders between the segments of an approximation.
 %
 <<epsilons,  fig.cap = "Effect of different epsilons on complexity of approximation. On the left the ALE plot can be approximated with a single linear segment for the given epsilon of 0.05. On the right two segments are needed to approximate the ALE curve when epsilon is set to 0.001.">>=
 n = 1000
@@ -110,14 +110,14 @@ plot(app) + ggtitle("") + scale_y_continuous("ALE")
 % =============================================================================
 Through the approximation with linear segments, the degrees of freedom required for describing a main effect curve become measurable.
 We measure the degrees of freedom as the number of non-zero coefficients for intercepts and slopes of the linear segments.
-The approximation allows some error, e.g. an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)} may have $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
-The approximation quality is measured with R-squared, i.e. the proportion of variance of $\falej$ that is explained by the approximation with linear segments.
-An approximation has to reach an R-squared of at least $1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
+The approximation allows some error, e.g., an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)} may have $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
+The approximation quality is measured with R-squared ($R^2$), i.e., the proportion of variance of $\falej$ that is explained by the approximation with linear segments.
+An approximation has to reach an $R^2 \geq 1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
 We also introduced parameter $max_{seg}$, the maximum number of segments.
-In the case that an approximation cannot reach an R-squared above $1-\epsilon$ with a given $max_{seg}$, $\text{MEC}_j$ is computed with the maximum number of segments.
+In the case that an approximation cannot reach an $R^2 \geq 1-\epsilon$ with a given $max_{seg}$, $\text{MEC}_j$ is computed with the maximum number of segments.
 The selected maximum approximation error $\epsilon$ should be small, but not too small.
-We found $\epsilon$ between $0.01$ and $0.1$ visually meaningful.
-We apply a post-processing step that greedily sets slopes of the linear segments to zero, as long as R-squared $\in\{1-\epsilon,1\}$.
+We found $\epsilon$ between $0.01$ and $0.1$ visually meaningful and used $\epsilon=0.05$ throughout the paper.
+We apply a post-processing step that greedily sets slopes of the linear segments to zero, as long as $R^2\in\{1-\epsilon,1\}$.
 This post-processing step potentially decreases the $\text{MEC}_j$, especially for models with constant segments like decision trees or rule-based models.
 % =============================================================================
 % Measure Sum Up and Fix
@@ -128,7 +128,7 @@ Each $\text{MEC}_j$ is weighted with the variance of the corresponding ALE main 
 %We need more linear segments to get the same approximation $R^2$ as for the second curve.
 %One way to mitigate the problem of getting high MEC estimates through wiggly main effects that are irrelevant for the prediction is to weight each main effect by its variance.
 For example, the three main effect curves \Sexpr{spark(app1$ale, c(-6, 6), width = 5)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)} differ from each other by a scaling factor in the y-axis, but each requires five segments to be approximated with $R^2 >= 0.95$:
- \Sexpr{spark(app1, c(-6, 6), width = 5)}, \Sexpr{spark(app2, c(-6, 6), width = 5)} and \Sexpr{spark(app3, c(-6, 6), width = 5)}.
+ \Sexpr{spark(app1, c(-6, 6), width = 5)}, \Sexpr{spark(app2, c(-6, 6), width = 5)}, and \Sexpr{spark(app3, c(-6, 6), width = 5)}.
 When weighted with the variance,  \Sexpr{spark(app1$ale, c(-6, 6), width = 5)} gets a weight of \Sexpr{sprintf("%.2f", app1$var)}, \Sexpr{spark(app2$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app2$var)} and \Sexpr{spark(app3$ale, c(-6, 6), width = 5)} a weight of \Sexpr{sprintf("%.2f", app3$var)}.
 Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 
@@ -137,32 +137,33 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 % =============================================================================
 \begin{algorithm}
 \caption{Main Effect Complexity (MEC).}\label{algo:AMEC}
-	\KwInput{Prediction function $\fh$, approximation error $\epsilon$, maximum number of segments $max_{seg}$, data $\D$}
+	\KwInput{Model $\fh$, approximation error $\epsilon$, max. segments $max_{seg}$, data $\D$}
 	Define $R^2(g_j, \falej) := \sum_{i=1}^n (g_j(\xij) - \falej(\xij))^2 / \sum_{i=1}^n (\falej(\xij))^2$\;
 	\For{$j \in \pset$}{
         Estimate $\falej$\;
 	\tcp{Approximate ALE with linear model}
 	Fit $g_j(x_j) = \beta_0 + \beta_1 x_j$ predicting $\falej(\xij)$ from $\xij$, $i\in{1,\ldots,n}$\;
-	Set $K=1$
+	Set $K=1$\;
 	\tcp{Increase number of segments until approximation is good enough}
 	\While{$K < max_{seg}$ AND $R^2(g_j,\falej) < (1- \epsilon)$}{
 		\tcp{Optimize intervals $Z_k$ via generalized simulated annealing, estimate $\beta$'s per segment with ordinary least squares}
-		\tcp{For categorical feature, set slopes $\beta_{1,k}$ to zero} 
+		\tcp{For categorical feature, set slopes $\beta_{1,k}$ to zero}
 		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xj\in Z_k}\cdot\left(\beta_{0,k} + \beta_{1,k}\xj\right)$\;
 		Set $K = K+1$ \;
 	}
-	\tcp{Post-processing of slopes}
-	\For{$k \in 1,\ldots,K$}{
-		\tcp{$n_k$ is number of instances in interval $Z_k$}
-		Set $\beta_{0,k} = \frac{1}{n_k}\sum_{i:\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{1,k} = 0$ in $g_j$\;
-		\lIf{$R^2(g_j, \falej) > (1-\epsilon)$}
-		{
-			Use new $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$
-		}
-		\lElse{
-			Keep old $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$	
-			}
-			}
+	Greedily set slopes to zero while $R^2>1-\epsilon$\;
+	%\tcp{Post-processing of slopes}
+	%\For{$k \in 1,\ldots,K$}{
+	%	\tcp{$n_k$ is number of instances in interval $Z_k$}
+	%	Set $\beta_{0,k} = \frac{1}{n_k}\sum_{i:\xi\in Z_k}\cdot\falej(\xij)$ and $\beta_{1,k} = 0$ in $g_j$\;
+	%	\lIf{$R^2(g_j, \falej) > (1-\epsilon)$}
+	%	{
+	%		Use new $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$
+	%	}
+	%	\lElse{
+	%		Keep old $\beta_{0,k}$, $\beta_{1,k}$ in $g_j$
+	%		}
+	%		}
 \tcp{Sum of non-zero coefficients minus first intercept}
 	$MEC_j = K + \sum_{k=1}^K \mathbb{I}_{\beta_{1,k} > 0} - 1$\;
 $V_j = \frac{1}{n}\sum_{i=1}^n (\falej(x^{(i)}))^2$\;
@@ -173,7 +174,7 @@ $V_j = \frac{1}{n}\sum_{i=1}^n (\falej(x^{(i)}))^2$\;
 
 
 % =============================================================================
-% Experiment 
+% Experiment
 % =============================================================================
 <<MEC-experiment, eval=FALSE>>=
 data("BostonHousing", package = "mlbench")
@@ -212,8 +213,8 @@ experiment_slopes = function(epsilon, m){
   dirs = rowSums(mod$learner.model$dirs)
   # Calculating the coefficients
   cfs = mod$learner.model$coefficients[,1]
-  cfs = diag(dirs[names(cfs)] * cfs) 
-  cfsm = mm0 %*% cfs 
+  cfs = diag(dirs[names(cfs)] * cfs)
+  cfsm = mm0 %*% cfs
   colnames(cfsm) = colnames(mm)
   # Matching coefficients from multiple pieces to each feature
   cfsmm = melt(cfsm)
@@ -224,7 +225,7 @@ experiment_slopes = function(epsilon, m){
   # Getting data into usable format
   cfsmm = data.table(cfsmm)
   cfsmm = cfsmm[,.(value = sum(value)),by = c("Var1", "Var2")]
-  cfsmm = dcast(cfsmm, formula = Var1 ~ Var2) 
+  cfsmm = dcast(cfsmm, formula = Var1 ~ Var2)
   earth_coefs  = data.frame(cfsmm)[,-1]
   # Computation of cosine similarity
   angle = function(s1,s2) {
@@ -301,7 +302,7 @@ epsilon = 0.05
 %	Define segments $Z_1 = [min(\xj), z_1], \ldots, Z_k = [z_{k-1}, z_k],\ldots,Z_{K+1} = [z_K,max(\xj)]$ \\
 %If $K=0$, then $Z_1 = [min(\xj), max(\xj)]$\;
 %
-%	Optimize break points: $\hat{z}_1,\ldots, \hat{z}_K = argmin_{z_1,\ldots,z_K} \sum_{k=1}^{K+1} \sum_{\xi\in Z_k}\left(\falej(\xij) - (\beta_{j0}^k + \beta_{j1}^k\xij)\right)^2$ where and $\beta_{j0}^k$ and $\beta_{j1}^k$ are the least square estimates. 
+%	Optimize break points: $\hat{z}_1,\ldots, \hat{z}_K = argmin_{z_1,\ldots,z_K} \sum_{k=1}^{K+1} \sum_{\xi\in Z_k}\left(\falej(\xij) - (\beta_{j0}^k + \beta_{j1}^k\xij)\right)^2$ where and $\beta_{j0}^k$ and $\beta_{j1}^k$ are the least square estimates.
 %Optimize with Generalized Simulated annealing.
 %
 %$\galej(\xj) = \sum_{k=1}^{K+1} \I_{\xi\in Z_k}\left(\hat{\beta}_0^k + \hat{\beta}_j^k\xij\right)$.

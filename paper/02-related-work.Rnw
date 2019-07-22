@@ -4,7 +4,7 @@
 
 In this section, we introduce the notation, review related work, and describe the functional decomposition on which we base the proposed complexity measures.
 
-\textbf{Notation:} We consider machine learning prediction functions $\fh:x \mapsto y$, where $x \in \mathbb{R}^p$ is a $p$-dimensional feature vector and $y \in \mathbb{R}$ is the prediction (e.g., regression output or a classification score).
+\textbf{Notation:} We consider machine learning prediction functions $\fh:\mathbb{R}^p \mapsto \mathbb{R}$, where $\fh(x)$ is a prediction (e.g., regression output or a classification score).
 For the decomposition of $\fh$, we write $f_S:x_S \mapsto y$, $S \subseteq\{1, \ldots, p\}$, $x_S \in \mathbb{R}^{|S|}$ to denote a function that maps a vector with a subset of features to a marginal prediction.
 If subset $S$ contains a single feature $j$, we write $f_j$.
 We refer to the training data of the machine learning model with the tuples $\D = \{(x^{(i)},y^{(i)})\}_{i=1}^n$ and refer to the value of the $j$-th feature from the $i$-th instance as $x_j^{(i)}$.
@@ -68,7 +68,7 @@ The ALE main effect $f_{j,ALE}$ of a feature $x_j, j \in \{1,\ldots,p\}$ for a p
 \falej(x_j) = \int_{z_{0,j}}^{x_j} \mathbb{E}\left[\frac{\partial \fh(X_1,\ldots,X_p)}{\partial X_j}\middle|X_j = z_j\right]dz_j-c_j
 \end{eqnarray}
 Here, $z_{0,j}$ is a lower bound of $X_j$ (usually the minimum of $x_j$) and the expectation $\mathbb{E}$ is computed conditional on the value for $x_j$ and over the marginal distribution of all other features.
-The constant $c_j$ is chosen so that the mean of $f_{j,ALE}(x_j)$ with respect to the marginal distribution of $X_j$ is zero.
+The constant $c_j$ is chosen so that the mean of $f_{j,ALE}(x_j)$ with respect to the marginal distribution of $X_j$ is zero, so that the ALE components sum to the full prediction function.
 ALE main effects are estimated with finite differences, i.e., access to the gradient of a prediction function is not required (see \citep{apley2016visualizing}).
 % =============================================================================
 % ALE is best

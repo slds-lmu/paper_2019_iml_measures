@@ -16,7 +16,7 @@ fe = FeatureEffect$new(pred, "x")
 app = AleNumApprox$new(ale = fe, max_seg = 2, epsilon = 0.05, m_nf = 100, post_process = FALSE)
 @
 To determine the average shape complexity of ALE main effects $\falej$, we propose the main effect complexity (MEC) measure.
-For a single ALE main effect, we define $\text{MEC}_j$ as the number of parameters needed to approximate the curve with linear segments.
+For a single ALE main effect, we define $\text{MEC}_j$ as the number of parameters needed to approximate the curve with piece-wise linear models.
 For the entire model, MEC is the average $\text{MEC}_j$ over all main effects, weighted with their variance.
 Figure~\ref{fig:c-demo} shows an ALE plot (= main effect) and its approximation with two linear segments.
 In the remainder, main effect ALE curves are represented by sparklines, e.g., Figure~\ref{fig:c-demo} by \Sexpr{spark(app$ale)}.
@@ -108,15 +108,15 @@ plot(app) + ggtitle("") + scale_y_continuous("ALE")
 % =============================================================================
 % Measure Intuition
 % =============================================================================
-Through the approximation with linear segments, the degrees of freedom required for describing a main effect curve become measurable.
-We measure the degrees of freedom as the number of non-zero coefficients for intercepts and slopes of the linear segments.
+Through the approximation with piece-wise linear models, the degrees of freedom required for describing a main effect curve become measurable.
+We measure the degrees of freedom as the number of non-zero coefficients for intercepts and slopes of the linear models.
 The approximation allows some error, e.g., an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)} may have $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
 The approximation quality is measured with R-squared ($R^2$), i.e., the proportion of variance of $\falej$ that is explained by the approximation with linear segments.
 An approximation has to reach an $R^2 \geq 1-\epsilon$, where $\epsilon$ is the user defined maximum approximation error.
 We also introduced parameter $max_{seg}$, the maximum number of segments.
 In the case that an approximation cannot reach an $R^2 \geq 1-\epsilon$ with a given $max_{seg}$, $\text{MEC}_j$ is computed with the maximum number of segments.
 The selected maximum approximation error $\epsilon$ should be small, but not too small.
-We found $\epsilon$ between $0.01$ and $0.1$ visually meaningful and used $\epsilon=0.05$ throughout the paper.
+We found $\epsilon$ between $0.01$ and $0.1$ visually meaningful (i.e. a subjectively good approximation) and used $\epsilon=0.05$ throughout the paper.
 We apply a post-processing step that greedily sets slopes of the linear segments to zero, as long as $R^2\in\{1-\epsilon,1\}$.
 This post-processing step potentially decreases the $\text{MEC}_j$, especially for models with constant segments like decision trees or rule-based models.
 % =============================================================================

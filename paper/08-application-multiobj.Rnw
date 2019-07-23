@@ -220,7 +220,7 @@ We optimized over the space of following model classes (and hyperparameters): \t
 
 \textbf{Results}.
 The multi-objective optimization resulted in \Sexpr{nrow(best.models.print)} models.
-The measures had the following ranges: MAE \Sexpr{min(best.models.print$MAE)} - \Sexpr{max(best.models.print$MAE)}, number of features \Sexpr{min(best.models.print$NF)} -  \Sexpr{max(best.models.print$NF)}, mean effect complexity \Sexpr{min(best.models.print$MEC)} - \Sexpr{max(best.models.print$MEC)} and interaction strength \Sexpr{min(best.models.print$IAS)} - \Sexpr{max(best.models.print$IAS)}.
+The measures had the following ranges: MAE \Sexpr{min(best.models.print$MAE)} -- \Sexpr{max(best.models.print$MAE)}, number of features \Sexpr{min(best.models.print$NF)} --  \Sexpr{max(best.models.print$NF)}, mean effect complexity \Sexpr{min(best.models.print$MEC)} -- \Sexpr{max(best.models.print$MEC)} and interaction strength \Sexpr{min(best.models.print$IAS)} -- \Sexpr{max(best.models.print$IAS)}.
 For a more informative visualization, we propose to visualize the main effects together with the measures in Table~\ref{tab:spark-table-multiobj}.
 The four selected models show different trade-offs between the four measures.
 % =============================================================================

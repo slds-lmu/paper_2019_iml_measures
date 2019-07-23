@@ -69,6 +69,7 @@ The ALE main effect $f_{j,ALE}$ of a feature $x_j, j \in \{1,\ldots,p\}$ for a p
 \end{eqnarray}
 Here, $z_{0,j}$ is a lower bound of $X_j$ (usually the minimum of $x_j$) and the expectation $\mathbb{E}$ is computed conditional on the value for $x_j$ and over the marginal distribution of all other features.
 The constant $c_j$ is chosen so that the mean of $f_{j,ALE}(x_j)$ with respect to the marginal distribution of $X_j$ is zero, so that the ALE components sum to the full prediction function.
+By integrating the expected derivative of $\fh$ with respect to $X_j$ the effect of $x_j$ on the prediction function $\fh$ is isolated from the effects of all other features.
 ALE main effects are estimated with finite differences, i.e., access to the gradient of a prediction function is not required (see \citep{apley2016visualizing}).
 % =============================================================================
 % ALE is best

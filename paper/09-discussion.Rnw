@@ -20,6 +20,7 @@ For example, all higher order effects are combined into a single interaction str
 However, the framework of accumulated local effect decomposition allows to estimate higher order effects and to construct different interaction measures.
 The main effect complexity measure only considers linear segments but not, e.g., seasonal components or other structures.
 Furthermore, the complexity measures quantify machine learning models from a functional point of view and ignore the structure of the model (e.g., whether it can be represented by a tree).
+For example, main effect complexity and interaction strength measures can be large for decision trees (e.g. in Table \ref{tab:exp}) even when they can be visualized with few nodes. 
 % =============================================================================
 % What's next
 % =============================================================================

@@ -108,7 +108,10 @@ plot(app) + ggtitle("") + scale_y_continuous("ALE")
 % =============================================================================
 % Measure Intuition
 % =============================================================================
-Through the approximation with piece-wise linear models, the degrees of freedom required for describing a main effect curve become measurable.
+We use segmented linear regression to approximate the ALE curve.
+Within the segments, linear models are estimated with ordinary least squares.
+The breakpoints that define the segments are found by greedy and exhaustive search along the interval boundaries of the ALE curve.
+Greedy here means that e.g. when fitting a segmented linear model with two breakpoints, we first optimize first breakpoint and then the second breakpoint with the first breakpoint fixed.
 We measure the degrees of freedom as the number of non-zero coefficients for intercepts and slopes of the linear models.
 The approximation allows some error, e.g., an almost linear main effect like \Sexpr{spark(fc1$approx_models$V3$ale)} may have $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
 The approximation quality is measured with R-squared ($R^2$), i.e., the proportion of variance of $\falej$ that is explained by the approximation with linear segments.
@@ -144,12 +147,12 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 	\tcp{Approximate ALE with linear model}
 	Fit $g_j(x_j) = \beta_0 + \beta_1 x_j$ predicting $\falej(\xij)$ from $\xij$, $i\in{1,\ldots,n}$\;
 	Set $K=1$\;
-	\tcp{Increase number of segments until approximation is good enough}
+	\tcp{Increase nr. of segments until approximation is good enough}
 	\While{$K < max_{seg}$ AND $R^2(g_j,\falej) < (1- \epsilon)$}{
-		\tcp{Optimize intervals $Z_k$ via generalized simulated annealing, estimate $\beta$'s per segment with ordinary least squares}
+	        \tcp{Find intervals $Z_k$ through exhaustive search along ALE curve breakpoints}
 		\tcp{For categorical feature, set slopes $\beta_{1,k}$ to zero}
 		$g_j(x_j) = \sum_{k=1}^{K+1} \I_{\xj\in Z_k}\cdot\left(\beta_{0,k} + \beta_{1,k}\xj\right)$\;
-		Set $K = K+1$ \;
+		Set $K = K+1$
 	}
 	Greedily set slopes to zero while $R^2>1-\epsilon$\;
 	%\tcp{Post-processing of slopes}

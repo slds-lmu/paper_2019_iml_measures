@@ -197,17 +197,31 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
         self$segments = extract_segments(model, self$breaks, levels(x_interval))
         return()
       }
+      pars = c()
+      lower = as.numeric(min(x))
+      upper = as.numeric(max(x))
+      ale_breaks = self$ale$results[[self$ale$feature.name]]
       for( n_breaks in 1:self$max_breaks) {
-        lower = as.numeric(rep(min(x), times = n_breaks))
-        upper = as.numeric(rep(max(x), times = n_breaks))
-        init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
-        opt_gensa = GenSA(par = init_breaks, segment_fn, lower, upper, ale = self$ale,
-          control = list(maxit = 250), self$ssq_ale ,
-          x = x, ale_prediction = private$ale_values)
-        pars = opt_gensa$par
-        if (opt_gensa$value <= self$epsilon)  break()
+        #init_breaks = quantile(x, seq(from = 0, to = 1, length.out = n_breaks + 2))[2:(n_breaks +1)]
+        #init_breaks = as.numeric(median(x))
+        opt = lapply(ale_breaks, segment_fn, ale = self$ale,
+	             ssq_ale = self$ssq_ale, x = x,
+	             ale_prediction = private$ale_values,
+		     prev_breaks = pars)
+
+	#opt_gensa = optim(par = init_breaks, segment_fn, lower = lower,
+	#		  upper = upper, ale = self$ale,
+	#		  ssq_ale = self$ssq_ale, x = x,
+	#		  ale_prediction = private$ale_values,
+	#		  prev_breaks = pars, method = "Brent")
+	opt = unlist(opt)
+	min.opt = which.min(opt)[[1]]
+	pars = c(pars, ale_breaks[min.opt])
+        #pars = opt_gensa$par
+        vv = opt[min.opt]
+        if (vv <= self$epsilon)  break()
       }
-      if (opt_gensa$value > self$epsilon)  self$max_complex = TRUE
+      if (vv > self$epsilon)  self$max_complex = TRUE
       # fit lm with par as cut points
       self$breaks = sort(unique(c(min(x), pars, max(x))))
       x_interval = cut(x, breaks = self$breaks, include.lowest = TRUE)
@@ -247,8 +261,9 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
 #' Function to optimize for ALE approx
 #'
 #' @param par The breakpoints
-segment_fn = function(par, ale, ssq_ale, x, ale_prediction){
-  x_interval = cut(x, breaks = unique(c(min(x), par, max(x))), include.lowest = TRUE)
+segment_fn = function(par, ale, ssq_ale, x, ale_prediction, prev_breaks){
+  breaks = unique(c(min(x), par, prev_breaks, max(x)))
+  x_interval = cut(x, breaks =  breaks,  include.lowest = TRUE)
   dat = data.table(xv = x, interval = x_interval, alev = ale_prediction)
   res = dat[, .(ssq(.lm.fit(cbind(rep.int(1, times = length(xv)),xv),alev)$residuals)), by = interval]
   error = sum(res$V1)/ssq_ale

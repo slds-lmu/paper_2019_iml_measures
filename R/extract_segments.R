@@ -1,6 +1,4 @@
 # Extract the slope information
-# TODO: Improve by detecting intervals from coef names
-# TODO: Write some tests
 extract_segments = function(model, breaks, intervals, feature.cname = "x") {
   assert_class(model, "lm")
   stopifnot(!any(duplicated(breaks)))

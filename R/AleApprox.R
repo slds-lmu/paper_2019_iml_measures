@@ -189,8 +189,6 @@ AleNumApprox = R6::R6Class(classname = "AleNumApprox",
       mod = lm(private$ale_values ~ x)
       ssq_approx_error = ssq(private$ale_values - predict(mod))
       if( self$ssq_ale  == 0 || (ssq_approx_error/self$ssq_ale ) < self$epsilon) {
-        if(any(is.na(predict(mod)))) browser()
-        if(any(is.na(private$ale_values))) browser()
         self$r2 = get_r2(predict(mod), private$ale_values)
         self$approx_values = predict(mod)
         model = mod

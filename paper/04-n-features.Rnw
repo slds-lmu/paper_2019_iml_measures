@@ -57,7 +57,7 @@ NF = 0\;
 %If we set $M=100$, then $P_{fn}^j = (0.99 + 0.01\cdot 0.01)^{100} \approx 0.37$.
 %If we increase M to 500, the probability that NF counts too few features drops to $\approx 0.007$.
 
-<<NF-false-negatives>>=
+<<NF-false-negatives, cache = TRUE>>=
 set.seed(42)
 n_repetitions = 100
 

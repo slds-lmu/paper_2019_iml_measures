@@ -24,9 +24,9 @@ test_that("does not accept out of range pars", {
 })
 
 test_that("cost always 0 for lm", {
-  expect_equal(0, segment_fn(2,                 ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
-  expect_equal(0, segment_fn(c(10, 20, 50, 88), ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
-  expect_equal(0, segment_fn(c(1, 99),          ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
+  expect_equal(0, segment_fn(2, prev_breaks = 1,  ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
+  expect_equal(0, segment_fn(10, prev_breaks = c(20, 50, 88), ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
+  expect_equal(0, segment_fn(1, prev_breaks = c( 99), ale = ale.lm1, ssq_ale =sst.ale.x1, x = dat$x.1, ale_prediction = ale.lm1$predict(dat$x.1)))
 })
 
 
@@ -43,34 +43,25 @@ test_that("cost matches correct cost", {
   pred = ale2$predict(dat$x.1)
   mod = lm(pred ~ dat$x.1 * x.cut)
   eps = sum(ssq(mod$residuals)) / sst2
-  expect_equal(eps,segment_fn(pars, ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
-
-
-  pars = c(66)
-  x.cut = cut(dat$x.1, breaks = c(min(dat$x.1), pars, max(dat$x.2)), include.lowest = TRUE)
-  pred = ale2$predict(dat$x.1)
-  mod = lm(pred ~ dat$x.1 * x.cut)
-  eps = sum(ssq(mod$residuals)) / sst2
-  expect_equal(eps,segment_fn(pars, ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
-
+  expect_equal(eps,segment_fn(pars[1], prev_breaks = pars[2], ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
 
   pars = 1:10
   x.cut = cut(dat$x.1, breaks = c(min(dat$x.1), pars, max(dat$x.2)), include.lowest = TRUE)
   pred = ale2$predict(dat$x.1)
   mod = lm(pred ~ dat$x.1 * x.cut)
   eps = sum(ssq(mod$residuals)) / sst2
-  expect_equal(eps,segment_fn(pars, ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
+  expect_equal(eps,segment_fn(pars[1], prev_breaks = pars[-1], ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
 })
 
 
 test_that("order of pars irrelevant", {
-  expect_equal(segment_fn(c(10, 50, 60), ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)),
-    segment_fn(c(50, 10, 60), ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
+  expect_equal(segment_fn(10, prev_breaks = c(50, 60), ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)),
+    segment_fn(50, prev_breaks = c(10, 60), ale = ale2, ssq_ale =sst2, x = dat$x.1, ale_prediction = ale2$predict(dat$x.1)))
 
   ale2 = FeatureEffect$new(pred2, feature = "x.2")
   sst2 = var(ale2$predict(dat$x.2))
-  expect_equal(segment_fn(c(1000, 500, 600), ale = ale2, ssq_ale =sst2, x = dat$x.2, ale_prediction = ale2$predict(dat$x.2)),
-    segment_fn(c(500, 1000, 600), ale = ale2, ssq_ale =sst2, x = dat$x.2, ale_prediction = ale2$predict(dat$x.2)))
+  expect_equal(segment_fn(1000, prev_breaks = c(500, 600), ale = ale2, ssq_ale =sst2, x = dat$x.2, ale_prediction = ale2$predict(dat$x.2)),
+    segment_fn(500, prev_breaks = c(1000, 600), ale = ale2, ssq_ale =sst2, x = dat$x.2, ale_prediction = ale2$predict(dat$x.2)))
 })
 
 

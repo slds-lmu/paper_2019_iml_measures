@@ -12,7 +12,7 @@ Therefore, model complexity and interpretability are deeply intertwined and redu
 % =============================================================================
 % Need interpretability measures
 % =============================================================================
-Model-agnostic complexity measures are needed to strike a balance between interpretability and predictive performance explicit when selecting models \citep{ruping2006learning,bibal2016interpretability}.
+Model-agnostic complexity measures are needed to strike a balance between interpretability and predictive performance \citep{ruping2006learning,bibal2016interpretability}.
 
 % =============================================================================
 % Our solution

@@ -8,7 +8,7 @@
 We propose an approach based on feature permutation to determine how many features are used by a model.
 We regard features as "used" when changing a feature changes the prediction.
 If available, the model-specific number of features is preferable.
-The model-agnostic version is useful when the prediction function is only accessible via API or when the feature transformation pipeline is very complex.
+The model-agnostic version is useful when the prediction function is only accessible via API or when the machine learning pipeline is complex.
 
 % =============================================================================
 % Why model-agnostic
@@ -21,7 +21,7 @@ The model-agnostic version is useful when the prediction function is only access
 % =============================================================================
 The proposed procedure is formally described in Algorithm~\ref{algo:nfeat}.
 To estimate whether the $j$-th feature was used, we sample instances from data $\D$, replace their $j$-th feature values with random values from the distribution of $X_j$ (e.g., by sampling $\xj$ from other instances from $\D$), and observe whether the predictions change.
-If the prediction of any sample changes, the feature was used for the prediction.
+If the prediction of any sample changes, the feature was used. 
 % =============================================================================
 % Feature-count heuristic: algorithm
 % =============================================================================
@@ -118,6 +118,6 @@ maes_cart = sprintf("%.3f", aggr[model == "CART", med])
 We tested the NF heuristic with the Boston Housing data.
 We trained decision trees (CART) with maximum depths $\in\{1,2,10\}$ leading to \Sexpr{nf_tree(mods[[1]])}, \Sexpr{nf_tree(mods[[2]])} and  \Sexpr{nf_tree(mods[[3]])} features used and an L1-regularized linear model with penalty $\lambda\in\{10, 5, 2, 1, 0.1, 0.001\}$ leading to \Sexpr{nf_glmnet(mods[[4]])}, \Sexpr{nf_glmnet(mods[[5]])}, \Sexpr{nf_glmnet(mods[[6]])}, \Sexpr{nf_glmnet(mods[[7]])}, \Sexpr{nf_glmnet(mods[[8]])} and \Sexpr{nf_glmnet(mods[[9]])} features used.
 For each model, we estimated NF with sample sizes $M\in\{10, 50, 500\}$ and repeated each estimation \Sexpr{n_repetitions} times.
-For the elastic net models, NF was always equal to the number of features with non-zero weight estimates.\Sexpr{stopifnot(all(aggr[model == "elastic net", med] == 0))}
-For the CART models, the mean absolute differences between NF and the number of features used in the trees were \Sexpr{maes_cart[1]} ($M=10$), \Sexpr{maes_cart[2]} ($M=50$) and \Sexpr{maes_cart[3]} ($M=500$).
+For the elastic net models, NF was always equal to the number non-zero weight. \Sexpr{stopifnot(all(aggr[model == "elastic net", med] == 0))}
+For CART, the mean absolute differences between NF and the number of features used in the trees were \Sexpr{maes_cart[1]} ($M=10$), \Sexpr{maes_cart[2]} ($M=50$) and \Sexpr{maes_cart[3]} ($M=500$).
 

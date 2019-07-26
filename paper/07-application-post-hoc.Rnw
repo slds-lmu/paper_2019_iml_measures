@@ -10,7 +10,7 @@ The computational complexity and output size of most interpretation methods scal
 As demonstrated in Table~\ref{tab:spark-table-multiobj}, a model with fewer features has a more compact representation.
 If additionally $IAS=0$, the ALE main effects fully characterize the prediction function.
 Interpretation methods that analyze 2-way feature interactions scale with $O(\text{NF}^2)$.
-A complete functional decomposition would require to estimate $\sum_{k=1}^{NF} {NF\choose k}$ components which has a computational complexity of $O(2^{NF})$.
+A complete functional decomposition requires to estimate $\sum_{k=1}^{NF} {NF\choose k}$ components which has a computational complexity of $O(2^{NF})$.
 
 \textbf{Less interaction, more reliable feature effects.}
 Feature effect plots such as partial dependence plots and ALE plots visualize the marginal relationship between a feature and the prediction.

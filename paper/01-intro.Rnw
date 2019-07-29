@@ -19,7 +19,7 @@ Model-agnostic complexity measures are needed to strike a balance between interp
 % =============================================================================
 \textbf{Contributions.}
 We propose and implement three model-agnostic measures of machine learning model complexity which are related to post-hoc interpretability.
-To our best knowledge, these are the first model-agnostic measures that describe the interaction strength, complexity of main effects and number of features.
+To our best knowledge, these are the first model-agnostic measures that describe the global interaction strength, complexity of main effects and number of features.
 %For the \textbf{number of features used} by the model, we propose an estimation heuristic.
 %Based on the decomposition of the prediction function, we suggest measures for \textbf{interaction strength} and for \textbf{average complexity of the feature main effects}.
 We apply the measures to different datasets and machine learning models.

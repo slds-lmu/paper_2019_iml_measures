@@ -134,7 +134,7 @@ The interaction strength (IAS) is zero for additive models (boosted GAM, (regula
 Across datasets we observe that the underlying complexity measured as the range of MEC and IAS across the models varies.
 The bike dataset seems to be adequately described by only additive effects, since even random forests, which often model strong interactions show low interaction strength here.
 In contrast, the superconductivity dataset is better explained by models with more interactions.
-For the abalone dataset there are two best models based on MSE: the support vector machine and the random forest.
+For the abalone dataset there are two models with low MSE: the support vector machine and the random forest.
 We might prefer the SVM, since main effects can be described with single numbers ($MEC = 1$) and interaction strength is low.
 
 <<results = 'asis', cache = FALSE, eval = FALSE>>=

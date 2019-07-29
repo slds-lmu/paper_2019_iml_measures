@@ -106,10 +106,10 @@ plot(app) + ggtitle("") + scale_y_continuous("ALE")
 % =============================================================================
 % Measure Intuition
 % =============================================================================
-We use segmented linear regression to approximate the ALE curve.
+We use piece-wise linear regression to approximate the ALE curve.
 Within the segments, linear models are estimated with ordinary least squares.
 The breakpoints that define the segments are found by greedy and exhaustive search along the interval boundaries of the ALE curve.
-Greedy here means that e.g. when fitting a segmented linear model with two breakpoints, we first optimize first breakpoint and then the second breakpoint with the first breakpoint fixed.
+Greedy here means that we first optimize the first breakpoint, then the second breakpoint with the first breakpoint fixed and so on.
 We measure the degrees of freedom as the number of non-zero coefficients for intercepts and slopes of the linear models.
 The approximation allows some error, e.g., an almost linear main effect may have $\text{MEC}_j=1$, even if dozens of parameters would be needed to describe it perfectly. 
 The approximation quality is measured with R-squared ($R^2$), i.e., the proportion of variance of $\falej$ that is explained by the approximation with linear segments.

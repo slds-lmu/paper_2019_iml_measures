@@ -240,7 +240,7 @@ best_perf = which.min(best.models.print$MAE)
 # MAE-best model with bounded MEC
 best_2 = which(best.models.print$MEC < 1.01)[1]
 # MAE-best model that models few interactions
-best_3 = which(best.models.print$IA <= 0.1)[1]
+best_3 = which(best.models.print$IA <= 0.2)[1]
 # Best model that does not use all features
 best_4 = which(best.models.print$NF <=  7)[1]
 
@@ -253,7 +253,7 @@ colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)
 colnames(tab) = gsub("\\(\\)", "",colnames(tab), fixed = TRUE)
 rownames(tab) = c("MAE", "MEC", "IAS", "NF", setdiff(colnames(task.dat), "quality"))
 
-cap = sprintf("A selection of four models from the Pareto optimal set, along with their ALE main effect curves. From left to right, the columns show models with 1) lowest MAE, 2) lowest MAE when $MEC=1$, 3) lowest MAE when $IAS =\\leq 0.1$, and 4) lowest MAE with $NF \\leq 7$.", length(indices))
+cap = sprintf("A selection of four models from the Pareto optimal set, along with their ALE main effect curves. From left to right, the columns show models with 1) lowest MAE, 2) lowest MAE when $MEC=1$, 3) lowest MAE when $IAS =\\leq 0.2$, and 4) lowest MAE with $NF \\leq 7$.", length(indices))
 xtab = xtable(tab, caption = cap, label = "tab:spark-table-multiobj")
 align(xtab) <- "l|p{2.2cm}p{2.2cm}p{2.2cm}p{2.2cm}"
 print.xtable(xtab, sanitize.text.function = as.is, caption.placement = "top")

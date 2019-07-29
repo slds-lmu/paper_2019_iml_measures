@@ -15,7 +15,7 @@ GRID.SIZE = 200
 # Parameters for mbo
 n.folds = 5
 # Number of iterations should be at least 20 times number of hyperparameters
-max.iters = 350
+max.iters = 500
 @
 
 <<mo-data>>=
@@ -150,14 +150,16 @@ lrn_model_map = c("xgboost" = "gbt", "rpart" = "CART", "featureless" = "median",
 		  "ranger" = "rf")
 
 best.models.print$model = lrn_model_map[best.models.print$selected.learner]
-
+options(scipen = 20)
 # Shorter description of learner
 best.models.print$descr = apply(best.models.print, 1, function(row) {
-  lrn_name =   params = row[param_cols]
+  params = row[param_cols]
   params = params[!is.na(params)]
+  params = gsub(" ", "", params)
   names(params) = gsub(sprintf("%s.", row['selected.learner']), "", names(params), fixed = TRUE)
+  names(params) = gsub("_", "", names(params))
   param_string = sprintf("%s:%s", names(params), params)
-  param_string = paste(param_string, collapse = ",")
+  param_string = paste(param_string, collapse = ", ")
   # When model has no parameters
   param_string = gsub("()", "", param_string, fixed = TRUE)
   sprintf("%s (%s)", row["model"], param_string)
@@ -213,14 +215,14 @@ We suggest searching over a wide spectrum of model classes and hyperparameter se
 % =============================================================================
 % Objectives and Models
 % =============================================================================
-We used the mlrMBO model-based optimization framework \citep{horn2016multi} with ParEGO \citep{knowles2006parego} (\Sexpr{max.iters} iterations) to find the best model based on four objectives: number of features used by the model (NF), main effect complexity (MEC), interaction strength (IAS) and the cross-validated mean absolute error (MAE) (\Sexpr{n.folds}-fold cross-validated).
-We optimized over the space of following model classes (and hyperparameters): \textbf{CART} (maximum tree-depth and pruning cp), \textbf{s}upport \textbf{v}ector \textbf{m}achine (cost C and sigma), \textbf{elastic net} regression (regularization alpha and penalization lambda), \textbf{g}radient \textbf{b}oosted \textbf{t}rees (maximum depth, number of iterations), gradient \textbf{boost}ed \textbf{g}eneralized \textbf{a}dditive \textbf{m}odel (number of iterations) and \textbf{r}andom \textbf{f}orest (mtry).
+We used the mlrMBO model-based optimization framework \citep{horn2016multi} with ParEGO \citep{knowles2006parego} (\Sexpr{max.iters} iterations) to find the best models based on four objectives: number of features used (NF), main effect complexity (MEC), interaction strength (IAS) and cross-validated mean absolute error (MAE) (\Sexpr{n.folds}-fold cross-validated).
+We optimized over the space of following model classes (and hyperparameters): \textbf{CART} (maximum tree-depth and complexity parameter cp), \textbf{s}upport \textbf{v}ector \textbf{m}achine (cost C and inverse kernel width sigma), \textbf{elastic net} regression (regularization alpha and penalization lambda), \textbf{g}radient \textbf{b}oosted \textbf{t}rees (maximum depth, number of iterations), gradient \textbf{boost}ed \textbf{g}eneralized \textbf{a}dditive \textbf{m}odel (number of iterations nrounds) and \textbf{r}andom \textbf{f}orest (number of split features mtry).
 
 \textbf{Results}.
 The multi-objective optimization resulted in \Sexpr{nrow(best.models.print)} models.
-The measures had the following ranges: MAE \Sexpr{min(best.models.print$MAE)} - \Sexpr{max(best.models.print$MAE)}, number of features \Sexpr{min(best.models.print$NF)} -  \Sexpr{max(best.models.print$NF)}, mean effect complexity \Sexpr{min(best.models.print$MEC)} - \Sexpr{max(best.models.print$MEC)} and interaction strength \Sexpr{min(best.models.print$IAS)} - \Sexpr{max(best.models.print$IAS)}.
+The measures had the following ranges: MAE \Sexpr{min(best.models.print$MAE)} -- \Sexpr{max(best.models.print$MAE)}, number of features \Sexpr{min(best.models.print$NF)} --  \Sexpr{max(best.models.print$NF)}, mean effect complexity \Sexpr{min(best.models.print$MEC)} -- \Sexpr{max(best.models.print$MEC)} and interaction strength \Sexpr{min(best.models.print$IAS)} -- \Sexpr{max(best.models.print$IAS)}.
 For a more informative visualization, we propose to visualize the main effects together with the measures in Table~\ref{tab:spark-table-multiobj}.
-The four selected models show different trade-offs between the four measures.
+The selected models show different trade-offs between the measures.
 % =============================================================================
 % Best performing model
 % =============================================================================
@@ -245,7 +247,7 @@ best_4 = which(best.models.print$NF <=  7)[1]
 indices = c(best_perf, best_2, best_3, best_4)
 mbo_indices = best.models.print[indices,"index"]
 tab = get_spark_table(mbo_obj = mbo.iml, indices =  mbo_indices, height = 3, width=10, log_params = log_params)
-colnames(tab) = best.models.print$model[indices]
+colnames(tab) = best.models.print$descr[indices]
 # Because I use as.is later with xtable
 colnames(tab) = gsub("_","\\_", colnames(tab), fixed = TRUE)
 colnames(tab) = gsub("\\(\\)", "",colnames(tab), fixed = TRUE)

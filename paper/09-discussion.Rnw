@@ -8,6 +8,8 @@
 % =============================================================================
 We proposed three measures for machine learning model complexity based on functional decomposition: number of features used, interaction strength and main effect complexity.
 Due to their model-agnostic nature, the measures allow model selection and comparison across different types of models and they can be used as objectives in automated machine learning frameworks.
+This also includes "white-box" models:
+For example, the interaction strength of interaction terms in a linear model or the complexity of smooth effects in generalized additive models can be quantified and compared across models.
 We argued that minimizing these measures for a machine learning model improves its post-hoc interpretation.
 We demonstrated that the measures can be optimized directly with multi-objective optimization to make the trade-off between performance and post-hoc interpretability explicit.
 
@@ -20,6 +22,7 @@ For example, all higher order effects are combined into a single interaction str
 However, the framework of accumulated local effect decomposition allows to estimate higher order effects and to construct different interaction measures.
 The main effect complexity measure only considers linear segments but not, e.g., seasonal components or other structures.
 Furthermore, the complexity measures quantify machine learning models from a functional point of view and ignore the structure of the model (e.g., whether it can be represented by a tree).
+For example, main effect complexity and interaction strength measures can be large for short decision trees (e.g. in Table \ref{tab:exp}). 
 % =============================================================================
 % What's next
 % =============================================================================

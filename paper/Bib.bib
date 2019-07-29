@@ -70,11 +70,12 @@
 		pages={1-15}
 }
 @misc{uci,
-       author = "Dua, Dheeru and Graff, Casey",
-year = "2017",
-title = "{UCI} Machine Learning Repository",
-url = "http://archive.ics.uci.edu/ml",
-institution = "University of California, Irvine, School of Information and Computer Sciences" } 
+      author = "Dua, Dheeru and Graff, Casey",
+      year = "2017",
+      title = "{UCI} Machine Learning Repository",
+      url = "http://archive.ics.uci.edu/ml",
+      institution = "University of California, Irvine, School of Information and Computer Sciences"
+} 
 
 @inproceedings{horn2016multi,
   title={Multi-objective parameter configuration of machine learning algorithms using model-based optimization},
@@ -99,10 +100,10 @@ institution = "University of California, Irvine, School of Information and Compu
 
 
 @article{leeper2017interpreting,
-	  title={Interpreting regression results using average marginal effects with R’s margins},
-	    author={Leeper, Thomas J},
-	      journal={Available at the comprehensive {R} Archive Network (CRAN)},
-	        year={2017}
+	 title={Interpreting regression results using average marginal effects with {R}’s margins},
+	 author={Leeper, Thomas J},
+	 journal={CRAN},
+	 year={2017}
 }
 
 
@@ -133,7 +134,7 @@ institution = "University of California, Irvine, School of Information and Compu
         organization = {R Foundation for Statistical Computing},
         address = {Vienna, Austria},
         year = {2018},
-        url = {https://www.R-project.org/},
+        opturl = {https://www.R-project.org/},
 }
 
 @article{ribeiro2016model,
@@ -143,12 +144,12 @@ institution = "University of California, Irvine, School of Information and Compu
 	  year={2016}
 }
 
-@Manual{alepackage,
+@article{alepackage,
 	title = {ALEPlot: Accumulated Local Effects (ALE) Plots and Partial Dependence(PD) Plots},
-	author = {Dan Apley},
+        author={Apley, Daniel},
+        journal={CRAN},
 	year = {2017},
-	note = {{R} package version 1.0},
-	url = {https://CRAN.R-project.org/package=ALEPlot},
+	opturl = {https://CRAN.R-project.org/package=ALEPlot}
 }
 
 
@@ -162,13 +163,6 @@ institution = "University of California, Irvine, School of Information and Compu
 	  organization={ACM}
 }
   
-
-@article{fisher2018all,
-	  title={All Models are Wrong but many are Useful: Variable Importance for Black-Box, Proprietary, or Misspecified Prediction Models, using Model Class Reliance},
-	  author={Fisher, Aaron and Rudin, Cynthia and Dominici, Francesca},
-	  journal={arXiv preprint arXiv:1801.01489},
-	  year={2018}
-}
 
 
 @book{molnar2019,
@@ -327,7 +321,9 @@ institution = "University of California, Irvine, School of Information and Compu
 @article{ruping2006learning,
   title={Learning interpretable models},
   author={R{\"u}ping, Stefan and others},
-  year={2006}
+  journal={Univ. Dortmund},
+  year={2006},
+  url={http://d-nb.info/997491736}
 }
 
 
@@ -420,14 +416,21 @@ institution = "University of California, Irvine, School of Information and Compu
   year={2017}
 }
 
-
 @article{dhurandhar2017tip,
-  title={TIP: Typifying the Interpretability of Procedures},
-  author={Dhurandhar, Amit and Iyengar, Vijay and Luss, Ronny and Shanmugam, Karthikeyan},
-  journal={arXiv preprint arXiv:1706.02952},
-  year={2017}
+    author    = {Amit Dhurandhar and
+                 Vijay Iyengar and
+                 Ronny Luss and
+                 Karthikeyan Shanmugam},
+    title     = {{TIP:} Typifying the Interpretability of Procedures},
+    journal   = {arXiv preprint arXiv:1706.02952},
+    year      = {2017},
+    opturl       = {http://arxiv.org/abs/1706.02952},
+    archivePrefix = {arXiv},
+    eprint    = {1706.02952},
+    timestamp = {Mon, 13 Aug 2018 16:48:50 +0200},
+    biburl    = {https://dblp.org/rec/bib/journals/corr/DhurandharILS17},
+    bibsource = {dblp computer science bibliography, https://dblp.org}
 }
-
 
 @article{murdoch2019interpretable,
   title={Interpretable machine learning: definitions, methods, and applications},
@@ -468,7 +471,7 @@ institution = "University of California, Irvine, School of Information and Compu
 
 @Article{apley2016visualizing,
   title={Visualizing the Effects of Predictor Variables in Black Box Supervised Learning Models},
-  author={Apley, Daniel W},
+  author={Apley, Daniel},
   journal={arXiv preprint arXiv:1612.08468},
   year={2016}
 }
@@ -484,16 +487,21 @@ institution = "University of California, Irvine, School of Information and Compu
 }
 
 
-@Article{Fisher2018,
-  author     = {Fisher, Aaron and Rudin, Cynthia and Dominici, Francesca},
-  title      = {Model Class Reliance: Variable Importance Measures for Any Machine Learning Model Class, from the {"Rashomon"} Perspective},
-  journal    = {arXiv preprint \href{http://arxiv.org/abs/1801.01489}{arXiv:1801.01489}},
-  year       = {2018},
-  arxivid    = {1801.01489},
-  eprint     = {1801.01489},
-  eprinttype = {arXiv},
-  opturl        = {http://arxiv.org/abs/1801.01489},
+@ARTICLE{fisher2018all,
+       author = {{Fisher}, Aaron and {Rudin}, Cynthia and {Dominici}, Francesca},
+        title = "{All Models are Wrong but many are Useful: Variable Importance for Black-Box, Proprietary, or Misspecified Prediction Models, using Model Class Reliance}",
+      journal = {arXiv preprint},
+     keywords = {Statistics - Methodology},
+         year = "2018",
+          eid = {arXiv:1801.01489},
+        pages = {arXiv:1801.01489},
+archivePrefix = {arXiv},
+       eprint = {1801.01489},
+ primaryClass = {stat.ME},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2018arXiv180101489F},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
 }
+
 
 
 @incollection{lundberg2017unified,
@@ -538,13 +546,12 @@ opturl = {http://papers.nips.cc/paper/7062-a-unified-approach-to-interpreting-mo
 @Article{JMLR:v17:15-066,
   author    = {Bischl, Bernd and Lang, Michel and Kotthoff, Lars and Schiffner, Julia and Richter, Jakob and Studerus, Erich and Casalicchio, Giuseppe and Jones, Zachary M.},
   title     = {{mlr}: Machine Learning in {R}},
-  journal   = {J. Mach. Learn. Res.},
+  journal   = {Journal of Machine Learning Research},
   year      = {2016},
   volume    = {17},
   number    = {170},
   pages     = {1--5},
-  publisher = {Microtome Publisher},
-  opturl       = {http://jmlr.org/papers/v17/15-066.html},
+  opturl    = {http://jmlr.org/papers/v17/15-066.html},
 }
 
 

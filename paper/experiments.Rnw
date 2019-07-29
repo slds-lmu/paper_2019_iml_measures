@@ -78,6 +78,7 @@ fn = function(lrn, tsk){
 
 
 <<eval = TRUE, cache = TRUE, results = "hide">>=
+set.seed(42)
 library(parallel)
 lrn.runs = mclapply(learners, function(lrn) {
   print(lrn$short.name)

@@ -7,7 +7,7 @@
 % First order model
 % =============================================================================
 Interactions between features mean that the prediction cannot be expressed as a sum of independent feature effects, but the effect of a feature depends on values of other features \citep{molnar2019}.
-We propose to measure interaction strength as the scaled approximation error between the ALE main effect model and the prediction function $\fh$.
+We propose to measure interaction strength as the scaled approximation error between the ALE main effect model and the prediction function $f$.
 Based on the ALE decomposition, the ALE main effect model is defined as the sum of first order ALE effects:
 $$\faleme(x) = f_0 + f_{1,ALE}(x_1) + \ldots + f_{p,ALE}(x_p)$$
 % =============================================================================
@@ -15,17 +15,17 @@ $$\faleme(x) = f_0 + f_{1,ALE}(x_1) + \ldots + f_{p,ALE}(x_p)$$
 % =============================================================================
 We define interaction strength as the approximation error measured with loss $L$:
 \begin{eqnarray}\label{eqn:pre}
-IAS = \frac{\mathbb{E}(L(\fh, \faleme))}{\mathbb{E}(L(\fh, f_0))} \geq 0
+IAS = \frac{\mathbb{E}(L(f, \faleme))}{\mathbb{E}(L(f, f_0))} \geq 0
 \end{eqnarray}
 Here, $f_0$ is the mean of the predictions and can be interpreted as the functional decomposition where all feature effects are set to zero.
 % =============================================================================
 % R2 special case
 % =============================================================================
-IAS with the $L2$ loss equals 1 minus the R-squared measure, where the true targets $y_i$ are replaced with $\fh(\xi)$.
-$$IAS = \frac{\sum_{i=1}^n(\fh(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(\fh(\xi) - f_0)^2} = 1 - R^2$$
+IAS with the $L2$ loss equals 1 minus the R-squared measure, where the true targets $y_i$ are replaced with $f(\xi)$.
+$$IAS = \frac{\sum_{i=1}^n(f(\xi)-\faleme(\xi))^2}{\sum_{i=1}^n(f(\xi) - f_0)^2} = 1 - R^2$$
 % Interpretation of IAS
 % =============================================================================
-If $IAS=0$, then $L(\fh,\faleme)=0$, which means that the first order ALE model perfectly approximates $\fh$ and the model has no interactions.
+If $IAS=0$, then $L(f,\faleme)=0$, which means that the first order ALE model perfectly approximates $f$ and the model has no interactions.
 %IAS can be larger than $0$ for additive models for which we would expect $IAS=0$, as observed in e.g. Table~\ref{tab:pareto} (e.g. $IAS=0.01$).
 %This small deviation can occur when the true ALEs (see Equation~\ref{eqn:ale}) are not perfectly approximated by finite differences.
 % =============================================================================
@@ -52,11 +52,11 @@ If $IAS=0$, then $L(\fh,\faleme)=0$, which means that the first order ALE model 
 %\begin{algorithm}
 %\caption{Estimate PRL of ALE main effects model}\label{algo:ale1st}
 %\begin{enumerate}
-%\item Given: model $\fh$, dataset $\D$, loss function $L$
+%\item Given: model $f$, dataset $\D$, loss function $L$
 %\item Estimate $\falej$ for all features $j\in\{1,\ldots,p\}$
-%\item Estimate $\fzero = \sum_{i=1}^n \fh(\xi)$
+%\item Estimate $\fzero = \sum_{i=1}^n f(\xi)$
 %\item Define: $\fale(x) = \fzero + \sum_{j=1}^p \falej(x)$
-%\item Calculate $PRL(L, \fh, \fale)$
+%\item Calculate $PRL(L, f, \fale)$
 %\end{enumerate}
 %\end{algorithm}
 

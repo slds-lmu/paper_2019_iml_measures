@@ -138,7 +138,7 @@ Algorithm~\ref{algo:AMEC} describes the MEC computation in detail.
 % =============================================================================
 \begin{algorithm}
 \caption{Main Effect Complexity (MEC).}\label{algo:AMEC}
-	\KwInput{Model $\fh$, approximation error $\epsilon$, max. segments $max_{seg}$, data $\D$}
+	\KwInput{Model $f$, approximation error $\epsilon$, max. segments $max_{seg}$, data $\D$}
 	Define $R^2(g_j, \falej) := \sum_{i=1}^n (g_j(\xij) - \falej(\xij))^2 / \sum_{i=1}^n (\falej(\xij))^2$\;
 	\For{$j \in \pset$}{
         Estimate $\falej$\;

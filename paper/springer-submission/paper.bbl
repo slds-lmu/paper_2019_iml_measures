@@ -1,0 +1,165 @@
+ \newcommand{\noop}[1]{}
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{apley2016visualizing}
+Apley, D.: Visualizing the effects of predictor variables in black box
+  supervised learning models. arXiv preprint arXiv:1612.08468  (2016)
+
+\bibitem{alepackage}
+Apley, D.: Aleplot: Accumulated local effects (ale) plots and partial
+  dependence(pd) plots. CRAN  (2017)
+
+\bibitem{askira1998knowledge}
+Askira-Gelman, I.: Knowledge discovery: comprehensibility of the results. In:
+  Proceedings of the thirty-first Hawaii international conference on system
+  sciences. vol.~5, pp. 247--255. IEEE (1998)
+
+\bibitem{bibal2016interpretability}
+Bibal, A., Fr{\'e}nay, B.: Interpretability of machine learning models and
+  representations: an introduction. In: Proceedings on ESANN. pp. 77--82 (2016)
+
+\bibitem{JMLR:v17:15-066}
+Bischl, B., Lang, M., Kotthoff, L., Schiffner, J., Richter, J., Studerus, E.,
+  Casalicchio, G., Jones, Z.M.: {mlr}: Machine learning in {R}. Journal of
+  Machine Learning Research  \textbf{17}(170), ~1--5 (2016)
+
+\bibitem{casalicchio2018visualizing}
+Casalicchio, G., Molnar, C., Bischl, B.: Visualizing the feature importance for
+  black box models. In: Joint European Conference on Machine Learning and
+  Knowledge Discovery in Databases. pp. 655--670. Springer (2018)
+
+\bibitem{cortez2009modeling}
+Cortez, P., Cerdeira, A., Almeida, F., Matos, T., Reis, J.: Modeling wine
+  preferences by data mining from physicochemical properties. Decision Support
+  Systems  \textbf{47}(4),  547--553 (2009)
+
+\bibitem{dhurandhar2017tip}
+Dhurandhar, A., Iyengar, V., Luss, R., Shanmugam, K.: {TIP:} typifying the
+  interpretability of procedures. arXiv preprint arXiv:1706.02952  (2017)
+
+\bibitem{uci}
+Dua, D., Graff, C.: {UCI} machine learning repository (2017),
+  \url{http://archive.ics.uci.edu/ml}
+
+\bibitem{bike}
+Fanaee-T, H., Gama, J.: Event labeling combining ensemble detectors and
+  background knowledge. Progress in Artificial Intelligence pp. 1--15 (2013)
+
+\bibitem{fisher2018all}
+{Fisher}, A., {Rudin}, C., {Dominici}, F.: {All Models are Wrong but many are
+  Useful: Variable Importance for Black-Box, Proprietary, or Misspecified
+  Prediction Models, using Model Class Reliance}. arXiv preprint
+  arXiv:1801.01489 (2018)
+
+\bibitem{freitas2014comprehensible}
+Freitas, A.A.: Comprehensible classification models: a position paper. ACM
+  SIGKDD explorations newsletter  \textbf{15}(1),  1--10 (2014)
+
+\bibitem{friedler2019assessing}
+Friedler, S.A., Roy, C.D., Scheidegger, C., Slack, D.: Assessing the local
+  interpretability of machine learning models. arXiv preprint arXiv:1902.03501
+  (2019)
+
+\bibitem{friedman2001greedy}
+Friedman, J.H.: Greedy function approximation: a gradient boosting machine.
+  Annals of statistics pp. 1189--1232 (2001)
+
+\bibitem{friedman1991multivariate}
+Friedman, J.H., et~al.: Multivariate adaptive regression splines. The annals of
+  statistics  \textbf{19}(1),  1--67 (1991)
+
+\bibitem{furnkranz2012foundations}
+F{\"u}rnkranz, J., Gamberger, D., Lavra{\v{c}}, N.: Foundations of rule
+  learning. Springer Science \& Business Media (2012)
+
+\bibitem{guidotti2018survey}
+Guidotti, R., Monreale, A., Ruggieri, S., Turini, F., Giannotti, F., Pedreschi,
+  D.: A survey of methods for explaining black box models. ACM computing
+  surveys (CSUR)  \textbf{51}(5), ~93 (2018)
+
+\bibitem{hamidieh2018data}
+Hamidieh, K.: A data-driven statistical model for predicting the critical
+  temperature of a superconductor. Computational Materials Science
+  \textbf{154},  346--354 (2018)
+
+\bibitem{horn2016multi}
+Horn, D., Bischl, B.: Multi-objective parameter configuration of machine
+  learning algorithms using model-based optimization. In: 2016 IEEE Symposium
+  Series on Computational Intelligence (SSCI). pp.~1--8. Ieee (2016)
+
+\bibitem{huysmans2011empirical}
+Huysmans, J., Dejaeger, K., Mues, C., Vanthienen, J., Baesens, B.: An empirical
+  evaluation of the comprehensibility of decision table, tree and rule based
+  predictive models. Decision Support Systems  \textbf{51}(1),  141--154 (2011)
+
+\bibitem{knowles2006parego}
+Knowles, J.: Parego: a hybrid algorithm with on-line landscape approximation
+  for expensive multiobjective optimization problems. IEEE Transactions on
+  Evolutionary Computation  \textbf{10}(1),  50--66 (2006)
+
+\bibitem{lakkaraju2017interpretable}
+Lakkaraju, H., Kamar, E., Caruana, R., Leskovec, J.: Interpretable \&
+  explorable approximations of black box models. arXiv preprint
+  arXiv:1707.01154  (2017)
+
+\bibitem{leeper2017interpreting}
+Leeper, T.J.: Interpreting regression results using average marginal effects
+  with {R}’s margins. CRAN  (2017)
+
+\bibitem{molnar2019}
+Molnar, C.: Interpretable Machine Learning (2019),
+  \url{https://christophm.github.io/interpretable-ml-book/}
+
+\bibitem{iml}
+Molnar, C., Bischl, B., Casalicchio, G.: iml: An {R} package for interpretable
+  machine learning. JOSS  \textbf{3}(26), ~786 (2018)
+
+\bibitem{philipp2018measuring}
+Philipp, M., Rusch, T., Hornik, K., Strobl, C.: Measuring the stability of
+  results from supervised statistical learning. Journal of Computational and
+  Graphical Statistics  \textbf{27}(4),  685--700 (2018)
+
+\bibitem{plumb2019regularizing}
+Plumb, G., Al-Shedivat, M., Xing, E., Talwalkar, A.: Regularizing black-box
+  models for improved interpretability. arXiv preprint arXiv:1902.06787  (2019)
+
+\bibitem{poursabzi2018manipulating}
+Poursabzi-Sangdeh, F., Goldstein, D.G., Hofman, J.M., Vaughan, J.W., Wallach,
+  H.: Manipulating and measuring model interpretability. arXiv preprint
+  arXiv:1802.07810  (2018)
+
+\bibitem{r2018}
+{R Core Team}: R: A Language and Environment for Statistical Computing. R
+  Foundation for Statistical Computing, Vienna, Austria (2018)
+
+\bibitem{ribeiro2016model}
+Ribeiro, M.T., Singh, S., Guestrin, C.: Model-agnostic interpretability of
+  machine learning. arXiv preprint arXiv:1606.05386  (2016)
+
+\bibitem{ruping2006learning}
+R{\"u}ping, S., et~al.: Learning interpretable models. Univ. Dortmund  (2006),
+  \url{http://d-nb.info/997491736}
+
+\bibitem{schielzeth2010simple}
+Schielzeth, H.: Simple means to improve the interpretability of regression
+  coefficients. Methods in Ecology and Evolution  \textbf{1}(2),  103--113
+  (2010)
+
+\bibitem{ustun2016supersparse}
+Ustun, B., Rudin, C.: Supersparse linear integer models for optimized medical
+  scoring systems. Machine Learning  \textbf{102}(3),  349--391 (2016)
+
+\bibitem{yang2017scalable}
+Yang, H., Rudin, C., Seltzer, M.: Scalable bayesian rule lists. In: Proceedings
+  of the 34th International Conference on Machine Learning-Volume 70. pp.
+  3921--3930. JMLR. org (2017)
+
+\bibitem{zhou2018measuring}
+Zhou, Q., Liao, F., Mou, C., Wang, P.: Measuring interpretability for different
+  types of machine learning models. In: Pacific-Asia Conference on Knowledge
+  Discovery and Data Mining. pp. 295--308 (2018)
+
+\end{thebibliography}
